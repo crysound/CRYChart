@@ -1,0 +1,249 @@
+{
+  "preparedAtUTC": "2026-11-02T05:19:14.906430+00:00",
+  "purpose": "Independent public factual assets for original CRYChart example implementations",
+  "sources": [
+    {
+      "file": "world-50m.geojson",
+      "url": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_0_countries.geojson",
+      "bytes": 3083490,
+      "sha256": "3e458fc036ad0a66411f2c1e6cac49c5d7bfb81cb1123bc513b22511a2b7fdeb"
+    },
+    {
+      "file": "us-states-110m.geojson",
+      "url": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_1_states_provinces.geojson",
+      "bytes": 183638,
+      "sha256": "0067dec6a2c4f9c7a644bf7a9a46163d8d881595953326d0c67d89934190aefe"
+    },
+    {
+      "file": "population-2018.json",
+      "url": "https://api.worldbank.org/v2/country/all/indicator/SP.POP.TOTL?date=2018&format=json&per_page=400",
+      "bytes": 53600,
+      "sha256": "b39f45c58651c47e6d6f7bc511822dfa1ef0e2de6cd5f9fba061c6e95bbad9d9"
+    },
+    {
+      "file": "population-growth.json",
+      "url": "https://api.worldbank.org/v2/country/all/indicator/SP.POP.GROW?date=1961:2019&format=json&per_page=20000",
+      "bytes": 3466317,
+      "sha256": "b379980bf9f93d2e01b4470a5003c7826890173234a4f1740c5173ab89f563dd"
+    },
+    {
+      "file": "dublin-metadata.json",
+      "url": "https://data.gov.ie/api/3/action/package_show?id=google-airview-data-dublin-city",
+      "bytes": 17286,
+      "sha256": "f1bde882ac5c1613fb7cbb3d632775310dee7394c89aff2569639e4a7bfa5cd0"
+    },
+    {
+      "file": "entsoe-geo-readme.txt",
+      "url": "https://raw.githubusercontent.com/EnergieID/entsoe-py/master/entsoe/geo/README.MD",
+      "bytes": 2331,
+      "sha256": "ccb8fb041c917752bf7d52516f8a80c322a07c86fde20c48c8be8609dc496034"
+    },
+    {
+      "file": "entsoe-license.txt",
+      "url": "https://raw.githubusercontent.com/EnergieID/entsoe-py/master/LICENSE",
+      "bytes": 1074,
+      "sha256": "4f1e217e1d2d9993ceaf794be6bde9d5d8da72a0047a9fa3518739ef3477f13e"
+    },
+    {
+      "file": "AirView_DublinCity_RoadData_Metadata.txt",
+      "url": "https://data.smartdublin.ie/dataset/4976e11e-a015-4ef9-9179-dc7c27fb5a81/resource/761fccf9-6cc0-4c35-8a33-e6067ff52bee/download/airview_dublincity_roaddata_ugm3.txt",
+      "bytes": 1489,
+      "sha256": "b77b13de224c829620e15afcc6d5c22dc9d9173cea19e46e24e946bfbf3ea2e1"
+    },
+    {
+      "file": "AirView_DublinCity_Measurements_CSV.zip",
+      "url": "https://data.smartdublin.ie/dataset/4976e11e-a015-4ef9-9179-dc7c27fb5a81/resource/a58428ad-3815-4454-82a4-c0e98aca3844/download/airview_dublincity_measurements_ugm3_csv.zip",
+      "bytes": 190796429,
+      "sha256": "4dc8ba22c27a20c8208a7f4cd7d9ced50950c3153f7ec38c6e7c9674e14cbf70"
+    },
+    {
+      "file": "AirView_DublinCity_Measurements_Metadata.txt",
+      "url": "https://data.smartdublin.ie/dataset/4976e11e-a015-4ef9-9179-dc7c27fb5a81/resource/ea9ad286-3267-477a-96b1-70b4b2965a9e/download/airview_dublincity_measurements_ugm3.txt",
+      "bytes": 707,
+      "sha256": "d81f330c8ec7221e6f8bf0f1014c3812a5460371d1116596890a87d59d7770f4"
+    },
+    {
+      "file": "AirView_DublinCity_RoadData_GeoJSON.geojson",
+      "url": "https://data.smartdublin.ie/dataset/4976e11e-a015-4ef9-9179-dc7c27fb5a81/resource/ec7f3108-c12b-4e07-b482-470f28f52aca/download/airview_dublincity_roaddata_ugm3.geojson",
+      "bytes": 18916472,
+      "sha256": "2b74576777dd42e66c29a0d9fb4ab3a671cc4c538294d8eac4319c5f354a068a"
+    },
+    {
+      "file": "DK_1.geojson",
+      "url": "https://raw.githubusercontent.com/EnergieID/entsoe-py/master/entsoe/geo/geojson/DK_1.geojson",
+      "bytes": 65781,
+      "sha256": "d4fa3a91c56df8a9abf125a4fa841734e43d4bd881d5e14e6297abd2da95691b"
+    },
+    {
+      "file": "DK_2.geojson",
+      "url": "https://raw.githubusercontent.com/EnergieID/entsoe-py/master/entsoe/geo/geojson/DK_2.geojson",
+      "bytes": 27249,
+      "sha256": "0b744fc90a517bc5a2fe4f2e454869e6742e30a718f190f7ced1cf8fed9f2f74"
+    },
+    {
+      "file": "EE.geojson",
+      "url": "https://raw.githubusercontent.com/EnergieID/entsoe-py/master/entsoe/geo/geojson/EE.geojson",
+      "bytes": 45888,
+      "sha256": "f204c518dbb1b4eeec1d4a655c3ad493b7e279987609c49d5cd9d3ea25605ca9"
+    },
+    {
+      "file": "FI.geojson",
+      "url": "https://raw.githubusercontent.com/EnergieID/entsoe-py/master/entsoe/geo/geojson/FI.geojson",
+      "bytes": 141232,
+      "sha256": "1215e10adc8101197b283e280d5b910b1f90e1b46954a7a60a8abfebacaac765"
+    },
+    {
+      "file": "LT.geojson",
+      "url": "https://raw.githubusercontent.com/EnergieID/entsoe-py/master/entsoe/geo/geojson/LT.geojson",
+      "bytes": 24634,
+      "sha256": "53e928f66e222d7284dfd5068af0610ce886607430154ed37d2a31fb9c0b93dd"
+    },
+    {
+      "file": "LV.geojson",
+      "url": "https://raw.githubusercontent.com/EnergieID/entsoe-py/master/entsoe/geo/geojson/LV.geojson",
+      "bytes": 23806,
+      "sha256": "868388232b3f01241aafa0e4f28ac0de9fe8b6278e1dc984943f46e5360e52cc"
+    },
+    {
+      "file": "NO_1.geojson",
+      "url": "https://raw.githubusercontent.com/EnergieID/entsoe-py/master/entsoe/geo/geojson/NO_1.geojson",
+      "bytes": 773550,
+      "sha256": "67cfcd23561efa1ab5a88061515a32da680ff6af4bd7c1098ba7a3700499a43e"
+    },
+    {
+      "file": "NO_2.geojson",
+      "url": "https://raw.githubusercontent.com/EnergieID/entsoe-py/master/entsoe/geo/geojson/NO_2.geojson",
+      "bytes": 217427,
+      "sha256": "729dea0e0a172d36c33788bb50cdf50bc88b5e2b40e47eb8cc63f287fb0e12e3"
+    },
+    {
+      "file": "NO_3.geojson",
+      "url": "https://raw.githubusercontent.com/EnergieID/entsoe-py/master/entsoe/geo/geojson/NO_3.geojson",
+      "bytes": 221446,
+      "sha256": "3b5ad206acc7f5b327bea4a2d391a71f33eebb1b031012e799a2db599067a6df"
+    },
+    {
+      "file": "NO_4.geojson",
+      "url": "https://raw.githubusercontent.com/EnergieID/entsoe-py/master/entsoe/geo/geojson/NO_4.geojson",
+      "bytes": 702723,
+      "sha256": "419e69f56d042b0c4713caf073e943972d700800dd8edd19ec47842c9c5fc12a"
+    },
+    {
+      "file": "NO_5.geojson",
+      "url": "https://raw.githubusercontent.com/EnergieID/entsoe-py/master/entsoe/geo/geojson/NO_5.geojson",
+      "bytes": 440492,
+      "sha256": "163f046cdf6fa5520ccfb12319a9eca21bf4aefb1d682b8a986e354b1752ebdb"
+    },
+    {
+      "file": "SE_1.geojson",
+      "url": "https://raw.githubusercontent.com/EnergieID/entsoe-py/master/entsoe/geo/geojson/SE_1.geojson",
+      "bytes": 42877,
+      "sha256": "7c377a53cad2a39f9c92fff53a5fe3ddce336d4c4bc24fd26872eda2e3b9033d"
+    },
+    {
+      "file": "SE_2.geojson",
+      "url": "https://raw.githubusercontent.com/EnergieID/entsoe-py/master/entsoe/geo/geojson/SE_2.geojson",
+      "bytes": 40138,
+      "sha256": "a5d9dce69ad410bf610fd83babcc41d429000182b75d784d4d8a11419b1b7958"
+    },
+    {
+      "file": "SE_3.geojson",
+      "url": "https://raw.githubusercontent.com/EnergieID/entsoe-py/master/entsoe/geo/geojson/SE_3.geojson",
+      "bytes": 96287,
+      "sha256": "e073c06d4da34a83ffd9c6a79de089a81810102e3cb855ec144133329df344e0"
+    },
+    {
+      "file": "SE_4.geojson",
+      "url": "https://raw.githubusercontent.com/EnergieID/entsoe-py/master/entsoe/geo/geojson/SE_4.geojson",
+      "bytes": 26450,
+      "sha256": "7cad475b7c408cc78d080b3df2ee87b4800ec3c4d2f77bf91f8d30e37436b87d"
+    },
+    {
+      "file": "owid-covid-data.csv",
+      "url": "https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv",
+      "bytes": 98391483,
+      "sha256": "8473d0f0fdf962e1ffbd5b85b18726fc96a49bab109e271186c339725a12b10c"
+    }
+  ],
+  "outputs": [
+    {
+      "file": "world-countries.json",
+      "bytes": 1891792,
+      "sha256": "4775de9b763a118e7a3a969be301c6e70ecad9ab1f79cf502ac949bee0a0924b",
+      "sources": [
+        "world-50m.geojson"
+      ],
+      "transformation": "Keep all 242 country features and all polygon rings; round longitude/latitude to 4 decimals; retain display name, ISO alpha-3, continent, and Natural Earth label coordinates."
+    },
+    {
+      "file": "us-contiguous-states.json",
+      "bytes": 46343,
+      "sha256": "85cf6e63bac296175a12c1fdd0ca0d64ccb2f4fae514f04c1c7d3c9191cce27f",
+      "sources": [
+        "us-states-110m.geojson"
+      ],
+      "transformation": "Keep the 48 contiguous states plus District of Columbia; preserve polygon rings; round coordinates to 4 decimals."
+    },
+    {
+      "file": "world-bank-population.json",
+      "bytes": 236002,
+      "sha256": "d391c8641574d6a31fca4f594f766e8b6e08182b696e754dac96475ae1794e87",
+      "sources": [
+        "population-2018.json",
+        "population-growth.json"
+      ],
+      "transformation": "Retain population total in 2018 and annual growth percentages from 1961 through 2019 by ISO code; omit missing values; round growth to 5 decimals."
+    },
+    {
+      "file": "nordic-bidding-zones.json",
+      "bytes": 1156734,
+      "sha256": "d0eb359b4c514112ef16cfb485feb3bc623ed9236cde171847ac414123699494",
+      "sources": [
+        "DK_1.geojson",
+        "DK_2.geojson",
+        "EE.geojson",
+        "FI.geojson",
+        "LT.geojson",
+        "LV.geojson",
+        "NO_1.geojson",
+        "NO_2.geojson",
+        "NO_3.geojson",
+        "NO_4.geojson",
+        "NO_5.geojson",
+        "SE_1.geojson",
+        "SE_2.geojson",
+        "SE_3.geojson",
+        "SE_4.geojson"
+      ],
+      "transformation": "Combine 15 Nordic/Baltic bidding-zone files from EnergieID entsoe-py; keep real Polygon/MultiPolygon outlines and holes, round coordinates to 4 decimals; rename codes without underscores. Upstream notes that Swedish internal boundaries were manually redrawn."
+    },
+    {
+      "file": "covid-history.json",
+      "bytes": 3197876,
+      "sha256": "1d9c8e505c9a8cf01894cdd746db2fa00b83ff85f8298785ee2e84cbd29bf620",
+      "sources": [
+        "owid-covid-data.csv"
+      ],
+      "transformation": "Retain daily records 2020-11-01 through 2022-03-11, countries and OWID world aggregate; keep vaccination percentage plus smoothed new cases/hospital/ICU per million, population and country name. Missing metrics stay null. Values rounded to 4 decimals; source revisions can differ from the historical reference screenshot."
+    },
+    {
+      "file": "dublin-air-view-route.json",
+      "bytes": 107924,
+      "sha256": "d46064b832e11c1d730ca3a1a70cc27fe2cb2accf13790264b4b6f74a2cde0ec",
+      "sources": [
+        "AirView_DublinCity_Measurements_CSV.zip",
+        "AirView_DublinCity_Measurements_Metadata.txt"
+      ],
+      "transformation": "Extract actual finite PM2.5 measurements on 2021-05-26 14:40–15:20 UTC inside longitude[-6.38,-6.20], latitude[53.30,53.43]. Sort by timestamp, retain one row per second, round geographic positions to 7 decimals. Gaps are preserved by timestamp and must not count as exposure time."
+    },
+    {
+      "file": "dublin-road-segments.json",
+      "bytes": 2802565,
+      "sha256": "99b18e2f01fae87fc9b1fdac313f482a2c75b07c0d85c8d09173675ae488b5e4",
+      "sources": [
+        "AirView_DublinCity_RoadData_GeoJSON.geojson"
+      ],
+      "transformation": "Retain actual LineString street segments intersecting the displayed Dublin extent and name/class; round to 6 decimals. Geometry derives from OpenStreetMap as identified by upstream osm_id. Retain separate segments; never connect unrelated roads."
+    }
+  ]
+}

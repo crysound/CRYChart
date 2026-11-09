@@ -1,0 +1,68 @@
+CRYChart geographical example data
+
+These geographical example assets come from the independent sources below. Original download URLs and SHA-256 hashes, output hashes, and
+transformations are recorded in map-data-provenance.json. prepare-maps.py is the
+reproducible extraction script. All example data is embedded for offline use.
+
+Natural Earth
+  world-countries.json and us-contiguous-states.json
+  Source: https://github.com/nvkelso/natural-earth-vector
+  Terms: https://www.naturalearthdata.com/about/terms-of-use/
+  Natural Earth vector and raster data are in the public domain. All polygon
+  rings are retained; this project only reduces metadata and coordinate precision.
+
+World Bank, World Development Indicators
+  world-bank-population.json
+  Indicators: SP.POP.TOTL (population total), SP.POP.GROW (annual growth %)
+  Source: https://api.worldbank.org/v2/
+  Terms: https://data.worldbank.org/summary-terms-of-use
+  License: CC BY 4.0 with the World Bank's additional terms and mandatory source
+  acknowledgment passed to recipients. The downloaded indicator metadata did not
+  indicate a different data license. Data revisions may differ from the 2018
+  values displayed in the historical reference chart.
+
+EnergieID entsoe-py geographical data
+  nordic-bidding-zones.json
+  https://github.com/EnergieID/entsoe-py/tree/master/entsoe/geo
+  Repository copyright: 2017 EnergieID cvba-so; MIT notice retained separately in
+  entsoe-MIT-LICENSE.txt. Only GeoJSON factual assets and license/source metadata
+  were used, not plotting or library implementation code.
+  Upstream source notes: Natural Earth for country geometries; Norway's NVE
+  https://temakart.nve.no/link/?link=vannkraft for Norwegian zones; Swedish zone
+  boundaries manually redrawn upstream from https://www.natomraden.se/.
+  This is the upstream best-effort geographic layer, not an authoritative grid
+  boundary determination. Energy generation/price profiles in example 1714 are
+  independently generated and identified as such; they are not Nord Pool data.
+
+Our World in Data COVID-19 historical dataset
+  covid-history.json
+  https://github.com/owid/covid-19-data/tree/master/public/data
+  Mathieu, E., Ritchie, H., Ortiz-Ospina, E. et al. A global database of COVID-19
+  vaccinations. Nature Human Behaviour (2021).
+  https://doi.org/10.1038/s41562-021-01122-8
+  OWID-produced data is CC BY 4.0. The upstream repository states that third-party
+  data retains its original authors' terms and supplies source documentation:
+  https://github.com/owid/covid-19-data/blob/master/public/data/README.md
+  Missing metrics remain null. The candidate uses recorded daily vaccination
+  rates and seven-day-smoothed cases per million, not estimates of missing
+  observations. Current historical revisions need not match a prior screenshot.
+
+Dublin City Council / Google Project Air View
+  dublin-air-view-route.json and dublin-road-segments.json
+  Data attribution: Aclima & Google 2022 via Dublinked.
+  https://data.gov.ie/dataset/google-airview-data-dublin-city
+  Publisher declares Creative Commons Attribution 4.0.
+  https://creativecommons.org/licenses/by/4.0/
+  Measurement timestamps are UTC; coordinates are GPS longitude/latitude and
+  PM25_ugm3 is measured PM2.5 in micrograms per cubic metre. Extraction dates and
+  bounds are recorded in the provenance manifest. Exposure arithmetic skips gaps
+  between observations. The example is a chart demo, not an exposure assessment.
+  The road dataset identifies OpenStreetMap osm_id/fclass/name fields. Its street
+  geometry remains attributed to OpenStreetMap contributors and is distributed
+  as a separate derived geometry asset under ODbL 1.0:
+  https://www.openstreetmap.org/copyright
+  https://opendatacommons.org/licenses/odbl/1-0/
+  No OpenStreetMap raster tiles are downloaded or redistributed.
+
+All CC BY assets include the attribution above. Changes consist of documented
+selection, rounding, field removal and JSON repackaging, not new measurements.

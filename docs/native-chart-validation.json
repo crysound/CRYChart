@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 2,
+  "product": "CRYChart",
+  "updatedAt": "2026-11-09",
+  "status": "current-source-verification-pending",
+  "scope": {
+    "subjects": 8,
+    "maximumChannels": 128,
+    "applicationExecutedByThisCleanup": false,
+    "applicationModified": false
+  },
+  "subjects": [
+    {
+      "id": "base",
+      "name": "BaseChartV2 共同底座",
+      "functionChain": "ChartXY → typed DataSet → addLineSeries → 独立 Y axis、tick/cursor formatter → native legend/cursor → 交互/annotation 事件 → PNG/resize/dispose",
+      "inputAndOperations": "默认 x Float64 progressive、y Float32；独立 renderY，非有限 raw 值渲染为 NaN。Base 默认不用 auto X，子类可开启。策略级 setTickStyle、margin/titlePosition、即时 zoom、scrollMargins、同函数事件解绑。",
+      "consumerSHA256": "d489ce18813311e48fbb66d961309cdcfa080bf59351c775d2896d9feddb58c6",
+      "status": "current-source-verification-pending"
+    },
+    {
+      "id": "time-waveform",
+      "name": "TimeWaveformChart 堆叠波形",
+      "functionChain": "auto Float64 X + Float64 rawY/renderY → addLineSeries({x:xValues,y:renderYValues}) → 每通道 addAxisY({iStack:-index}) → append/cleanup → 分区交互/PNG/dispose",
+      "inputAndOperations": "48kHz、毫秒步长 1000/Fs；15 秒视区/60 秒历史；最多 128 通道；初始小容量按输入增长。主曲线是 addLineSeries，setEffect(false)、setCurvePreprocessing({type:'spline',resolution:0})。隐藏的插值 PLA 不是主性能构造器。",
+      "consumerSHA256": "381d4f89881fbfa5dd6b06f465c44f3644b0221c2422f8681dfd44100d2a35b0",
+      "status": "current-source-verification-pending"
+    },
+    {
+      "id": "single-y-waveform",
+      "name": "WaveformSingleYAxis 共享 Y 波形",
+      "functionChain": "Base Float32 rawY/renderY + auto Float64 X → 主 LineSeries → 共享 Y/共享 X → 增删/单位/formatter/PNG",
+      "inputAndOperations": "相同 48kHz、15 秒视区、60 秒保留；共享 Y 不人为 offset 或归一化。单位转换后的 rawY 与仅清理非有限值的 renderY 保持独立。",
+      "consumerSHA256": "f352bcc1fb9d8306b89e6a4f50aa6df1b8bea0de8524cc3a6575bb0ca31f40e6",
+      "status": "current-source-verification-pending"
+    },
+    {
+      "id": "tdf",
+      "name": "TDF 二维滚动频谱",
+      "functionChain": "频率 bins/frameStep → resolution-only scrolling columns → start/step + absolute iSample → NaN 缺帧 → view-aware min cleaning → LUT native legend + intensity cursor override",
+      "inputAndOperations": "元 frameStep 优先；legacy step=1000*fftLength/sampleRate*overlapRatio。跳号默认重复前列，消费端先插 NaN 保证缺帧为 NaN。minDataPointCount 是保底，只清理不可见旧列，不是硬上限。",
+      "consumerSHA256": "d69e5a88729e38997d38186f33c4a97973170a508623d7b581acc5300a7699f3",
+      "status": "current-source-verification-pending"
+    },
+    {
+      "id": "waterfall",
+      "name": "Waterfall 逐帧 3D 折线",
+      "functionChain": "每帧 addLineSeries({legend:null}) → {x:time,y:amplitude,z:frequency} → CPU log-frequency 映射 → 15 秒过期 series dispose → resize/getSizePixels/setBoundingBox 保持 camera",
+      "inputAndOperations": "明确 frequency values 或 start+step，严格递增频率。真实 resize 事件 {width,height,engineWidth,engineHeight}；getter {x,y}；同一 callback 移除。",
+      "consumerSHA256": "cd7a498f83f9df8a1ba7478c8c8fd33a4dd34df8529226bf2aa1f2c8ed00416a",
+      "status": "current-source-verification-pending"
+    },
+    {
+      "id": "histogram",
+      "name": "Histogram 直方图",
+      "functionChain": "普通/倍频程 bins → rectangle x1/x2/y1/y2 + raw xValue/yValue → independent Y axes → show-all native handler → raw bandwidth selection → 多 marker/table 坐标 → PNG hide/restore",
+      "inputAndOperations": "最多 100000 柱；真实同 X 柱上方、X gap、两轴不同单位、handler 移除/恢复、clear/重建。",
+      "consumerSHA256": "222f9acc9ea605b1625d52b95e273fb2cd08d046b508f5159e501dcc5b891115",
+      "status": "current-source-verification-pending"
+    },
+    {
+      "id": "trajectory",
+      "name": "Trajectory 二维/三维轨迹",
+      "functionChain": "XYZ typed columns/rAF → axisZ capability 分维度 → appendJSON capability 或 add → line 与独立 endpoint → realtime 100k ring/history clear+replace → PNG/series/chart dispose",
+      "inputAndOperations": "实时 100000 cap；历史不应擅自丢弃。2D/3D public capability 分支实际执行，256 输入→clear→72 替换→删除重建64。",
+      "consumerSHA256": "e1a79e8fe31e4253ddee09f1926219f9de785e0f9dd178f091fee6e92ab47314",
+      "status": "current-source-verification-pending"
+    },
+    {
+      "id": "polar",
+      "name": "PolarDirectivityChart 极坐标指向性",
+      "functionChain": "Polar + legend hidden → radial north0/clockwise true/radians formatter → amplitude formatter/units → setData/clear/restore → show-nearest/formattingOverride → dispose",
+      "inputAndOperations": "0/360 原始闭合点和负幅值；实际消费隐藏 chart/radial/amplitude 标题，角度标签不带默认度符号且隐藏 90 度；单位与 cursor 单独配置。",
+      "consumerSHA256": "2838f132cb12363cbf16a6e211dc57be8cf4784b6e048e8bc62fd62fc0830854",
+      "status": "current-source-verification-pending"
+    }
+  ],
+  "currentSourceEvidence": "Current regression and visible browser results are required after identity/API cleanup.",
+  "performanceReport": "docs/performance-scope-high-precision-20261109.md"
+}

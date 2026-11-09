@@ -1,0 +1,83 @@
+{
+  "candidate_pack_id": "PACK-CRY-FIXED-HEATMAP-9AD2-20261104-SCOPE-V2",
+  "claims": [
+    {
+      "claim_id": "C-CRY-FIXED-HEATMAP-INITIAL-ZERO-9AD2-V2",
+      "claim_type": "acceptance",
+      "evidence_level": "runtime_verified",
+      "notes": "仅引用绑定Chrome报告fixed四例的empty与cleared原始双侧查询，336组查询均为零；每个方向实际返回8/12个不同单元。本来源未执行显式NaN写入，也未遍历全部12单元。stream四项失败、Polar、全站等价、像素和性能均不在此事实范围。",
+      "object": "在绑定的4×3固定XY网格四种步长方向下，三种solve模式已实际查询并返回的8个不同单元（共12个单元）在初始未写入及clear后强度均为零。",
+      "predicate": "validated_initial_and_clear_values",
+      "proposed_action": "supersede",
+      "review_status": "reviewed",
+      "runtime_verified": true,
+      "scope": {
+        "candidateCoreSHA256": "9ad2e31faccd17830af0cc7579edbb507e8a5b3b645416ab7a4b4fba03e17d27",
+        "caseIds": [
+          "fixed--1--1",
+          "fixed--1-1",
+          "fixed-1--1",
+          "fixed-1-1"
+        ],
+        "columns": 4,
+        "fullOfficialExampleEquivalence": false,
+        "polarExcluded": true,
+        "referenceSHA256": "77236196aec72aa0e833e89760bdd2ff47af855451408e88852ab886434bcee5",
+        "referenceVersion": "8.2.0",
+        "rows": 3,
+        "solveModes": [
+          "show-all",
+          "show-nearest",
+          "show-pointed"
+        ],
+        "stepX": [
+          -2,
+          2
+        ],
+        "stepY": [
+          -3,
+          3
+        ],
+        "streamCleaningExcluded": true
+      },
+      "source_ids": [
+        "SRC-CRY-FIXED-HEATMAP-9AD2-20261104"
+      ],
+      "subject": "CRYChart固定XY热图",
+      "supersedes": "CLM-c8182d3be036ff7f"
+    }
+  ],
+  "conflict_candidates": [],
+  "created_at": "2026-11-04T07:59:53.782Z",
+  "entity_candidates": [],
+  "origin": "runtime_observation",
+  "producer": "/root/ledger_integrate 只读独立证据审查；仅提案未晋升",
+  "proposed_actions": [],
+  "relationship_candidates": [],
+  "schema_version": "wuyong-business-map/knowledge-candidate-pack/v2",
+  "scope": {
+    "domain": "crychart-fixed-heatmap-public-behavior"
+  },
+  "source_digest": "sha256:532fa210a09f616181130c5bc9b224c8b97ff522a2bf7cbf754b4846d1ae7332",
+  "sources": [
+    {
+      "content_digest": "sha256:4817f4fa5aa903e05f70439f4aa9fd2b31c3aa1a62fbfcb59a963021e72fbe44",
+      "evidence_level": "runtime_verified",
+      "fetch_status": "local_read",
+      "local_path": "D:\\workspace\\CRYChart\\codex_artifact\\functional-completion-20261104\\heatmap-init-bounds-fix\\chrome-current\\run-2026-11-04T07-07-43-865Z\\report.json",
+      "notes": "只引用fixed四个通过场景；同一报告的四个stream清理场景失败仍保留，不作为这些claim的依据。",
+      "review_status": "reviewed",
+      "source_id": "SRC-CRY-FIXED-HEATMAP-9AD2-20261104",
+      "source_scope": "internal",
+      "source_type": "test_report",
+      "title": "固定XY热图四方向的真实Chrome公开查询证据",
+      "usage_scope": "internal_only"
+    }
+  ],
+  "target_binding": {
+    "namespace": "crychart",
+    "target_kb_identity": "kb-895ecc2e0d294b278a02d454c0eba7e8",
+    "target_mode": "bound"
+  },
+  "verification_gap_candidates": []
+}

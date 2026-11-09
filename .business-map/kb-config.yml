@@ -1,0 +1,45 @@
+target_kb:
+  root: .
+  identity: kb-895ecc2e0d294b278a02d454c0eba7e8
+  namespace: crychart
+  name: CRYChart
+  domain_name: project
+  primary_language: zh-CN
+  narrative_format: mixed
+  source_registry_path: sources/source-registry.yml
+  claim_map_path: graph/claim-source-map.jsonl
+  ontology_path: graph/ontology.yml
+  nodes_path: graph/nodes.jsonl
+  edges_path: graph/edges.jsonl
+  graph_manifest_path: graph/graph-manifest.json
+  claim_index_path: index/claims.md
+  source_index_path: index/sources.md
+  knowledge_index_path: README.md
+  changelog_path: CHANGELOG.md
+  verification_gap_index_path: index/verification-gaps.md
+  conflict_log_path: index/conflicts.md
+  todo_or_questions_path: index/todo-or-questions.md
+  candidate_root_path: admission/candidates
+  admission_decision_root_path: admission/decisions
+  admission_transaction_root_path: admission/transactions
+  context_projection_path: projections/CONTEXT.md
+  knowledge_page_root_path: projections/knowledge-pages
+  knowledge_page_manifest_path: projections/knowledge-pages/manifest.json
+  knowledge_page_index_path: index/knowledge-pages.md
+  knowledge_coverage_path: index/knowledge-coverage.json
+
+knowledge_lifecycle:
+  initialization_mode: incremental_accumulation
+  explicit_full_build_completed: false
+
+business_scope:
+  business_objects: []
+  products: []
+  services: []
+  processes: []
+  scenarios: []
+
+policies:
+  raw_artifact_policy: raw-artifact-outside-narrative
+  claim_requires_source: true
+  partial_source_requires_review: true

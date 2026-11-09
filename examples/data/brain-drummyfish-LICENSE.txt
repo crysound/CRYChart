@@ -1,0 +1,6 @@
+Brain object by Drummyfish
+Source: https://opengameart.org/content/brain-and-skull
+Original OBJ header: # by drummyfish, released under CC0 1.0, public domain
+License: CC0 1.0 Universal
+https://creativecommons.org/publicdomain/zero/1.0/
+No vendor/demo implementation is included.

@@ -1,0 +1,123 @@
+{
+  "candidate_pack_id": "PACK-CRY-SLICE-WIREFRAME-6326-20261105",
+  "claims": [
+    {
+      "claim_id": "C-CRY-PIE-RELATIVE-CONSUMER-6326",
+      "claim_type": "acceptance",
+      "evidence_level": "runtime_verified",
+      "runtime_verified": true,
+      "review_status": "reviewed",
+      "subject": "CRYChart饼图标签",
+      "predicate": "validated_relative_value_percentage_consumer",
+      "object": "当前0450正式消费者把标签回调的relativeValue乘以100，五个原值合计167，实际标签为11.98%、35.93%、17.96%、7.19%、26.95%；真实点击后离开仍保持指定扇区推出。",
+      "source_ids": [
+        "SRC-CRY-PIE-CONSUMER-6326"
+      ],
+      "scope": {
+        "candidateCoreSHA256": "6326b2ddaf4d197cfafe10d77eeb71aefa0fb6dc04457404a071421f50557045",
+        "referenceVersion": "8.2.0",
+        "referenceSHA256": "77236196aec72aa0e833e89760bdd2ff47af855451408e88852ab886434bcee5",
+        "fullOfficialExampleEquivalence": false,
+        "example": "0450",
+        "values": [
+          20,
+          60,
+          30,
+          12,
+          45
+        ]
+      },
+      "notes": "旧比例直接toFixed配置的失败保留；不声明回调次数、getSlices枚举顺序或跨库推出距离相同。"
+    },
+    {
+      "claim_id": "C-CRY-HEATMAP-WIREFRAME-6326",
+      "claim_type": "acceptance",
+      "evidence_level": "runtime_verified",
+      "runtime_verified": true,
+      "review_status": "reviewed",
+      "subject": "CRYChart固定与滚动XY热图网格线",
+      "predicate": "validated_explicit_wireframe_render_paths",
+      "object": "已测公开网格线样式的读取、设置及函数式更新影响GPU与Canvas实际绘制；emptyLine关闭网格线并保留色块，显式样式修改不重传原数据。对数轴Canvas路径应用样式，高精度路径保持不绘制网格线。",
+      "source_ids": [
+        "SRC-CRY-WIREFRAME-GPU-6326",
+        "SRC-CRY-WIREFRAME-CANVAS-6326"
+      ],
+      "scope": {
+        "candidateCoreSHA256": "6326b2ddaf4d197cfafe10d77eeb71aefa0fb6dc04457404a071421f50557045",
+        "referenceVersion": "8.2.0",
+        "referenceSHA256": "77236196aec72aa0e833e89760bdd2ff47af855451408e88852ab886434bcee5",
+        "fullOfficialExampleEquivalence": false,
+        "factoryKinds": [
+          "fixed",
+          "scroll"
+        ],
+        "renderPaths": [
+          "GPU",
+          "Canvas",
+          "log-axis Canvas"
+        ],
+        "highPrecisionWireframe": false
+      },
+      "notes": "仅指实际测试的固定/滚动XY配置；不扩展到极坐标、任意主题、全部缩放和高精度路径绘制网格线。"
+    }
+  ],
+  "conflict_candidates": [],
+  "created_at": "2026-11-04T20:53:41.356964+00:00",
+  "entity_candidates": [],
+  "origin": "runtime_observation",
+  "producer": "wuyong-task-wizard /root",
+  "proposed_actions": [],
+  "relationship_candidates": [],
+  "schema_version": "wuyong-business-map/knowledge-candidate-pack/v2",
+  "scope": {
+    "domain": "crychart-slice-wireframe-runtime-6326"
+  },
+  "source_digest": "sha256:ec6e6ebfd91c86c7761f9d175bcf83ca0fe60b0b4cb2a81424e7cac7eed56ff9",
+  "sources": [
+    {
+      "content_digest": "sha256:3c1c33d1cb33490b103ea8f2bd87a861067721c0e270f8433ed30c32610cc821",
+      "evidence_level": "runtime_verified",
+      "fetch_status": "local_read",
+      "local_path": "D:\\workspace\\CRYChart\\codex_artifact\\reference-expansion-20261104\\local-final-categorical-6326b2\\pie-business-consumer\\runs\\categorical-pie-0450-business-consumer\\2026-11-04T19-49-53-631Z\\report.json",
+      "notes": "当前6326可见Chrome实际执行，限定于明确列出的数据与配置，不外推全库兼容。",
+      "review_status": "reviewed",
+      "source_id": "SRC-CRY-PIE-CONSUMER-6326",
+      "source_scope": "internal",
+      "source_type": "test_report",
+      "title": "饼图比例回调与正式百分比显示",
+      "usage_scope": "internal_only"
+    },
+    {
+      "content_digest": "sha256:cfbd1ee8b0ea97f924fb499a4d2106c36ca598b21a127dce8e97f96636ac15d1",
+      "evidence_level": "runtime_verified",
+      "fetch_status": "local_read",
+      "local_path": "D:\\workspace\\CRYChart\\codex_artifact\\reference-expansion-20261104\\next-source-reference-replay\\heatmap\\runs\\next-source-artifact-wireframe-render-and-0800-consumer\\2026-11-04T19-38-28-724Z\\report.json",
+      "notes": "当前6326可见Chrome实际执行，限定于明确列出的数据与配置，不外推全库兼容。",
+      "review_status": "reviewed",
+      "source_id": "SRC-CRY-WIREFRAME-GPU-6326",
+      "source_scope": "internal",
+      "source_type": "test_report",
+      "title": "热图网格线公开样式及 GPU 原生显示",
+      "usage_scope": "internal_only"
+    },
+    {
+      "content_digest": "sha256:4306dd12b8d18672484ff616d59f7fe9916c0275a347f31f679d90aa19299c50",
+      "evidence_level": "runtime_verified",
+      "fetch_status": "local_read",
+      "local_path": "D:\\workspace\\CRYChart\\codex_artifact\\reference-expansion-20261104\\next-source-reference-replay\\heatmap\\runs\\next-source-artifact-wireframe-v2-canvas-log-and-rows\\2026-11-04T19-38-55-166Z\\report.json",
+      "notes": "当前6326可见Chrome实际执行，限定于明确列出的数据与配置，不外推全库兼容。",
+      "review_status": "reviewed",
+      "source_id": "SRC-CRY-WIREFRAME-CANVAS-6326",
+      "source_scope": "internal",
+      "source_type": "test_report",
+      "title": "热图 Canvas、对数轴及高精度路径",
+      "usage_scope": "internal_only"
+    }
+  ],
+  "target_binding": {
+    "namespace": "crychart",
+    "target_kb_identity": "kb-895ecc2e0d294b278a02d454c0eba7e8",
+    "target_mode": "bound"
+  },
+  "verification_gap_candidates": []
+}

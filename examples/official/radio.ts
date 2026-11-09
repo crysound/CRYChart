@@ -1,0 +1,54 @@
+import {ColorRGBA,ColorHEX,SolidFill,SolidLine,PalettedFill,LUT,FontSettings,transparentFill,emptyLine} from '../../src/index.js';
+import {advanced3DUtils as ui} from './advanced3d.js';
+import {SampleClock} from './dashboards-data.js';
+import {syncAxes} from './xy-data.js';
+import {aggregationColumn,maxHeatmapProjection,radioSpectrum,RadioDetector} from './radio-data.js';
+import type {OfficialEntry,OfficialMountContext,OfficialMounted} from './types.js';
+
+const {frame,panel,control}=ui;
+const palette=()=>new PalettedFill({lut:new LUT({steps:[{value:-110,color:ColorHEX('#071318')},{value:-95,color:ColorHEX('#173d72')},{value:-80,color:ColorHEX('#36b7be')},{value:-65,color:ColorHEX('#ece74e')},{value:-45,color:ColorHEX('#f06d38')},{value:-15,color:ColorHEX('#fff0d5')}],interpolate:true,units:'dB'})});
+function chart(context:OfficialMountContext,host:HTMLElement,title:string){return context.engine.ChartXY({container:host,theme:context.theme,legend:{visible:false}}).setTitle(title).setTitleFont(new FontSettings({size:14})).setBackgroundFillStyle(transparentFill).setPadding({left:0,right:12,top:-12,bottom:-4});}
+const provenance={kind:'independent-synthetic',source:'Deterministic original RF signals; not measured transmissions or reference arrays'};
+
+/** This is a read-only application projection, not a Heatmap.setAggregation shim. */
+function aggregation(context:OfficialMountContext):OfficialMounted{
+  const root=frame(context),tools=panel(root,'height:32px;flex:none;align-items:center;gap:10px;padding:0 8px'),top=chart(context,panel(root,'flex:1'),'Nearest cells — complete raw vectors'),bottom=chart(context,panel(root,'flex:1'),'Application MAX per physical display footprint'),label=document.createElement('span');tools.append(label);
+  const bins=1024,capacity=96,step=.05,clock=new SampleClock(20),source:Float32Array[]=[];
+  const raw=top.addHeatmapScrollingGridSeries({resolution:bins,columns:capacity,scrollDimension:'columns',start:{x:0,y:0},step:{x:step,y:1}}).setName('Raw intensity').setFillStyle(palette()).setIntensityInterpolation('disabled');
+  top.getDefaultAxisY().setTitle('Frequency bin').setInterval({start:0,end:bins});bottom.getDefaultAxisY().setTitle('Frequency bin').setInterval({start:0,end:bins});for(const c of[top,bottom])c.getDefaultAxisX().setTitle('Time (s)').setInterval({start:0,end:capacity*step});
+  const unsyncX=syncAxes([top.getDefaultAxisX(),bottom.getDefaultAxisX()]),unsyncY=syncAxes([top.getDefaultAxisY(),bottom.getDefaultAxisY()]);let projected:any,projection:ReturnType<typeof maxHeatmapProjection>|undefined,key='',first=0,follow=true,disposed=false;
+  function project(){if(disposed||!source.length||bottom.plot.width<=0||bottom.plot.height<=0)return;const x=bottom.getDefaultAxisX().getInterval(),y=bottom.getDefaultAxisY().getInterval(),ratio=bottom.canvas.width/bottom.width,width=Math.max(1,Math.min(Math.ceil(bottom.plot.width*ratio),Math.ceil((x.end-x.start)/step))),height=Math.max(1,Math.min(Math.ceil(bottom.plot.height*ratio),Math.ceil(y.end-y.start))),nextKey=[clock.index,first,x.start,x.end,y.start,y.end,width,height].join('/');if(key===nextKey)return;key=nextKey;
+    const data=new Float32Array(source.length*bins);for(let row=0;row<bins;row++)for(let col=0;col<source.length;col++)data[row*source.length+col]=source[col][row];
+    projection=maxHeatmapProjection(data,source.length,bins,{x0:x.start/step-first,x1:x.end/step-first,y0:y.start,y1:y.end},width,height);
+    if(!projected||projected.columns!==width||projected.rows!==height){projected?.dispose();projected=bottom.addHeatmapGridSeries({dataOrder: 'rows', columns:width,rows:height}).setName('Application max projection').setFillStyle(palette()).setIntensityInterpolation('disabled');}
+    projected.setStart({x:x.start,y:y.start}).setStep({x:(x.end-x.start)/width,y:(y.end-y.start)/height}).invalidateIntensityValues(projection.values);label.textContent=`${source.length} × ${bins} raw cells → ${width} × ${height} display cells`;
+  }
+  const tokens=[top.on('render',project),bottom.on('render',project)],abort=new AbortController();root.addEventListener('wheel',()=>follow=false,{capture:true,signal:abort.signal});
+  control(tools,'Reset view','aggregate-reset',()=>{follow=true;top.getDefaultAxisY().setInterval({start:0,end:bins});top.getDefaultAxisX().setInterval({start:first*step,end:(first+capacity)*step});project();});
+  function append(delta:number){const {start,count}=clock.advance(delta);for(let i=start;i<start+count;i++){const row=aggregationColumn(i,bins);source.push(row);if(source.length>capacity)source.shift();raw.addIntensityValues([row]);}first=clock.index-source.length;if(follow)top.getDefaultAxisX().setInterval({start:first*step,end:(first+capacity)*step});project();}
+  append(3.2);
+  return{charts:[top,bottom],update:(_t,d)=>append(d),dispose:()=>{disposed=true;abort.abort();top.off(tokens[0]);bottom.off(tokens[1]);unsyncX();unsyncY();root.remove();},snapshot:()=>({rate:20,nextSample:clock.index,first,columns:source.length,rows:bins,capacity,step,following:follow,rawSamples:raw.getSampleCount(),projection:projection?{width:projection.width,height:projection.height,view:projection.view,maximum:Math.max(...projection.values.filter(Number.isFinite)),minimum:Math.min(...projection.values.filter(Number.isFinite))}:null,sourcePeaks:source.map((values,col)=>({index:first+col,peak:Math.max(...values)})),method:'application-max-footprint',bilinear:false,dataProvenance:provenance})};
+}
+
+function surveillance(context:OfficialMountContext,detect:boolean):OfficialMounted{
+  const root=frame(context),tools=panel(root,'height:32px;flex:none;align-items:center;gap:8px;padding:0 8px'),upper=chart(context,panel(root,'flex:1'),detect?'Detected persistent RF ranges':'2.4 GHz spectrum surveillance'),lower=chart(context,panel(root,'flex:1'),'Frequency over time'),label=document.createElement('span');tools.append(label);
+  const bins=512,frequencyStart=2400,frequencyStep=100/bins,rate=10,capacity=200,clock=new SampleClock(rate),detector=new RadioDetector(8,3),history:Float32Array[]=[];
+  const traces=Array.from({length:8},(_,i)=>upper.addLineSeries().setName(`Trace age ${7-i}`).setStrokeStyle(new SolidLine({thickness:1,fillStyle:new SolidFill({color:ColorRGBA(98,225,178,Math.round(18+(i+1)*18))})})));
+  const area=upper.addAreaSeries().setName('Latest power').setAreaBaseline(-110).setFillStyle(new SolidFill({color:ColorRGBA(56,191,154,50)})).setStrokeStyle(new SolidLine({thickness:1.5,fillStyle:new SolidFill({color:ColorHEX('#b0edcf')})}));
+  const bands=detect?upper.addRectangleSeries().setName('Detected occupied bands').setFillStyle(new SolidFill({color:ColorRGBA(242,168,53,48)})).setStrokeStyle(new SolidLine({thickness:1,fillStyle:new SolidFill({color:ColorRGBA(246,180,60,210)})})):undefined;bands?.setMouseInteractions(false);
+  const heat=lower.addHeatmapScrollingGridSeries({resolution:bins,rows:capacity,scrollDimension:'rows',start:{x:frequencyStart,y:0},step:{x:frequencyStep,y:1/rate}}).setName('Raw power history').setFillStyle(palette()).setIntensityInterpolation('disabled');
+  upper.getDefaultAxisX().setTitle('Frequency (MHz)').setInterval({start:2400,end:2500});lower.getDefaultAxisX().setTitle('Frequency (MHz)').setInterval({start:2400,end:2500});upper.getDefaultAxisY().setTitle('Power (dB)').setInterval({start:-110,end:-15});lower.getDefaultAxisY().setTitle('Time (s)').setInterval({start:0,end:20});const unsync=syncAxes([upper.getDefaultAxisX(),lower.getDefaultAxisX()]);let analysis:ReturnType<RadioDetector['push']>|undefined,latest:Float32Array=new Float32Array(bins),lastFrame=-1;
+  function draw(){for(let i=0;i<traces.length;i++){const values=history[history.length-traces.length+i];traces[i].clear();if(values)traces[i].appendSamples({x:Float64Array.from({length:bins},(_,i)=>frequencyStart+i*frequencyStep),y:values});}area.clear().appendSamples({x:Float64Array.from({length:bins},(_,i)=>frequencyStart+i*frequencyStep),y:latest});bands?.clear();for(const r of analysis?.ranges??[])bands?.add({x:frequencyStart+r.startBin*frequencyStep,y:-110,width:(r.endBin-r.startBin)*frequencyStep,height:95});label.textContent=detect?`Noise ${analysis?.noise.toFixed(1)} dB · threshold ${analysis?.threshold.toFixed(1)} dB · ${analysis?.ranges.length??0} persistent ranges`:`${rate} frames/s · ${bins} bins · 20 s retained history`;}
+  function append(delta:number){const{start,count}=clock.advance(delta);if(!count)return;for(let i=start;i<start+count;i++){latest=radioSpectrum(i,bins);lastFrame=i;history.push(latest);if(history.length>8)history.shift();heat.addIntensityValues([latest]);analysis=detector.push(latest);}lower.getDefaultAxisY().setInterval({start:Math.max(0,clock.index/rate-20),end:Math.max(20,clock.index/rate)});draw();}
+  control(tools,'Reset view','radio-reset',()=>upper.getDefaultAxisX().setInterval({start:2400,end:2500}));
+  control(tools,'Clear history','radio-clear',()=>{heat.clear().setStart({x:frequencyStart,y:clock.index/rate});detector.clear();history.length=0;latest=new Float32Array(bins);latest.fill(NaN);analysis=undefined;lastFrame=-1;traces.forEach(s=>s.clear());area.clear();bands?.clear();label.textContent='Cleared; next incoming frame starts a fresh history.';});
+  append(1.2);
+  return{charts:[upper,lower],update:(_t,d)=>append(d),dispose:()=>{unsync();history.length=0;detector.clear();root.remove();},snapshot:()=>({detect,rate,bins,frequencyStart,frequencyStep,capacity,nextFrame:clock.index,lastFrame,latest:Array.from(latest),traceCounts:traces.map(s=>s.getSampleCount()),traceAlphas:traces.map(s=>s.getStrokeStyle().getFillStyle().getColor().getA()),history:history.length,heatRetained:heat.getRetainedSampleCount(),heatSamples:heat.getSampleCount(),heatOrigin:heat.start,noise:analysis?.noise,threshold:analysis?.threshold,ranges:analysis?.ranges??[],rectangleCount:bands?.getFigures().length??0,dataProvenance:provenance})};
+}
+
+const gap="本库场景的功能、交互和资源占用需在目标运行环境验证。";
+export const radioEntries:OfficialEntry[]=[
+  {id:'crychart-example-1708-scrollingHeatmapAggregation',title:'滚动热图最大值聚合 · 1708',description:'同一1024频率点原始输入，上图保留原网格，下图按实际物理显示单元取最大值；缩放重新计算且不修改原始数据。',observed:["同一1024频率点原始输入，上图保留原网格，下图按实际物理显示单元取最大值；缩放重新计算且不修改原始数据。"],gaps:["MAX是本例应用层投影，未声明通用Heatmap.setAggregation接口兼容。"],mount:aggregation},
+  {id:'crychart-example-1718-rfMonitoringSpectrumSurveillance',title:'RF频谱监控 · 1718',description:'512频率点、10帧每秒，衰减轨迹及最新面积与纵向滚动热图共享输入和频率视区，包含跳频、宽带占用、固定载波和间歇突发。',observed:["512频率点、10帧每秒，衰减轨迹及最新面积与纵向滚动热图共享输入和频率视区，包含跳频、宽带占用、固定载波和间歇突发。"],gaps:["场景样本用于演示；生产负载的性能与资源容量需要单独测量。"],mount:c=>surveillance(c,false)},
+  {id:'crychart-example-1719-rfJamming',title:'RF持续频段检测 · 1719',description:'在频谱监控上执行8帧平均、频率平滑、噪声估计、阈值分组及3帧持续检测，矩形直接对应计算出的频段。',observed:["在频谱监控上执行8帧平均、频率平滑、噪声估计、阈值分组及3帧持续检测，矩形直接对应计算出的频段。"],gaps:["轻量演示检测器不用于判定实际干扰源或无线安全。"],mount:c=>surveillance(c,true)}
+];

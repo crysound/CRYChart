@@ -1,0 +1,13 @@
+{
+  "schema_version": "wuyong-code-map-artifact-manifest/v1",
+  "generator": "wuyong-code-map/development-diff",
+  "artifact_role": "development_knowledge",
+  "project_root": "D:\\workspace\\CRYChart",
+  "artifacts": [
+    {
+      "path": "code-map.json",
+      "sha256": "cfa1dc43c1734d45c2cb63592b986ead7018083822e0708e6d2d36c1700ada6d",
+      "bytes": 691156
+    }
+  ]
+}

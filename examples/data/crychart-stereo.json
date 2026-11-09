@@ -1,0 +1,10 @@
+{
+  "kind": "independent-synthetic",
+  "generator": "scripts/generate-audio-fixture.py",
+  "sampleRate": 24000,
+  "channels": 2,
+  "seconds": 13,
+  "pcmBits": 16,
+  "sha256": "8d147b76b008d3b67f92461018dc23d9d4a8e1f97273c353b32bc73d70a406bd",
+  "description": "Original chirps and deterministic noise. No upstream recording, code, or media used."
+}

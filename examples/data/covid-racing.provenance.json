@@ -1,0 +1,12 @@
+{
+  "source": "https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv",
+  "sourceSHA256": "8473d0f0fdf962e1ffbd5b85b18726fc96a49bab109e271186c339725a12b10c",
+  "fileSHA256": "10e6a486821c1df740cb8dbd560c66511bfdfb93fa2dc8574558e70d88769ef2",
+  "metric": "total_cases",
+  "countries": 8,
+  "days": 185,
+  "missingValues": 0,
+  "attribution": "Our World in Data COVID-19 dataset; underlying providers and revisions documented by OWID.",
+  "licenseURL": "https://github.com/owid/covid-19-data/blob/master/LICENSE",
+  "notes": "Missing observations stay null. Display interpolation applies only between two known daily totals and is not an additional reported observation."
+}

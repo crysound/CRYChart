@@ -1,0 +1,24 @@
+{
+  "title": "Brain and Skull ? brain object",
+  "author": "Drummyfish",
+  "sourcePage": "https://opengameart.org/content/brain-and-skull",
+  "sourceURL": "https://opengameart.org/sites/default/files/head_0.obj",
+  "license": "CC0-1.0",
+  "licenseURL": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "retrievedAt": "2026-11-03T09:54:27.421Z",
+  "sourceBytes": 304762,
+  "sourceSHA256": "653dd4f3b72ef1a7257952be59c5d74142d418f6bfa84648afd6dbf922c94450",
+  "outputBytes": 183732,
+  "outputSHA256": "d7a93c9fff5eb70cbe0305bb773d5b3087569e28b5776494a7bc82a6b7707cb8",
+  "originalVertexCount": 5594,
+  "extractedVertexCount": 3398,
+  "faceCount": 3397,
+  "transform": [
+    "Read v records globally, preserve original decimal coordinate tokens",
+    "Select only f records under o brain",
+    "Keep all referenced vertices, compact and remap 1-based face indices in encounter order",
+    "No geometric decimation or anatomical modification",
+    "Runtime parser fan-triangulates faces and uniformly centers/scales geometry for chart display"
+  ],
+  "clinicalUse": false
+}

@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 2,
+  "kind": "deterministic-synthetic-data",
+  "generator": "scripts/generate-demo-assets.ts",
+  "seed": 20261109,
+  "description": "Original procedural city surfaces, tree crowns, terrain, hourly demonstration measurements and stereo spectral peaks. These are illustrative data, not captured surveys or sensor recordings.",
+  "assets": [
+    {
+      "file": "lidar-city-buildings.bin",
+      "bytes": 3505852,
+      "sha256": "03f0df7dd6d36937b1526ae4cbee710cbb3c68d2e440933af52b4f93588afa58",
+      "kind": "deterministic-synthetic-data",
+      "generator": "scripts/generate-demo-assets.ts",
+      "seed": 20261109
+    },
+    {
+      "file": "lidar-city-vegetation.bin",
+      "bytes": 7682440,
+      "sha256": "ce3bcfa758f38254e111e275a43ba6285c277af79afaddcf27a0f480beecdc95",
+      "kind": "deterministic-synthetic-data",
+      "generator": "scripts/generate-demo-assets.ts",
+      "seed": 20261109
+    },
+    {
+      "file": "lidar-terrain.bin",
+      "bytes": 6837976,
+      "sha256": "72fe6e28b5e5df20d73494cafcc4eb869ee5483a894fe235aec3577b240bda6c",
+      "kind": "deterministic-synthetic-data",
+      "generator": "scripts/generate-demo-assets.ts",
+      "seed": 20261109
+    },
+    {
+      "file": "synthetic-air-quality.json",
+      "bytes": 46800,
+      "sha256": "9cdf696374d6be549f767236b1a8f063c7069f242eead08767eb028125ef9eec",
+      "kind": "deterministic-synthetic-data",
+      "generator": "scripts/generate-demo-assets.ts",
+      "seed": 20261109
+    },
+    {
+      "file": "stereo-spectrum-demo.json",
+      "bytes": 3191,
+      "sha256": "7504fd7eeeeebc9c350e5821b19071e2935431269cb8ece3b4b4a708ead15d3f",
+      "kind": "deterministic-synthetic-data",
+      "generator": "scripts/generate-demo-assets.ts",
+      "seed": 20261109
+    }
+  ]
+}

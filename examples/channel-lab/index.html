@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <link rel="icon" href="data:," />
+    <title>CRYChart · 多通道波形实验台</title>
+    <style>
+      :root {
+        font:
+          14px "Segoe UI",
+          "Microsoft YaHei",
+          sans-serif;
+        color: #dfe9ec;
+        background: #0d1218;
+        --border: #2b3944;
+        --muted: #91a5b1;
+        --accent: #45dec1;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+      }
+      button,
+      input,
+      select {
+        font: inherit;
+        color: inherit;
+        background: #1b2731;
+        border: 1px solid #3b505d;
+        border-radius: 5px;
+        padding: 7px 11px;
+      }
+      button {
+        cursor: pointer;
+      }
+      button:hover {
+        border-color: var(--accent);
+      }
+      button:disabled {
+        opacity: 0.45;
+        cursor: default;
+      }
+      button.primary {
+        background: var(--accent);
+        color: #10251f;
+        border-color: var(--accent);
+        font-weight: 650;
+      }
+      input {
+        width: 80px;
+      }
+      a {
+        color: var(--accent);
+      }
+      header {
+        padding: 20px 28px 16px;
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        border-bottom: 1px solid var(--border);
+        align-items: center;
+      }
+      h1 {
+        margin: 0;
+        font-size: 23px;
+        font-weight: 650;
+      }
+      header p {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .badge {
+        border: 1px solid #48604b;
+        background: #1a2e22;
+        color: #b5deb8;
+        padding: 8px 11px;
+        border-radius: 20px;
+        white-space: nowrap;
+        font-size: 12px;
+      }
+      main {
+        max-width: 1700px;
+        margin: auto;
+        padding: 18px 24px;
+      }
+      .controls {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        background: #141d25;
+        border: 1px solid var(--border);
+        padding: 14px;
+        border-radius: 9px 9px 0 0;
+      }
+      .controls label {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        color: var(--muted);
+        font-size: 11px;
+      }
+      .controls select {
+        min-width: 100px;
+      }
+      .controls .spacer {
+        flex: 1;
+      }
+      .commands {
+        display: flex;
+        gap: 7px;
+        flex-wrap: wrap;
+      }
+      .stage {
+        height: min(60vh, 720px);
+        min-height: 460px;
+        border: 1px solid var(--border);
+        position: relative;
+        background: #101820;
+        overflow: hidden;
+      }
+      .stage.empty:after {
+        content: "图表已释放。点击「恢复」重新创建。";
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        color: var(--muted);
+      }
+      .metrics {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        border: 1px solid var(--border);
+        border-top: 0;
+        background: #151f28;
+        border-radius: 0 0 9px 9px;
+      }
+      .metric {
+        padding: 12px 16px;
+        border-right: 1px solid var(--border);
+        min-width: 0;
+      }
+      .metric:last-child {
+        border: 0;
+      }
+      .metric span {
+        display: block;
+        font-size: 10px;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+      .metric strong {
+        font-size: 20px;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+      }
+      .metric small {
+        font-size: 10px;
+        color: var(--muted);
+        display: block;
+        margin-top: 4px;
+      }
+      .details {
+        display: flex;
+        gap: 16px;
+        margin-top: 14px;
+        align-items: stretch;
+      }
+      .detail {
+        border: 1px solid var(--border);
+        background: #141d25;
+        border-radius: 8px;
+        padding: 13px 16px;
+        flex: 1;
+        min-width: 0;
+      }
+      .detail h2 {
+        font-size: 12px;
+        margin: 0 0 8px;
+        color: #c6d9df;
+      }
+      .detail p {
+        font-size: 11px;
+        color: var(--muted);
+        line-height: 1.7;
+        margin: 6px 0;
+      }
+      .status {
+        color: var(--accent);
+        font-size: 12px;
+        min-height: 18px;
+      }
+      .inspector {
+        font:
+          11px/1.8 Consolas,
+          monospace;
+        white-space: pre-wrap;
+        color: #b7d6df;
+      }
+      .pane-label {
+        position: absolute;
+        font:
+          10px Consolas,
+          monospace;
+        color: #9db5c2;
+        left: 5px;
+        transform: translateY(-50%);
+        pointer-events: none;
+        z-index: 3;
+      }
+      .pane-separator {
+        position: absolute;
+        border-top: 1px solid #738b9e24;
+        pointer-events: none;
+        z-index: 2;
+      }
+      pre {
+        font:
+          11px/1.65 Consolas,
+          monospace;
+        white-space: pre-wrap;
+        max-height: 220px;
+        overflow: auto;
+        margin: 8px 0 0;
+      }
+      footer {
+        font-size: 11px;
+        color: #92a6b3;
+        line-height: 1.8;
+        margin: 14px 0;
+      }
+      .error {
+        color: #ffbd91;
+      }
+      @media (max-width: 900px) {
+        header {
+          padding: 16px;
+        }
+        .badge {
+          display: none;
+        }
+        main {
+          padding: 12px;
+        }
+        .metrics {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .details {
+          display: block;
+        }
+        .detail {
+          margin-bottom: 12px;
+        }
+        .stage {
+          min-height: 500px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <h1>多通道波形实验台</h1>
+        <p>CRYChart · 48 kHz 真实采样 · 单个 WebGL 绘图上下文</p>
+      </div>
+      <span class="badge">隔离实验 · OpenTest 应用未运行</span>
+    </header>
+    <main>
+      <section class="controls" aria-label="采样配置">
+        <label>渲染预设<select id="preset">
+          <option value="standard">普通配置</option>
+          <option value="opentest">OpenTest 波形配置</option>
+        </select></label>
+        <label
+          >通道数<select id="channels">
+            <option>1</option>
+            <option selected>4</option>
+            <option>16</option>
+            <option>64</option>
+            <option>128</option>
+          </select></label
+        >
+        <label
+          >Y 轴布局<select id="layout">
+            <option value="stacked">分区 Y 轴</option>
+            <option value="shared">共享 Y 轴</option>
+          </select></label
+        >
+        <label
+          >数据精度<select id="storage">
+            <option value="float64">TimeWaveform · Float64</option>
+            <option value="float32">Base / Single · Float32</option>
+          </select></label
+        >
+        <label
+          >可见窗口 / 秒<input
+            id="window-seconds"
+            type="number"
+            value="15"
+            min="0.1"
+            max="60"
+            step="0.1"
+        /></label>
+        <label
+          >保留上限 / 秒<input
+            id="history-seconds"
+            type="number"
+            value="60"
+            min="1"
+            max="60"
+        /></label>
+        <button id="load" class="primary">载入 1 秒数据</button
+        ><span class="spacer"></span>
+        <div class="commands">
+          <button id="play">开始</button><button id="fit">聚焦已有数据</button
+          ><button id="follow">跟随 15 秒窗口</button
+          ><button id="add">＋通道</button><button id="remove">−通道</button
+          ><button id="export">导出 PNG</button
+          ><button id="clear">清空数据</button
+          ><button id="visibility">隐藏曲线</button
+          ><button id="dispose">释放</button
+          ><button id="restore" disabled>恢复</button>
+        </div>
+      </section>
+      <p id="preset-description" class="status" aria-live="polite"></p>
+      <section id="stage" class="stage" aria-label="多通道波形"></section>
+      <section class="metrics">
+        <div class="metric">
+          <span>实际保留采样点</span><strong id="point-count">0</strong
+          ><small id="duration">每通道 0 秒</small>
+        </div>
+        <div class="metric">
+          <span>数据列实际分配</span><strong id="data-bytes">0 MiB</strong
+          ><small>raw Y + render Y；自动 X 保持隐式</small>
+        </div>
+        <div class="metric">
+          <span>GPU 缓冲区分配</span><strong id="gpu-bytes">0 MiB</strong
+          ><small id="gpu-vertices">本帧提交样本 0</small>
+        </div>
+        <div class="metric">
+          <span>浏览器 JS 堆</span><strong id="heap-bytes">未提供</strong
+          ><small id="peak-bytes">非进程 RSS</small>
+        </div>
+        <div class="metric">
+          <span>当前状态</span><strong id="run-state">准备</strong
+          ><small id="schema-state">48,000 Hz · 毫秒横轴</small>
+        </div>
+      </section>
+      <section class="details">
+        <div class="detail">
+          <h2>交互与取值</h2>
+          <p>
+            滚轮：共享 X 与当前分区 Y
+            缩放。左拖：框选；右拖：平移。切换布局保留数据，鼠标取值使用对应分区坐标。
+          </p>
+          <div id="inspector" class="inspector">
+            移动到波形区域查看原始值、绘制值和时间。
+          </div>
+        </div>
+        <div class="detail">
+          <h2>环形缓冲诊断</h2>
+          <p>
+            独立 16 点小缓冲执行连续追加与回卷，核对每个保留值及自动
+            X；不会给主图降采样。
+          </p>
+          <button id="ring">执行回卷检查</button>
+          <pre id="ring-output">尚未运行</pre>
+        </div>
+      </section>
+      <footer>
+        <div id="status" class="status">正在载入…</div>
+        初始每通道 48,000 个点，共 1 秒；128 通道为 6,144,000
+        个真实点。保留上限采用按需增长，不预分配整个 60
+        秒。此页面验证短历史功能，不能据此声明完整 60
+        秒容量或性能已达标。开始后持续生成全部采样；页面进入后台会暂停。
+        数据列统计不含渲染器 CPU 缓冲区；GPU 数值来自实际缓冲区分配，
+        不含纹理、驱动开销或驻留显存。浏览器堆采样不代表进程 RSS。
+      </footer>
+    </main>
+    <script type="module">
+      const fixture = new URLSearchParams(location.search).get('fixture');
+      let source = '/dist/channel-lab.js';
+      if (fixture) {
+        const candidate = new URL(fixture, location.origin);
+        if (candidate.origin !== location.origin || !candidate.pathname.startsWith('/codex_artifact/channel-lab/') || !candidate.pathname.endsWith('/lab.js')) throw new Error('Only a local channel-lab test fixture is allowed');
+        source = candidate.href;
+      }
+      await import(source);
+    </script>
+  </body>
+</html>

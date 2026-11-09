@@ -1,0 +1,8 @@
+{
+  "sourceURL": "https://raw.githubusercontent.com/mwaskom/seaborn-data/master/diamonds.csv",
+  "upstreamDataset": "ggplot2 diamonds; public price/carat/clarity data used by the reference example",
+  "sourceKind": "public tabular dataset, not vendor chart implementation",
+  "rows": 53940,
+  "bytes": 2772143,
+  "sha256": "9574730b03aba241d899c4a97511c5061b19358fab89510774fb6c24168345c4"
+}

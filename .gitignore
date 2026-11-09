@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.cache/
+codex_context/
+codex_artifact/
+*.tgz
+!/version/v1.0/crychart-1.0.0.tgz

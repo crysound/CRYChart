@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 2,
+  "product": "CRYChart",
+  "factory": "cryChart",
+  "contextType": "CRYChart",
+  "optionsType": "CRYChartOptions",
+  "publicFacts": [
+    "Chart and series setters are fluent; color, fill, line, font and palette mutations produce new style values.",
+    "ColorRGBA and Color.setA use channels from 0 to 255, including alpha. Default alpha is 255.",
+    "Axis.setInterval accepts optional start/end, animation and stopAxisAfter fields. An omitted endpoint is retained; stopAxisAfter defaults to true.",
+    "ChartXY exposes identical axisX/xAxis and axisY/yAxis aliases.",
+    "Heatmap grid dimensions and data order must be explicit. Grid matrices differ from scrolling-grid sample batches.",
+    "Subscription tokens allow individual event handlers to be removed without disposing the chart."
+  ],
+  "openTestDataContracts": [
+    "DataSet schema keys are arbitrary column names, with typed storage and optional progressive/automatic coordinates.",
+    "OpenTest uses xValues as Float64Array, source yValues and rendered renderYValues as separate Float32Array or Float64Array columns.",
+    "An automatic coordinate ignores explicit input for that column. start denotes the first coordinate in the incoming batch. A step-only append continues from the preceding coordinate.",
+    "clear resets the logical sample index and automatic-coordinate continuation.",
+    "Fixed-capacity retention preserves the latest complete rows. Capacity changes preserve retained order and the next logical sample index.",
+    "A replacement series can share an existing data set. Disposing one series must not dispose that data set.",
+    "DataSet.readBack range keys identify a progressive data column; range endpoints are coordinate values, not sample indexes.",
+    "Non-finite source values remain available for copying. Rendering uses separate gaps at the same coordinates."
+  ],
+  "implementationChoices": [
+    "A logical sample counter is independent of the physical ring write position.",
+    "Oversized batches copy only the retained tail without allocating per-sample objects.",
+    "Logical-order column snapshots are cached by revision for rendering; public readBack returns owned arrays.",
+    "Each data append emits one change event and advances one revision.",
+    "Palette lookup uses sorted steps and binary search, with explicit interpolation and non-finite fallback colors."
+  ],
+  "validation": {
+    "tests": [
+      "tests/core-data.test.ts",
+      "tests/core-styles.test.ts",
+      "tests/core-events.test.ts"
+    ],
+    "scope": "Core unit contracts only; application integration and end-to-end measurements are separate."
+  }
+}

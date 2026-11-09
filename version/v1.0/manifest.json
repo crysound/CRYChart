@@ -1,0 +1,65 @@
+{
+  "schema": "crychart-offline-distribution/v2",
+  "name": "crychart",
+  "version": "1.0.0",
+  "createdAt": "2026-11-09T09:56:32.219720+00:00",
+  "sourceBaselineCommit": "aafabfa4e2d071377665388134209e1fe23201bd",
+  "sourceState": "working-tree-with-uncommitted-identity-cleanup",
+  "factory": "cryChart",
+  "publicTypes": [
+    "CRYChart",
+    "CRYChartOptions",
+    "ChartEventListenerOptions"
+  ],
+  "runtimeDependencies": [],
+  "librarySHA256": "e58478f1d6b2d9ad49d2cb7d29ddd17a26d97c4fc810dbaf7c2661d1be7d91c0",
+  "files": [
+    {
+      "path": "version\\v1.0\\crychart-1.0.0.tgz",
+      "sha256": "8dbd4a6368a4240e7bb3533987b02bf091473e5c7cac36ab46884a831a37539e",
+      "bytes": 993039,
+      "files": 98
+    },
+    {
+      "path": "version\\v1.0\\crychart-v1.0.0-source.zip",
+      "sha256": "2db551c980cda3802a35580d00669b23bc3cdc32bfaa6a11ae08a72a348667fc",
+      "bytes": 9785825,
+      "files": 453
+    }
+  ],
+  "validation": {
+    "typecheckExit": 0,
+    "buildExit": 0,
+    "unitTests": {
+      "total": 1201,
+      "passed": 1199,
+      "failed": 0,
+      "skipped": 2
+    },
+    "opentestContractsPassed": 29,
+    "packagedTypesExit": 0,
+    "packagedESMandCommonJS": "passed",
+    "decompressedNamesAndContents": "zero forbidden identity matches",
+    "visibleInstalledChrome": {
+      "epoch-quality": {
+        "path": "codex_artifact/brand-cleanup-20261109/root/browser/epoch-quality-2026-11-09T09-37-55.688Z/report.json",
+        "status": "passed"
+      },
+      "native-worker": {
+        "path": "codex_artifact/brand-cleanup-20261109/root/browser/native-worker-2026-11-09T09-38-05.772Z/report.json",
+        "status": "passed"
+      },
+      "native-smoke": {
+        "path": "codex_artifact/brand-cleanup-20261109/root/browser/native-smoke-2026-11-09T09-41-34.868Z/report.json",
+        "status": "passed"
+      }
+    },
+    "allOwnedChromeClosed": true
+  },
+  "limitations": [
+    "Only the four changed 3D example scenarios and focused precision/streaming cases were checked in the current visible Chrome run.",
+    "Historical full-catalog results remain historical; the current catalog is not marked fully verified.",
+    "Application acquisition and IPC end-to-end latency were not measured.",
+    "Prior public aliases were removed; consumers must use the documented CRYChart names."
+  ]
+}

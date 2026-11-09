@@ -1,0 +1,13 @@
+CRYChart 3D demonstration data
+
+The five assets in 3d-data-provenance.json are deterministic synthetic data.
+Regenerate them with node scripts/generate-demo-assets.ts. The manifest records
+the generator, seed, byte size and SHA-256 digest of each file. City surfaces,
+tree crowns, terrain elevations, hourly air-quality values and stereo spectral
+peaks are mathematical illustrations, not captured surveys or sensor readings.
+
+The binary format is a little-endian u32 point count, followed by three planar
+signed i16 columns X/Y/Z and, when present, three planar u8 columns R/G/B.
+
+The independent brain mesh retains its CC0 license and provenance in
+brain-drummyfish-LICENSE.txt and brain-drummyfish.provenance.json.

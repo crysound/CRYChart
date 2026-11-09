@@ -1,0 +1,44 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="icon" href="data:,"><title>CRYChart XY axis theme verification</title>
+<style>body{margin:0;padding:22px;font:14px Arial;background:#e8edf3;color:#243447}#host{width:760px;height:480px;margin:16px 0}button{padding:8px 14px}p{max-width:900px}</style></head><body>
+<h1>XY tick theme and explicit-style verification</h1><p id="case-name"></p><button id="reset-strategy">Replace tick strategies</button><div id="host"></div>
+<script type="module">
+const choice=new URLSearchParams(location.search).get('library');
+if(choice&&!['baseline','candidate'].includes(choice))throw new Error('Only local frozen test bundles are allowed');
+const libraryURL=choice?`/codex_artifact/xy-axis-theme/${choice}.js`:'/dist/crychart.js';
+const themesURL=choice?'/codex_artifact/xy-axis-theme/themes.js':'/dist/themes.js';
+const lib=await import(libraryURL),{makeCustomTheme}=await import(themesURL);
+const {cryChart,ColorHEX,SolidFill,SolidLine,FontSettings,AxisTickStrategies,emptyFill,emptyLine,transparentFill}=lib;
+const host=document.querySelector('#host');
+let chart,caseName,options,revision=0;
+const cases={
+  'light-default':{light:true}, 'dark-default':{light:false},
+  'large-font':{light:true,size:28,family:'monospace',longY:true},
+  'light-explicit-12':{light:true,explicit:true}, 'dark-explicit-12':{light:false,explicit:true},
+  'explicit-hidden':{light:true,hidden:true}, 'theme-hidden':{light:false,themeHidden:true},
+  'strategy-reset':{light:true,explicit:true},
+};
+function mount(id){
+  if(!cases[id])throw new Error('Unknown case');chart?.dispose();caseName=id;options=cases[id];
+  const colors=options.light?{background:'#ffffff',text:'#334155',grid:'#CBD5E1'}:{background:'#151c28',text:'#dae7f8',grid:'#627793'};
+  const theme=makeCustomTheme({isDark:!options.light,backgroundColor:transparentFill,textColor:ColorHEX(colors.text),gridLineColor:ColorHEX(colors.grid),fontFamily:options.family??'Arial',fontSize:{other:options.size??14,chartTitle:14,axisTitle:14}});
+  if(options.themeHidden){theme.tickLabelFillStyle=emptyFill;theme.tickGridStrokeStyle=emptyLine;}
+  host.style.background=colors.background;
+  chart=cryChart().ChartXY({container:host,theme}).setTitle('');chart.legend.setOptions({visible:false});chart.setCursorMode(undefined);
+  chart.getDefaultAxisX().setInterval({start:0,end:10});chart.getDefaultAxisY().setInterval({start:0,end:10});
+  for(const axis of[chart.getDefaultAxisX(),chart.getDefaultAxisY()]){
+    axis.setTitle('');axis.setTickStrategy(AxisTickStrategies.Numeric);
+    if(options.explicit)axis.getTickStrategy().setTickStyle(tick=>tick.setLabelFont(font=>font.setSize(12)).setLabelFillStyle(new SolidFill({color:ColorHEX('#b71e67')})).setGridStrokeStyle(emptyLine));
+    if(options.hidden)axis.getTickStrategy().setTickStyle(tick=>tick.setLabelFillStyle(emptyFill).setGridStrokeStyle(emptyLine));
+  }
+  if(options.longY)chart.getDefaultAxisY().getTickStrategy().setFormattingFunction(()=>'-12345.67');
+  chart.addLineSeries().setStrokeStyle(new SolidLine({thickness:2,fillStyle:new SolidFill({color:ColorHEX('#28c88c')})})).add([{x:0,y:1},{x:2,y:5},{x:5,y:3},{x:7,y:8},{x:10,y:6}]);
+  document.querySelector('#case-name').textContent=id;revision++;
+  return {id,colors,options,revision};
+}
+document.querySelector('#reset-strategy').onclick=()=>{
+  for(const axis of[chart.getDefaultAxisX(),chart.getDefaultAxisY()])axis.setTickStrategy(AxisTickStrategies.Numeric);
+  revision++;
+};
+window.__XY_THEME__={cases:Object.keys(cases),mount,snapshot:()=>({caseName,revision,plot:{...chart.plot},stats:chart.getRenderStats(),width:host.clientWidth,height:host.clientHeight}),dispose:()=>chart?.dispose()};
+window.__XY_THEME__.ready=true;
+</script></body></html>

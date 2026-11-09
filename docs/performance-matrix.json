@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 2,
+  "product": "CRYChart",
+  "updatedAt": "2026-11-09",
+  "measurementKind": "Core build-to-build controlled monitoring diagnostics",
+  "historicalBuilds": {
+    "baselineSHA256": "454e2349495ff030baaa3325b8cebd29c7f2e87103495ba0579113fa3619bfc9",
+    "finalSHA256": "b46ce41d44a174f5a08daa67ea84b30dcb38805a0c59d3850334a5f03c688d2a"
+  },
+  "configuration": {
+    "heavyCharts": 2,
+    "mainSeriesPerHeavy": 2,
+    "maxSamplesPerMain": 2880000,
+    "samplesPerSecondPerMain": 48000,
+    "axisX": "linear-highPrecision",
+    "strokeCSSPx": 1,
+    "dpr": 1.75,
+    "browser": "visible installed Chrome156",
+    "backend": "ANGLE AMD Direct3D11",
+    "controlledWorkerBatchMs": 20
+  },
+  "scenarios": [
+    {
+      "historySeconds": 28,
+      "baseline": {
+        "frameIntervalP95Ms": 200.26,
+        "receiveP95Ms": 154.67,
+        "ingestP95Ms": 0.95,
+        "scopeSubmitAgeP95Ms": 317.2,
+        "pointerP95Ms": 197.25
+      },
+      "optimized": {
+        "frameIntervalP95Ms": 16.8,
+        "receiveP95Ms": 6.22,
+        "ingestP95Ms": 1.05,
+        "scopeSubmitAgeP95Ms": 25.64,
+        "pointerP95Ms": 25.11
+      }
+    },
+    {
+      "historySeconds": 60,
+      "baseline": {
+        "frameIntervalP95Ms": 350.46,
+        "receiveP95Ms": 280.12,
+        "ingestP95Ms": 0.98,
+        "scopeSubmitAgeP95Ms": 416.99,
+        "pointerP95Ms": 296.03
+      },
+      "optimized": {
+        "frameIntervalP95Ms": 16.78,
+        "receiveP95Ms": 4.91,
+        "ingestP95Ms": 1.02,
+        "scopeSubmitAgeP95Ms": 18.28,
+        "pointerP95Ms": 25.02
+      }
+    }
+  ],
+  "soakCheckpoints": [
+    {
+      "minutes": 1,
+      "scopeSubmitAgeP95Ms": 22.08,
+      "pendingBatches": 0,
+      "lifetimeMaxPending": 2
+    },
+    {
+      "minutes": 5,
+      "scopeSubmitAgeP95Ms": 22.24,
+      "pendingBatches": 0,
+      "lifetimeMaxPending": 19
+    },
+    {
+      "minutes": 10,
+      "scopeSubmitAgeP95Ms": 23.27,
+      "pendingBatches": 1,
+      "lifetimeMaxPending": 19
+    }
+  ],
+  "qualification": "Historical measurements only. Short optimized runs preceded the final experimental-block DPR integration. Soak and supplemental image checks used the final build. Source batches are controlled Worker metadata; all received samples were stored. Teardown canceled one not-yet-received batch.",
+  "notCertified": [
+    "current source after identity cleanup",
+    "actual hardware acquisition or Electron IPC latency",
+    "GPU completion or photon latency",
+    "indefinite queue bounds",
+    "process memory peak"
+  ],
+  "report": "docs/performance-scope-high-precision-20261109.md"
+}

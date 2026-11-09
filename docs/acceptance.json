@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 2,
+  "product": "CRYChart",
+  "updatedAt": "2026-11-09",
+  "overallStatus": "current-source-verification-pending",
+  "completionClaim": false,
+  "catalog": {
+    "count": 167,
+    "file": "docs/reference-examples.json"
+  },
+  "functionalVerification": "docs/functional-verification.json",
+  "publicAPI": "docs/public-api-contract.json",
+  "consumerRequirements": "docs/opentest-contract.json",
+  "browserPolicy": {
+    "browser": "installed visible Google Chrome",
+    "headless": false,
+    "closeOwnedBrowserAfterUse": true
+  },
+  "openTest": {
+    "sourceReadOnly": true,
+    "applicationModified": false,
+    "applicationIntegrationNotCertified": true
+  },
+  "performance": {
+    "kind": "Core self-measurement",
+    "report": "docs/performance-scope-high-precision-20261109.md",
+    "currentBuildCertification": false
+  },
+  "identityCleanup": {
+    "publicNames": [
+      "cryChart",
+      "CRYChart",
+      "CRYChartOptions"
+    ],
+    "legacyAliasRetained": false,
+    "historicalCountsAreCurrentCertification": false
+  },
+  "limits": [
+    "Current source validation is recorded by the current test run, not by historical catalog counts.",
+    "A controlled producer does not certify hardware acquisition, IPC, photon latency, or indefinite runtime stability."
+  ]
+}

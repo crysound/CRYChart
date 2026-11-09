@@ -1,0 +1,16 @@
+{
+  "schema": "crychart-delivery/v2",
+  "name": "crychart",
+  "version": "1.0.0",
+  "factory": "cryChart",
+  "publicTypes": ["CRYChart", "CRYChartOptions", "ChartEventListenerOptions"],
+  "distribution": "version/v1.0/manifest.json",
+  "sourceState": "current-working-tree",
+  "runtimeDependencies": [],
+  "documentation": ["README.md", "SPEC.md", "docs/使用手册.md", "docs/性能说明.md"],
+  "limits": [
+    "Historical measurements retain their original build identity.",
+    "Synthetic example data represents demonstrations rather than surveyed locations or measured air quality.",
+    "The application repository and its installed package were not modified."
+  ]
+}
