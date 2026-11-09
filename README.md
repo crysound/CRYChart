@@ -1,12 +1,16 @@
 # CRYChart
 
-CRYChart 是 **CRYSOUND 为 OpenTest 定制的前端渲染库**，基于 TypeScript 开发。
+**English** | [简体中文](README.zh-CN.md)
 
-CRYChart 面向 OpenTest 的数据可视化场景，提供流式数据绘制、交互坐标轴、游标、二维和三维图表。绘图使用 WebGL2，并提供 Canvas 回退。
+CRYChart is a **frontend rendering library built by CRYSOUND for OpenTest**, written in TypeScript.
 
-包名为 `crychart`，当前版本为 **1.0.0**。
+Designed for OpenTest's data visualization needs, CRYChart provides streaming data rendering, interactive axes, cursors, and 2D and 3D charts. It uses WebGL2 for rendering, with a Canvas fallback.
 
-## 安装与构建
+The package name is `crychart`. The current version is **1.0.0**.
+
+## Install and build
+
+From the repository root:
 
 ```powershell
 npm ci
@@ -14,9 +18,9 @@ npm run build
 npm run dev
 ```
 
-本地示例地址为 <http://127.0.0.1:4178/>。图表容器需要明确的宽度和高度。
+Open the local examples at <http://127.0.0.1:4178/>. Chart containers must have an explicit width and height.
 
-## 使用
+## Usage
 
 ```ts
 import { cryChart, ColorRGBA, SolidFill, SolidLine } from 'crychart'
@@ -33,13 +37,13 @@ line.setStrokeStyle(new SolidLine({
 }))
 line.appendSamples({ y: new Float32Array([1, 2, 3]) }, { start: 0, step: 0.001 })
 
-// 组件卸载时释放图表和绘图资源。
+// Dispose of charts and rendering resources when the component unmounts.
 context.dispose()
 ```
 
-包提供 ES 模块、CommonJS、浏览器脚本和 TypeScript 类型声明。浏览器脚本的全局对象为 `CRYChart`。主题入口为 `crychart/themes`。
+The package provides ES modules, CommonJS, a browser script, and TypeScript declarations. The browser script exposes the `CRYChart` global. Themes are available through `crychart/themes`.
 
-## 验证
+## Validation
 
 ```powershell
 npm run typecheck
@@ -50,20 +54,22 @@ npm run test:browser
 npm run test:gallery
 ```
 
-浏览器测试使用已安装的可见 Chrome。数据和接口测试不能替代图像、交互及性能测试。性能结果只适用于记录中的数据量、绘图区、设备像素比和机器配置。
+Browser tests use an installed, visible Chrome browser. Data and API tests do not replace visual, interaction, or performance tests. Performance results apply only to the recorded data volume, plot area, device pixel ratio, and machine configuration.
 
-## 许可协议
+## License
 
-CRYChart 采用 [CRYChart 社区许可协议 1.0](LICENSE.zh-CN.md)，并提供 [English version](LICENSE.md)。
+CRYChart is licensed under the [CRYChart Community License 1.0](LICENSE.md). A [Chinese version](LICENSE.zh-CN.md) is also available.
 
-免费许可不设置通道、数据系列、曲线、数据点或视图数量上限。商业分发、OEM、设备配套交付和收费托管的授权条件见协议第 7 条。中英文解释不一致时，以中文版为准。
+The free license imposes no limits on the number of channels, data series, curves, data points, or views. See Section 7 for the licensing conditions for commercial distribution, OEM use, delivery bundled with equipment, and paid hosting. If the English and Chinese versions differ in interpretation, the Chinese version prevails.
 
-## 文档
+## Documentation
 
-- [使用手册](docs/使用手册.md)
-- [性能说明](docs/性能说明.md)
-- [高精度历史波形与 Scope 延迟复测](docs/performance-scope-high-precision-20261109.md)
-- [架构说明](docs/architecture.md)
-- [产品规格](SPEC.md)
+- [User guide](docs/使用手册.md)
+- [Performance notes](docs/性能说明.md)
+- [High-precision historical waveforms and Scope latency retest](docs/performance-scope-high-precision-20261109.md)
+- [Architecture](docs/architecture.md)
+- [Product specification](SPEC.md)
 
-示例中的合成数据仅用于演示和测试。继续使用的外部数据、模型和素材保留各自的来源及授权说明。
+Some documentation is currently available only in Chinese.
+
+Synthetic data in the examples is intended for demonstrations and testing only. External data, models, and assets retain their respective source attributions and license notices.

@@ -26,6 +26,7 @@
     "dist/themes.js",
     "dist/types",
     "README.md",
+    "README.zh-CN.md",
     "docs/*.md",
     "docs/*.json",
     "docs/*.html",
