@@ -1,6 +1,6 @@
 {
   "bootstrap_version": 1,
-  "claim_digest": "sha256:c4ca498460db93c3ab8977943d75c7fbfc49b1c4bbd0842f5322f8e61a022090",
+  "claim_digest": "sha256:0914e9f5a9d11ccbfda356b55f6fdbb4e6dbbe61412894794bb5be0c35098363",
   "claim_map": "claim-source-map.jsonl",
   "edge_digest": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
   "edges": "edges.jsonl",
@@ -11,6 +11,6 @@
   "nodes": "nodes.jsonl",
   "ontology": "ontology.yml",
   "schema_version": "wuyong-business-map-graph-manifest/v2",
-  "source_digest": "sha256:bff3b1cd54fed1c633d4725b56fdfb81c65f00955ee51b49abea501fbe5d4b33",
+  "source_digest": "sha256:b2d60a0806bb175020d825b8fc231f077a55d6c63438618b6dea10cb6607e6f9",
   "source_registry": "../sources/source-registry.yml"
 }

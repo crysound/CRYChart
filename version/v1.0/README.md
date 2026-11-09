@@ -2,6 +2,8 @@
 
 本目录保存当前工作树重建的 SDK 和源码压缩包。公开包名为 `crychart`，工厂为 `cryChart()`。
 
+SDK 和源码包均包含 `LICENSE.md` 与 `LICENSE.zh-CN.md`，采用 CRYChart 社区许可协议 1.0。免费许可不设置通道数量上限。商业授权条件见协议正文，中英文解释不一致时以中文版本为准。
+
 - `crychart-1.0.0.tgz`：包含 JavaScript、类型声明和产品文档的安装包。
 - `crychart-v1.0.0-source.zip`：包含源码、测试、构建脚本、示例和文档的源码包。
 - `manifest.json`：文件大小、SHA-256、构建基线和实际验证结果。

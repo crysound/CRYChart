@@ -2,9 +2,9 @@
   "schema": "crychart-offline-distribution/v2",
   "name": "crychart",
   "version": "1.0.0",
-  "createdAt": "2026-11-09T09:56:32.219720+00:00",
-  "sourceBaselineCommit": "aafabfa4e2d071377665388134209e1fe23201bd",
-  "sourceState": "working-tree-with-uncommitted-identity-cleanup",
+  "createdAt": "2026-11-09T11:34:04.930890+00:00",
+  "sourceBaselineCommit": "270db6e89f278dede31318830dec5af6a8a1bbe2",
+  "sourceState": "working-tree-with-uncommitted-license-adaptation",
   "factory": "cryChart",
   "publicTypes": [
     "CRYChart",
@@ -15,16 +15,16 @@
   "librarySHA256": "e58478f1d6b2d9ad49d2cb7d29ddd17a26d97c4fc810dbaf7c2661d1be7d91c0",
   "files": [
     {
-      "path": "version\\v1.0\\crychart-1.0.0.tgz",
-      "sha256": "8dbd4a6368a4240e7bb3533987b02bf091473e5c7cac36ab46884a831a37539e",
-      "bytes": 993039,
-      "files": 98
+      "path": "version/v1.0/crychart-1.0.0.tgz",
+      "sha256": "9fa76b7ba8bc399a14cab6389e982f610421052444c4f0bec3876a6fa034b537",
+      "bytes": 1003786,
+      "files": 100
     },
     {
-      "path": "version\\v1.0\\crychart-v1.0.0-source.zip",
-      "sha256": "2db551c980cda3802a35580d00669b23bc3cdc32bfaa6a11ae08a72a348667fc",
-      "bytes": 9785825,
-      "files": 453
+      "path": "version/v1.0/crychart-v1.0.0-source.zip",
+      "sha256": "755633b19ccccd9ceedb21c749cd017ece06e8d4235e5d97e3fd1c26ab8ac403",
+      "bytes": 9796844,
+      "files": 455
     }
   ],
   "validation": {
@@ -61,5 +61,29 @@
     "Historical full-catalog results remain historical; the current catalog is not marked fully verified.",
     "Application acquisition and IPC end-to-end latency were not measured.",
     "Prior public aliases were removed; consumers must use the documented CRYChart names."
-  ]
+  ],
+  "licenseIdentifier": "LicenseRef-CRYChart-Community-1.0",
+  "licenseFiles": [
+    "LICENSE.md",
+    "LICENSE.zh-CN.md"
+  ],
+  "licenseAdaptation": {
+    "upstream": {
+      "repository": "https://github.com/crysound/OpenTest-Internal",
+      "commit": "5bbd11e1a6d03a834e5647a9b8714c3a1b3511ef",
+      "files": {
+        "LICENSE.md": {
+          "bytes": 16801,
+          "sha256": "af3528177f76385851aa19b77adde22b020e36a353fa28a3c78cc377fc7e14e2"
+        },
+        "LICENSE.zh-CN.md": {
+          "bytes": 13470,
+          "sha256": "c8ede4932ed24794da016dccc78e6376566842520c365848bbfd925accd3be24"
+        }
+      }
+    },
+    "channelCountRestrictions": false,
+    "englishAndChineseLicenseBytesMatchRepository": true,
+    "otherRuntimeValidation": "Previously recorded runtime checks were not rerun; bundled JavaScript is unchanged."
+  }
 }

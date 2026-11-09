@@ -6,8 +6,8 @@
   "artifacts": [
     {
       "path": "code-map.json",
-      "sha256": "cfa1dc43c1734d45c2cb63592b986ead7018083822e0708e6d2d36c1700ada6d",
-      "bytes": 691156
+      "sha256": "8dff22eee1690cffb0bb5c9fd5837dc90b3a7df391eb8599fe1ed9eacdcc2f21",
+      "bytes": 693014
     }
   ]
 }

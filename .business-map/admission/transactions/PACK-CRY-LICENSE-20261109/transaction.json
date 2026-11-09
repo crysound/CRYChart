@@ -1,0 +1,83 @@
+{
+  "admitted_as_schema_version": "wuyong-business-map/knowledge-candidate-pack/v2",
+  "candidate_pack_digest": "sha256:6b2d1a486be204f84e38a770920083a4add2dc824ef2d2807779e43d0818a872",
+  "candidate_pack_id": "PACK-CRY-LICENSE-20261109",
+  "candidate_schema_version": "wuyong-business-map/knowledge-candidate-pack/v2",
+  "committed_decision": {
+    "admitted_as_schema_version": "wuyong-business-map/knowledge-candidate-pack/v2",
+    "candidate_pack_digest": "sha256:6b2d1a486be204f84e38a770920083a4add2dc824ef2d2807779e43d0818a872",
+    "candidate_pack_id": "PACK-CRY-LICENSE-20261109",
+    "candidate_schema_version": "wuyong-business-map/knowledge-candidate-pack/v2",
+    "changed_canonical_artifacts": [
+      "sources/source-registry.yml",
+      "graph/claim-source-map.jsonl",
+      "graph/graph-manifest.json"
+    ],
+    "decisions": [
+      {
+        "candidate_id": "CLM-CRY-LICENSE-COUNT-20261109",
+        "canonical_id": "CLM-3bcb229401de123f",
+        "decision": "ADMIT",
+        "reason": "reviewed evidence closure is safe",
+        "record_type": "claim"
+      },
+      {
+        "candidate_id": "SRC-CRY-LICENSE-USER-20261109",
+        "canonical_id": "SRC-CRY-LICENSE-USER-20261109",
+        "decision": "ADMIT",
+        "reason": "new source identity",
+        "record_type": "source"
+      }
+    ],
+    "legacy_migration_applied": false,
+    "schema_version": "wuyong-business-map/knowledge-admission-decision/v1"
+  },
+  "decision_digest": "sha256:c0e193ef283719a3433a55d26931c9d302bdde1fc0e25495a70e532f4fe249eb",
+  "legacy_migration_applied": false,
+  "owned_files": [
+    {
+      "after_digest": "sha256:7cb15ff50253a583cf29a9168bb8d32ac0b70d60856884fd6db70e3964df4452",
+      "before_digest": "sha256:33d852ca4630251c37d4794fdb2741c916a8c6e0475d3d39b6cdccf19fcc088d",
+      "path": "sources/source-registry.yml",
+      "published": true
+    },
+    {
+      "after_digest": "sha256:a26cc8b723d075b3cb3c88cab90cb1c9d6ebad97c98232e8e6bd004f94855c8a",
+      "before_digest": "sha256:12ca0e04ab37e21fde7cf71d400d2e82d815633c3267044de6abcac292e493d0",
+      "path": "graph/claim-source-map.jsonl",
+      "published": true
+    },
+    {
+      "after_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "before_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "graph/nodes.jsonl",
+      "published": true
+    },
+    {
+      "after_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "before_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "graph/edges.jsonl",
+      "published": true
+    },
+    {
+      "after_digest": "sha256:7e0d8a78a4c67394da039a4010494e42ac3992cc0be37129adce4264519064f8",
+      "before_digest": "sha256:7e0d8a78a4c67394da039a4010494e42ac3992cc0be37129adce4264519064f8",
+      "path": "index/verification-gaps.md",
+      "published": true
+    },
+    {
+      "after_digest": "sha256:c0251aca1ba0020b9b4c734b1a9e0cd638c7f23b300adc0ad7f12351ac41d4a8",
+      "before_digest": "sha256:c0251aca1ba0020b9b4c734b1a9e0cd638c7f23b300adc0ad7f12351ac41d4a8",
+      "path": "index/conflicts.md",
+      "published": true
+    },
+    {
+      "after_digest": "sha256:0e5a51f9310052489cfed909dbfca173ced237225c3bbf92e555c266bf851eba",
+      "before_digest": "sha256:a7a2d537739c21c1f0ef026f33fc4fa1e208c8b03ba4262a9a3c35ca43ee5be2",
+      "path": "graph/graph-manifest.json",
+      "published": true
+    }
+  ],
+  "schema_version": "wuyong-business-map/admission-transaction/v1",
+  "status": "committed"
+}

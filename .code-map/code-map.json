@@ -2399,6 +2399,28 @@
       "更新时间": "static-scan-candidate"
     },
     {
+      "编号": "文件:LICENSE.md",
+      "类型": "文件",
+      "名称": "LICENSE.md",
+      "路径或定位符": "LICENSE.md",
+      "属性": {},
+      "置信度": "未验证",
+      "证据编号": "证据:scan-plan:3babf3da94277e80",
+      "commit编号": "static-scan-candidate",
+      "更新时间": "static-scan-candidate"
+    },
+    {
+      "编号": "文件:LICENSE.zh-CN.md",
+      "类型": "文件",
+      "名称": "LICENSE.zh-CN.md",
+      "路径或定位符": "LICENSE.zh-CN.md",
+      "属性": {},
+      "置信度": "未验证",
+      "证据编号": "证据:scan-plan:3babf3da94277e80",
+      "commit编号": "static-scan-candidate",
+      "更新时间": "static-scan-candidate"
+    },
+    {
       "编号": "文件:README.md",
       "类型": "文件",
       "名称": "README.md",
@@ -7555,6 +7577,28 @@
     }
   ],
   "边": [
+    {
+      "编号": "边:仓库:CRYChart->文件:LICENSE.md:包含文件",
+      "起点节点": "仓库:CRYChart",
+      "终点节点": "文件:LICENSE.md",
+      "类型": "包含文件",
+      "属性": {},
+      "置信度": "未验证",
+      "证据编号": "证据:scan-plan:3babf3da94277e80",
+      "commit编号": "static-scan-candidate",
+      "更新时间": "static-scan-candidate"
+    },
+    {
+      "编号": "边:仓库:CRYChart->文件:LICENSE.zh-CN.md:包含文件",
+      "起点节点": "仓库:CRYChart",
+      "终点节点": "文件:LICENSE.zh-CN.md",
+      "类型": "包含文件",
+      "属性": {},
+      "置信度": "未验证",
+      "证据编号": "证据:scan-plan:3babf3da94277e80",
+      "commit编号": "static-scan-candidate",
+      "更新时间": "static-scan-candidate"
+    },
     {
       "编号": "边:仓库:CRYChart->文件:README.md:包含文件",
       "起点节点": "仓库:CRYChart",
@@ -15482,8 +15526,8 @@
       "tests/interval-max.test.ts": "761bcbd6d55b06a83b9b5a59d23bd9ac5b99519d081a6bc6fc138dfcd400cf4b",
       "tests/polar-highlight.test.ts": "9d5524335c1bfab066854d32aa74fefbc18426efc7f3860e9173d9e082bf2642",
       "tests/series-highlight.test.ts": "dc14fa1856e679588e383d6311f08afcfd914bc49c1b59957b03ba21155e6af6",
-      "package-lock.json": "a8b0ac29f4384fb0af7cdea10e8821348edb3c36e30e03f00add2441ea02cd65",
-      "package.json": "c7302a0fe1f03b556ebcd66ff80dd97cbafd5682a28639dc9a33493fdc5181f3",
+      "package-lock.json": "354949a70997057b8106d7698a2d196e7ee3dbea360ee90c37acc347d879e08d",
+      "package.json": "0517be46284faec627528adb37a9136ffaf6029272b8cebca15fa73e8f23b0cb",
       "src/index.ts": "eb8199757ffbeb303f9db331b211be355b964b8a4a5e2f116ebc8bb6eb0422da",
       "examples/official/additional-dashboards.ts": "3379fd92f346b810342583594b4e3624643eff0d0ee96ca89afa767d44bb6907",
       "examples/official/additional-gauges.ts": "73fdc9309af5d5605d41013e548107d2f91ea9bd032417c28bcc99422641b5c9",
@@ -15718,7 +15762,7 @@
       "examples/opentest-lab/stream-overview-fixture.js": "dfa54fe936fc4732b35c63ce407233d653e8f8ede762b551b1e389cdfe5392bd",
       "examples/opentest-lab/tdf-native-fixture.js": "9116cf38b8b4b77c966f3ac99983325aaedf2175cefd9c688907dfd6c4f4b524",
       "examples/opentest-lab/tdf-native-visible.mjs": "5b887cc20fc006a473beba30ef4f593bdbd610cb3da53eb1fa3d202712af6e7e",
-      "README.md": "c9bc829a8c32a8dc4de63fc6079e6af9b2d4ada28c4b61e1b9b21deacf25a20f",
+      "README.md": "4457cdc44c66802ba0498b19f0ef4738b08635b2c5f67fc363a394f8edb20098",
       "scripts/benchmark.mjs": "44d685c4a3b2ae036dc4e2003ef4d10783404059f27c7fa3617e82341e79f072",
       "scripts/browser-test.mjs": "27b5d80359d601dbf181dc5763825983ccbde20143a0999b2f919190ac175499",
       "scripts/coverage-mixed-visible.mjs": "fb1e574b6f823a6cce4bb166950b7ff4a5344431a8ed5f5e40f96e629ae4f0ad",
@@ -15740,13 +15784,17 @@
       "src/chart-events.ts": "68c41858de3226009ab20d4113899882e858cc5217f2f3a2c51601517eb32116",
       "tests/compatibility-types.test.ts": "fc99e51781f0ecc9160b398eb06adfe82049999f6d2560a9c0bd23dea1bdffd0",
       "tests/gallery-catalog.test.ts": "65f8ea6a7c1e18fd968553ccc81c8e939d403a1d4ba33ede8b7b28fd735c6fc9",
-      "tests/xy-axis-theme.html": "f7ed2eb7a81f391b569dd150f62524907f710a94c5fba62bb9cff4c10c7176f6"
+      "tests/xy-axis-theme.html": "f7ed2eb7a81f391b569dd150f62524907f710a94c5fba62bb9cff4c10c7176f6",
+      "LICENSE.md": "51a896ce6dc2cea4aceaf46a9af6e5181d9a4bc470fd69dd9397768a82a43de8",
+      "LICENSE.zh-CN.md": "93a1a734843bf2fe9e4f9750ae2da1c7b95180210a91b244eb32d719cbad9951"
     },
     "coverage_mode": "incremental",
     "coverage_status": "partial",
     "full_build_completed": false,
     "accumulation_mode": "development_write",
     "covered_files": [
+      "LICENSE.md",
+      "LICENSE.zh-CN.md",
       "README.md",
       "SPEC.md",
       "delivery-manifest.json",
@@ -16056,7 +16104,11 @@
       "tests/xy-singleton-fit.test.ts"
     ],
     "scan_inventory": [
-      "src/time-grid.ts"
+      "LICENSE.md",
+      "LICENSE.zh-CN.md",
+      "package-lock.json",
+      "package.json",
+      "README.md"
     ],
     "last_incremental_sync": "development_diff"
   }
