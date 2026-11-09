@@ -3,5 +3,7 @@ dist/
 .cache/
 codex_context/
 codex_artifact/
+/.code-map/
+/.business-map/
 *.tgz
 !/version/v1.0/crychart-1.0.0.tgz

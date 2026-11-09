@@ -1,5 +1,0 @@
-# Verification Gaps
-
-```json
-[]
-```
