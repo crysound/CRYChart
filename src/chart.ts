@@ -2399,7 +2399,7 @@ export class Polar extends ChartXY {
   override dispose(){this.polarHeatCache?.clear();return super.dispose();}
 }
 export class Chart3D extends ChartXY {
-  protected override usesWholeControl3DLayout(){return this.cameraModel!=='legacy';}
+  protected override usesWholeControl3DLayout(){return this.kind==='3d'&&this.cameraModel!=='legacy';}
   getAxisDefaultStrokeStyle():LineStyle|undefined{return this.theme.axisStrokeStyle;}
   get axisZ(){return this.getDefaultAxisZ()!;}
   protected override kind = "3d";

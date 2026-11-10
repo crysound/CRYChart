@@ -278,6 +278,20 @@ try {
     const alpha=(x,dx,dy)=>{const p=new Uint8Array(4);gl.readPixels(Math.round((r.left+x/10*r.width)*c.dpr)+Math.round(dx*c.dpr),Math.round(c.canvas.height-(r.top+r.height*.5)*c.dpr)-Math.round(dy*c.dpr),1,1,gl.RGBA,gl.UNSIGNED_BYTE,p);return p[3]};
     const result={squareCorner:alpha(2,9,9),circleCorner:alpha(4,9,9),upTop:alpha(6,9,-9),upBottom:alpha(6,9,9),downTop:alpha(8,9,-9),downBottom:alpha(8,9,9),glError:gl.getError()};c.dispose();return result;
   });assert.ok(shapes.squareCorner>100);assert.equal(shapes.circleCorner,0);assert.equal(shapes.upTop,0,JSON.stringify(shapes));assert.ok(shapes.upBottom>100,JSON.stringify(shapes));assert.ok(shapes.downTop>100);assert.equal(shapes.downBottom,0);assert.equal(shapes.glError,0);evidence.checks.push('distinct GPU point shapes and rotated triangles match actual pixel silhouettes');evidence.environment.pointShapes=shapes;
+  const legacyResize = await page.evaluate(() => {
+    const engine=window.lib.cryChart(),chart=engine.Chart3D({container:document.getElementById('chart'),experimental3DCameraModel:'legacy',legend:{visible:false}});
+    try{
+      chart.setCameraLocation({azimuth:.6,elevation:.4,zoom:1});
+      const size=chart.getSizePixels(),point={x:.2,y:.3,z:.4};
+      const before=chart.translateCoordinate(point,chart.coordsAxis,chart.coordsPixel);
+      chart.resize(size.x,size.y);
+      const after=chart.translateCoordinate(point,chart.coordsAxis,chart.coordsPixel);
+      return{before,after,delta:Math.hypot(before.x-after.x,before.y-after.y)};
+    }finally{chart.dispose();engine.dispose();}
+  });
+  evidence.environment.legacyResize=legacyResize;
+  assert.ok(legacyResize.delta<1e-9,JSON.stringify(legacyResize));
+  evidence.checks.push('Same-size resize preserves the initial legacy 3D projection');
   const threeD = await page.evaluate(() => {
     const lib = window.lib,
       c = lib
