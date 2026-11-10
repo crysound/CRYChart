@@ -2474,7 +2474,12 @@ export class Chart3D extends ChartXY {
     const viewport={left:0,top:0,width:Math.max(1,this.width),height:Math.max(1,this.height)};
     const key=JSON.stringify([viewport,this.plot,this.boundingBox,this.worldPosition,this.worldManualDirection,this.worldProjection,this.worldAutoFit]);
     if(!this.worldFrame||this.worldFrameKey!==key){
-      this.worldFrame=createWorldCameraFrame({position:this.worldPosition,forward:this.worldManualDirection,projection:this.worldProjection,autoFit:this.worldAutoFit,box:this.boundingBox,viewport,clip:this.plot});
+      // Perspective automatic fitting reserves a whole-control gutter. Public
+      // padding controls rendering independently; it must not zoom the camera.
+      const mx=Math.min(50,(viewport.width-1)/2),my=Math.min(50,(viewport.height-1)/2);
+      const fitArea=this.worldAutoFit&&this.worldProjection==='perspective'
+        ?{left:mx,top:my,width:viewport.width-2*mx,height:viewport.height-2*my}:undefined;
+      this.worldFrame=createWorldCameraFrame({position:this.worldPosition,forward:this.worldManualDirection,projection:this.worldProjection,autoFit:this.worldAutoFit,box:this.boundingBox,viewport,clip:this.plot,fitArea});
       this.worldFrameKey=key;this.worldFrameBuilds++;if(this.worldAutoFit)this.worldFitBuilds++;
     }
     return this.worldFrame;

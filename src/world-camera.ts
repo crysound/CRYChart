@@ -127,9 +127,10 @@ function clipMatrix(frame:Omit<WorldCameraFrame,'matrix'|'rotation'>):Float32Arr
   const perspective=frame.projection==='perspective',kx=perspective?2*frame.focal/v.width:2/radius,ky=perspective?2*frame.focal/v.height:2*v.width/(radius*v.height),a=perspective?(z+n)/(z-n):2/(z-n),b=perspective?-2*z*n/(z-n):-(z+n)/(z-n);
   return new Float32Array([kx*r.x*s.x,ky*u.x*s.x,a*f.x*s.x,perspective?f.x*s.x:0,kx*r.y*s.y,ky*u.y*s.y,a*f.y*s.y,perspective?f.y*s.y:0,kx*r.z*s.z,ky*u.z*s.z,a*f.z*s.z,perspective?f.z*s.z:0,-kx*dot(r,p),-ky*dot(u,p),b-a*dot(f,p),perspective?-dot(f,p):1]);
 }
-export function createWorldCameraFrame(options:{position:Vec3;forward?:Vec3;projection:Projection3D;autoFit:boolean;box:Vec3;viewport:Rect;clip:Rect}):WorldCameraFrame{
+export function createWorldCameraFrame(options:{position:Vec3;forward?:Vec3;projection:Projection3D;autoFit:boolean;box:Vec3;viewport:Rect;clip:Rect;fitArea?:Rect}):WorldCameraFrame{
   const {projection,autoFit}=options;if(projection!=='perspective'&&projection!=='orthographic')throw new TypeError('Unknown 3D projection');
-  validateRect(options.viewport);validateRect(options.clip);const box=validateBox3D(options.box),viewport={...options.viewport},clip={...options.clip},safe=symmetricFitRect3D(viewport,clip);
+  validateRect(options.viewport);validateRect(options.clip);if(options.fitArea)validateRect(options.fitArea);
+  const box=validateBox3D(options.box),viewport={...options.viewport},clip={...options.clip},safe=symmetricFitRect3D(viewport,options.fitArea??clip);
   const solved=autoFit?fitEye(box,options.position,viewport,safe,projection):{position:clampManualCamera3D(options.position),...lookAtBasis3D(options.forward??mul(unit3(options.position),-1)),iterations:0,fits:true,fallback:false};
   const radius=Math.hypot(solved.position.x,solved.position.y,solved.position.z),near=.005,far=Math.max(8,radius+2),frame={position:solved.position,forward:solved.forward,right:solved.right,up:solved.up,viewport,clip,safe,box,projection,scale:worldScale3D(box),radius,near,far,focal:viewport.height/(2*Math.tan(Math.PI/8)),fit:{enabled:autoFit,iterations:solved.iterations,verified:solved.fits,fallback:solved.fallback}};
   const {right:r,up:u,forward:f}=frame;
