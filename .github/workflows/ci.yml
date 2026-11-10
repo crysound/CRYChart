@@ -1,0 +1,83 @@
+name: CRYChart CI
+
+on:
+  pull_request:
+    branches:
+      - main
+      - 'release/*'
+  push:
+    branches:
+      - main
+      - 'release/*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: CRYChart checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: 安装 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: 安装锁定版本的依赖
+        run: npm ci
+      - name: 检查类型
+        run: npm run typecheck
+      - name: 运行单元测试
+        run: npm test
+      - name: 检查 OpenTest 接口兼容性
+        run: npm run test:opentest-contract
+      - name: 构建库和示例
+        run: npm run build
+
+  browser:
+    name: CRYChart browser tests
+    runs-on: windows-latest
+    timeout-minutes: 20
+    env:
+      CRYCHART_CHROME: 'C:/Program Files/Google/Chrome/Application/chrome.exe'
+      CRYCHART_PORT: '4178'
+      CRYCHART_CDP: 'http://127.0.0.1:9223'
+      NO_PROXY: '127.0.0.1,localhost'
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: 安装 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: 安装锁定版本的依赖
+        run: npm ci
+      - name: 构建库和示例
+        run: npm run build
+      - name: 运行真实浏览器测试
+        run: npm run test:browser
+      - name: 运行示例和交互测试
+        run: npm run test:gallery
+      - name: 保存浏览器测试结果
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-test-results
+          path: |
+            codex_artifact/browser/
+            codex_artifact/gallery/
+          if-no-files-found: ignore
+          retention-days: 7
