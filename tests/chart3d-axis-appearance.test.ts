@@ -19,6 +19,37 @@ function recorder() {
   return{context,texts,strokes};
 }
 
+test('3D automatic numeric ticks keep minor labels hidden with a custom formatter',()=>{
+  const theme=makeCustomTheme({backgroundColor:emptyFill,textColor:ColorHEX('#304050'),gridLineColor:ColorHEX('#ccddee'),axisColor:ColorHEX('#708090')});
+  const chart=new Probe({theme,legend:{visible:false}}).resize(1440,749),r=recorder();
+  try{
+    chart.axisX.setTickStrategy('Empty');chart.axisZ.setTickStrategy('Empty');
+    chart.axisY.setInterval({start:-85,end:-41}).setTickStrategy('Numeric',strategy=>strategy.setFormattingFunction(value=>`level ${value}`));
+    chart.paint(r.context);
+    assert.deepEqual(r.texts.map(t=>t.text),['level -80','level -70','level -60','level -50']);
+    r.texts.length=0;
+    chart.axisY.setTickStrategy('Numeric',strategy=>strategy.setMinorTickStyle(style=>style.setLabelFillStyle(new SolidFill({color:ColorHEX('#abcdef')}))));
+    chart.paint(r.context);
+    assert.ok(r.texts.some(t=>t.text==='level -84'&&t.fill===ColorHEX('#abcdef').toCSS()),'An explicitly enabled minor label remains visible');
+  }finally{chart.dispose();}
+});
+
+test('3D axes default to theme strokes while explicit empty strokes stay empty',()=>{
+  const theme=makeCustomTheme({axisColor:ColorHEX('#708090')});
+  const chart=new Probe({theme,legend:{visible:false}}),r=recorder();
+  try{
+    for(const axis of[chart.axisX,chart.axisY,chart.axisZ]){
+      axis.setTickStrategy('Empty');
+      assert.equal(axis.stroke,theme.axisStrokeStyle);
+    }
+    chart.paint(r.context);
+    assert.equal(r.strokes.filter(s=>s.color===ColorHEX('#708090').toCSS()&&s.width===1).length,3);
+    for(const axis of[chart.axisX,chart.axisY,chart.axisZ])axis.setStrokeStyle(emptyLine);
+    r.strokes.length=0;chart.paint(r.context);assert.deepEqual(r.strokes,[]);
+    assert.equal(chart.addAxisZ().stroke,theme.axisStrokeStyle);
+  }finally{chart.dispose();}
+});
+
 test('3D axes draw the actual custom theme and per-axis overrides, including transparent backgrounds',()=>{
   const theme=makeCustomTheme({backgroundColor:emptyFill,textColor:ColorHEX('#304050'),gridLineColor:ColorHEX('#ccddee'),axisColor:ColorHEX('#708090'),fontSize:{axisTitle:14,other:13},fontFamily:'Arial'});
   const chart=new Probe({theme,legend:{visible:false}}).resize(1440,749),r=recorder();

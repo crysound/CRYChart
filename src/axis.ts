@@ -7,6 +7,7 @@ import {
   emptyLine,
   emptyFill,
   type FillStyle,
+  type LineStyle,
   type Theme,
 } from "./core/styles.js";
 import {UnsupportedFeatureError, type Interval, type Mutator} from "./contracts.js";
@@ -547,6 +548,8 @@ export interface AxisHost {
   readonly theme?: Partial<Theme>;
   /** Internal seed for style mutators; drawing still resolves explicit overrides. */
   getAxisTickFont?(): FontSettings | undefined;
+  /** 3D axes have a themed baseline; ordinary XY axes keep their empty default. */
+  getAxisDefaultStrokeStyle?(): LineStyle | undefined;
 }
 export class Axis {
   readonly events = new EventHub();
@@ -604,6 +607,7 @@ export class Axis {
     this.chart = chart;
     this.direction = direction;
     const theme=chart.theme;
+    this.stroke=chart.getAxisDefaultStrokeStyle?.()??this.stroke;
     this.titleFont=theme?.[`${direction}AxisTitleFont`]??theme?.axisTitleFont??this.titleFont;
     this.titleFill=theme?.[`${direction}AxisTitleFillStyle`]??theme?.axisTitleFillStyle??this.titleFill;
     this.tickStrategy = new NumericTickStrategy(()=>this.chart.invalidate(), this.initialTickFont(),this.chart.theme);

@@ -82,7 +82,7 @@ function resolvedTickFont(axis:Axis,level:TickLevel,style:TickStyle,theme?:AxisC
   const font=style.hasLabelFontOverride()?style.getLabelFont():level==='minor'&&axis.tickStrategy.kind==='time'?(axis.tickStrategy as TimeTickStrategy).resolveDefaultMinorFont?.(theme?.font)??current:current;
   return resolveFont?.(font)??font;
 }
-function resolvedTickFill(axis:Axis,level:TickLevel,style:TickStyle,theme?:AxisCanvasTheme,forDrawing=false){
+export function resolvedTickFill(axis:Axis,level:TickLevel,style:TickStyle,theme?:AxisCanvasTheme,forDrawing=false){
   if(style.hasLabelFillStyleOverride())return style.getLabelFillStyle();
   if(level==='major')return theme?.tickLabelFillStyle??(forDrawing?undefined:style.getLabelFillStyle());
   if(level==='minor'&&axis.tickStrategy.kind==='time'&&(axis.tickStrategy as TimeTickStrategy).usesBoundedMinor?.())return theme?.tickLabelFillStyle??style.getLabelFillStyle();

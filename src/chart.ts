@@ -51,7 +51,7 @@ import {colorMappedLine3D} from './line-palette-3d.js';
 import {PolarHeatmapSeries,type PolarHeatmapOptions,type PolarHeatmapSolveResult} from './polar-heatmap.js';
 import {Series3DBase,SurfaceGrid3D,SurfaceMesh3D,MeshModel3D,BoxSeries3D} from './mesh3d.js';
 import {layoutAxisStacks,parallelAxisCount} from './axis-layout.js';
-import {drawAxisCanvas,measureAxisCanvasLayout,measureChartTitleContent,axisCanvasLaneOffset,type AxisCanvasLayout} from './axis-canvas.js';
+import {drawAxisCanvas,measureAxisCanvasLayout,measureChartTitleContent,axisCanvasLaneOffset,resolvedTickFill,type AxisCanvasLayout} from './axis-canvas.js';
 import {layoutAxis3DTicks,type Axis3DTickRequest} from './axis3d-label-layout.js';
 import {computePolarLayout,polarPosition,polarInverseNormalized,type PolarLayout,type PolarInsets} from './polar-layout.js';
 import {PublicEventAdapter,getChartAxes,getChartSizePixels,type AxisPosition,type PublicEventListener,type ChartEventListenerOptions} from './chart-events.js';
@@ -2389,6 +2389,7 @@ export class Polar extends ChartXY {
   override dispose(){this.polarHeatCache?.clear();return super.dispose();}
 }
 export class Chart3D extends ChartXY {
+  getAxisDefaultStrokeStyle():LineStyle|undefined{return this.theme.axisStrokeStyle;}
   get axisZ(){return this.getDefaultAxisZ()!;}
   protected override kind = "3d";
   /** Original world-camera candidate. The stable/legacy path remains isolated. */
@@ -2947,7 +2948,7 @@ export class Chart3D extends ChartXY {
           marker = this.project(1, -1, f);
           preferred={x:marker.x+16,y:marker.y+10};
         }
-        const labelInk=fillColor(tickStyle.hasLabelFillStyleOverride()?tickStyle.getLabelFillStyle():this.theme.tickLabelFillStyle??tickStyle.getLabelFillStyle());
+        const labelInk=fillColor(resolvedTickFill(axis,level,tickStyle,this.theme));
         if(tick.label&&labelInk.a>0)tickRequests.push({axis:dimension,order:f,text:tick.label,preferred,tangent,outward,font:tickFont.toCSS(),fill:labelInk.toCSS()});
       }
       }
