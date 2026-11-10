@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="data:,">
+<title>CRYChart 性能自动测试</title>
+<style>html,body{margin:0;background:#101827;color:#e5edf8;font:14px system-ui}#stage,#grid{width:100%}#chart{width:1000px;height:600px}#status{position:fixed;right:8px;bottom:8px;pointer-events:none}</style>
+<div id="stage"><div id="chart"></div><div id="grid"></div></div><div id="status">CRYChart 性能测试</div>
+<script type="module">
+const fixture=new URL(location.href).searchParams.get('fixture');
+if(!['channels','monitoring'].includes(fixture))throw new Error('未知性能夹具');
+await import(`./${fixture}-fixture.mjs`);
+</script>
+</html>

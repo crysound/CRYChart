@@ -4,7 +4,7 @@ import {Axis,type AxisHost} from '../src/axis.js';
 import {FontSettings,SolidFill,ColorRGBA,emptyFill} from '../src/core/styles.js';
 import {numericTickPositions,logarithmicTickPositions} from '../src/grid-layout.js';
 import {drawAxisCanvas,measureAxisCanvasLayout} from '../src/axis-canvas.js';
-const makeHost=(font=new FontSettings({family:'Segoe UI, -apple-system, Verdana, Helvetica',size:14}),color=ColorRGBA(255,255,220)):AxisHost=>({plot:{left:0,top:0,width:619.7607439863349,height:400},theme:{font,tickLabelFillStyle:new SolidFill({color})},invalidate(){},boundsFor(){return undefined;}});
+const makeHost=(font=new FontSettings({family:'Segoe UI, -apple-system, Verdana, Helvetica',size:14}),color=ColorRGBA(255,255,220)):AxisHost=>({plot:{width:619.7607439863349,height:400},theme:{font,tickLabelFillStyle:new SolidFill({color})},invalidate(){},boundsFor(){return undefined;}});
 const measure=(_text:string,level:string)=>level==='major'?51.3515625:36.6796875;
 const positions=[300000,600000,1200000,1500000,2100000,2400000];
 test('Time默认次标签在主题family上为10px，复制主题填充而非暗色硬编码',()=>{

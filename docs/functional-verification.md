@@ -1,9 +1,13 @@
 # CRYChart 功能场景检查
 
-本地目录保留 167 个功能场景。条目 ID 统一使用 `crychart-example-` 前缀。公开入口为 `cryChart`。
+本轮检查 167 个功能场景：167 项通过，0 项失败，0 项未完成。
 
-历史构建记录了 167 项本库功能检查通过。历史生成时间为 `2026-11-06T05:11:25+08:00`，源提交为 `a2f0a9d5f94dff71061cd3c3f321cad5e6a1bdf5`。原始构建指纹保留在 JSON 的 `history` 字段。
+运行时间：2026-11-10T03:32:02.485Z。当前状态：通过。
 
-品牌和接口名称清理后，当前源码验收状态为 `pending`。历史通过数不计入当前通过数。每个场景需要按功能要求、数据、真实操作和生命周期验收，挂载成功不能代替完整场景通过。
+构建指纹：`67bfaa520f8375f87dfb9256044de59f6700f3d90cb1469708a4bef83d3716cd`。
 
-[机器可读清单](functional-verification.json) 保留本库历史检查和当前待验收要求。[HTML 场景表](CRYChart-functional-report.html) 提供条目检索。OpenTest 本轮保持只读，应用集成与现场性能需要单独验证。
+执行 `npm run build` 后运行 `npm run test:functional`，或使用 `npm run verify` 执行整套本库验证。缺项或失败返回非零退出码。
+
+[逐项清单](functional-verification.json) · [HTML 场景表](CRYChart-functional-report.html) · [本轮原始证据](../codex_artifact/functional-current/20261110-final/stable/report.json)
+
+历史结果保存在 JSON 的 history 字段，不计入当前通过数。本轮不运行 OpenTest 应用，也不据此宣称参考库完全等价或性能验收通过。

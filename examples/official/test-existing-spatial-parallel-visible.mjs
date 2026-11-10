@@ -26,7 +26,7 @@ const assetManifestPath = resolve('examples/data/3d-data-provenance.json');
 const assetManifest = JSON.parse(await readFile(assetManifestPath, 'utf8'));
 const assets = assetManifest.assets.filter(a => a.file.startsWith('lidar-'));
 for (const asset of assets) {const data = await readFile(resolve('examples/data', asset.file)); assert.equal(data.length, asset.bytes); assert.equal(hash(data), asset.sha256);}
-const report = {createdAt:new Date().toISOString(), bundlePath, bundleSHA256:sha, runnerSHA256:hash(runnerBytes), base, scope:ids, fullEquivalent:false, performanceTest:false,
+const report = {sessionId:process.env.CRYCHART_FUNCTIONAL_SESSION_ID,createdAt:new Date().toISOString(), bundlePath, bundleSHA256:sha, runnerSHA256:hash(runnerBytes), base, scope:ids, fullEquivalent:false, performanceTest:false,
   sourceManifest:args['source-manifest'] ? {path:resolve(String(args['source-manifest'])),sha256:hash(await readFile(resolve(String(args['source-manifest']))))} : null,
   provenance:{assetManifestPath,sha256:hash(await readFile(assetManifestPath)),assets},
   oraclePolicy:{raw:'Every retained XYZ/attribute or complete parallel record; exact comparison.',slab:'Independent full scan and duplicate-preserving projected point multiset, inclusive 120-unit slab.',ellipsoid:'Independent two-pass sample covariance; every mesh vertex must satisfy the inverse-covariance quadratic form 7.815.',fft:'Every retained heat/surface value and geometry coordinate; independent direct DFT for three retained frames per channel, tolerance 0.0001 dB.',interaction:'Real pointer/keyboard input; complete filter and aggregation sets recomputed from original records.'},
@@ -42,8 +42,8 @@ page.on('console', m => {if (m.type() === 'error') errors.push(m.text());});
 if (args.bundle) await page.route('**/dist/official.js', route => route.fulfill({status:200,contentType:'text/javascript',body:bytes}));
 await page.addInitScript(({assets}) => {
   window.__spatialLoss = [];
-  const getContext = HTMCoreanvasElement.prototype.getContext;
-  HTMCoreanvasElement.prototype.getContext = function(...args) {
+  const getContext = HTMLCanvasElement.prototype.getContext;
+  HTMLCanvasElement.prototype.getContext = function(...args) {
     const context = getContext.apply(this, args);
     if (context && !this.__spatialTracked) {this.__spatialTracked = true; this.addEventListener('webglcontextlost', () => window.__spatialLoss.push('lost'));}
     return context;

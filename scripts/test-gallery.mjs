@@ -65,28 +65,37 @@ try {
       if (context) window.__galleryCanvasContexts.set(this, { kind, context });
       if (context && kind === 'webgl2' && !instrumented.has(context)) {
         instrumented.add(context);
-        const draw = context.drawArrays;
+        const attribute = location => ({
+          buffer: context.getVertexAttrib(location, context.VERTEX_ATTRIB_ARRAY_BUFFER_BINDING),
+          size: context.getVertexAttrib(location, context.VERTEX_ATTRIB_ARRAY_SIZE),
+          type: context.getVertexAttrib(location, context.VERTEX_ATTRIB_ARRAY_TYPE),
+          stride: context.getVertexAttrib(location, context.VERTEX_ATTRIB_ARRAY_STRIDE),
+          divisor: context.getVertexAttrib(location, context.VERTEX_ATTRIB_ARRAY_DIVISOR),
+          offset: context.getVertexAttribOffset(location, context.VERTEX_ATTRIB_ARRAY_POINTER),
+        });
+        const domain = () => {
+          const location = context.getUniformLocation(context.getParameter(context.CURRENT_PROGRAM), 'u_domain');
+          return location ? Array.from(context.getUniform(context.getParameter(context.CURRENT_PROGRAM), location)) : undefined;
+        };
+        const draw = context.drawArrays, instanced = context.drawArraysInstanced;
         context.drawArrays = function (mode, first, count) {
           if (window.__galleryMillionTraceEnabled) {
-            const gl = context, program = gl.getParameter(gl.CURRENT_PROGRAM);
-            const uniform = name => {
-              const location = gl.getUniformLocation(program, name);
-              return location ? Array.from(gl.getUniform(program, location)) : undefined;
-            };
-            window.__galleryMillionDraws.set(gl, {
-              mode, first, count, domain: uniform('u_domain'),
-              defaultFramebuffer: gl.getParameter(gl.DRAW_FRAMEBUFFER_BINDING) === null,
-              center: {
-                buffer: gl.getVertexAttrib(1, gl.VERTEX_ATTRIB_ARRAY_BUFFER_BINDING),
-                size: gl.getVertexAttrib(1, gl.VERTEX_ATTRIB_ARRAY_SIZE),
-                type: gl.getVertexAttrib(1, gl.VERTEX_ATTRIB_ARRAY_TYPE),
-                stride: gl.getVertexAttrib(1, gl.VERTEX_ATTRIB_ARRAY_STRIDE),
-                divisor: gl.getVertexAttrib(1, gl.VERTEX_ATTRIB_ARRAY_DIVISOR),
-                offset: gl.getVertexAttribOffset(1, gl.VERTEX_ATTRIB_ARRAY_POINTER),
-              },
-            });
+            const values = domain(), defaultFramebuffer = context.getParameter(context.DRAW_FRAMEBUFFER_BINDING) === null;
+            if (values) window.__galleryMillionDraws.set(context, {kind:'strip', mode, first, count, domain:values, defaultFramebuffer, center:attribute(1)});
+            else if (defaultFramebuffer && mode === context.TRIANGLE_STRIP && first === 0 && count === 4) {
+              const recorded = window.__galleryMillionDraws.get(context);
+              if (recorded?.kind === 'coverage') recorded.compositedToCanvas = true;
+            }
           }
           return draw.call(context, mode, first, count);
+        };
+        context.drawArraysInstanced = function (mode, first, count, instances) {
+          if (window.__galleryMillionTraceEnabled) {
+            const values = domain();
+            if (values) window.__galleryMillionDraws.set(context, {kind:'coverage', mode, first, count, instances, domain:values,
+              defaultFramebuffer:context.getParameter(context.DRAW_FRAMEBUFFER_BINDING) === null, center:attribute(0), end:attribute(1), compositedToCanvas:false});
+          }
+          return instanced.call(context, mode, first, count, instances);
         };
       }
       return context;
@@ -244,11 +253,19 @@ try {
         const saved = [...window.__galleryCanvasContexts.entries()].find(([canvas, entry]) => canvas.isConnected && document.querySelector('#chart-stage').contains(canvas) && entry.kind === 'webgl2');
         if (!saved) throw new Error('Million-sample geometry verification requires a real WebGL2 data canvas');
         const [canvas, { context: gl }] = saved, draw = window.__galleryMillionDraws.get(gl);
-        if (!draw || draw.mode !== gl.TRIANGLE_STRIP || draw.first !== 0 || draw.count !== 2 * count || draw.center.size !== 2 || draw.center.type !== gl.FLOAT || draw.center.stride !== 8 || draw.center.divisor !== 0 || !draw.defaultFramebuffer || !draw.domain)
-          throw new Error('The observed raw line draw does not contain the expected complete center-coordinate geometry');
+        const coverage = draw?.kind === 'coverage';
+        const validGeometry = coverage
+          ? draw.count === 4 && draw.instances === count - 1 && !draw.defaultFramebuffer && draw.compositedToCanvas &&
+            [8,16].includes(draw.center.stride) && draw.center.divisor === 1 && draw.end.divisor === 1 &&
+            draw.end.buffer === draw.center.buffer && draw.end.size === 2 && draw.end.type === gl.FLOAT &&
+            draw.end.stride === draw.center.stride && draw.end.offset === draw.center.offset + draw.center.stride
+          : draw?.count === 2 * count && draw.defaultFramebuffer && draw.center.stride === 8 && draw.center.divisor === 0;
+        if (!draw || draw.mode !== gl.TRIANGLE_STRIP || draw.first !== 0 || draw.center.size !== 2 || draw.center.type !== gl.FLOAT || !draw.domain || !validGeometry)
+          throw new Error('The observed raw line draw does not contain every source sample and segment: ' + JSON.stringify({kind:draw?.kind,count:draw?.count,instances:draw?.instances,stride:draw?.center?.stride}));
+        const floatsPerSample = coverage ? draw.center.stride / 4 : 4;
         const errorsBefore = []; for (let i = 0; i < 12; i++) { const error = gl.getError(); if (!error) break; errorsBefore.push(error); }
         const previousBuffer = gl.getParameter(gl.ARRAY_BUFFER_BINDING), previousRead = gl.getParameter(gl.READ_FRAMEBUFFER_BINDING);
-        const centerCoordinates = new Float32Array(count * 4), pixels = new Uint8Array(canvas.width * canvas.height * 4);
+        const centerCoordinates = new Float32Array((count - 1) * floatsPerSample + (coverage ? 2 : 4)), pixels = new Uint8Array(canvas.width * canvas.height * 4);
         let bufferBytes;
         try {
           gl.bindBuffer(gl.ARRAY_BUFFER, draw.center.buffer);
@@ -265,21 +282,21 @@ try {
         for (let index = 0; index < count; index++) {
           const expectedX = Math.fround(index - originX);
           const sourceY = Math.sin(index * .002) + Math.sin(index * .000037) * .6 + (index % 8191 === 0 ? 2 : 0);
-          const expectedY = Math.fround(sourceY - originY), offset = index * 4;
+          const expectedY = Math.fround(sourceY - originY), offset = index * floatsPerSample;
           if (index % 8191 === 0) peaksChecked++;
-          if (centerCoordinates[offset] !== expectedX || centerCoordinates[offset + 1] !== expectedY || centerCoordinates[offset + 2] !== expectedX || centerCoordinates[offset + 3] !== expectedY) {
-            coordinateMismatches++; firstMismatch ??= { index, expected: [expectedX, expectedY], actual: Array.from(centerCoordinates.subarray(offset, offset + 4)) };
+          if (centerCoordinates[offset] !== expectedX || centerCoordinates[offset + 1] !== expectedY || (!coverage && (centerCoordinates[offset + 2] !== expectedX || centerCoordinates[offset + 3] !== expectedY))) {
+            coordinateMismatches++; firstMismatch ??= { index, expected: [expectedX, expectedY], actual: Array.from(centerCoordinates.subarray(offset, offset + (coverage ? 2 : 4))) };
           }
         }
         let seriesColoredPixels = 0;
         for (let i = 0; i < pixels.length; i += 4) if (pixels[i + 3] > 128 && pixels[i + 1] > pixels[i] + 50 && pixels[i + 2] > pixels[i] + 30) seriesColoredPixels++;
         const errorsAfter = []; for (let i = 0; i < 12; i++) { const error = gl.getError(); if (!error) break; errorsAfter.push(error); }
-        return { retainedSourceSamples: chart.series[0].sampleCount, submittedSamples: chart.stats.submittedSamples, gpuVertices: draw.count,
+        return { retainedSourceSamples: chart.series[0].sampleCount, submittedSamples: chart.stats.submittedSamples, gpuVertices: coverage ? draw.count * draw.instances : draw.count, gpuSegments: coverage ? draw.instances : draw.count / 2 - 1, geometryKind:draw.kind,
           backend: chart.stats.backend, uploads: chart.stats.uploads, uploadedBytes: chart.stats.uploadedBytes, bufferBytes,
-          projection: { checkedSamples: count, checkedCoordinates: count * 4, peaksChecked, coordinateMismatches, firstMismatch, origin: { x: originX, y: originY }, precision: 'Float32 relative GPU coordinates, compared against the independent original recipe formula; this is not a raw Float64-byte audit' },
+          projection: { checkedSamples: count, checkedCoordinates: count * (coverage ? 2 : 4), peaksChecked, coordinateMismatches, firstMismatch, origin: { x: originX, y: originY }, precision: 'Float32 relative GPU coordinates, compared against the independent original recipe formula; this is not a raw Float64-byte audit' },
           pixels: { width: canvas.width, height: canvas.height, seriesColoredPixels }, contextLost: gl.isContextLost(), errorsBefore, errorsAfter,
           bindingsRestored: gl.getParameter(gl.ARRAY_BUFFER_BINDING) === previousBuffer && gl.getParameter(gl.READ_FRAMEBUFFER_BINDING) === previousRead,
-          downsamplingObserved: draw.count / 2 !== count || chart.stats.submittedSamples !== count,
+          downsamplingObserved: (coverage ? draw.instances + 1 : draw.count / 2) !== count || chart.stats.submittedSamples !== count,
           limits: 'Readback is diagnostic and outside performance timing. Source retention count, projected geometry, GPU vertices and upload bytes are distinct quantities.' };
       }, expectedSamples);
       assert.equal(evidence.retainedSourceSamples, expectedSamples);
@@ -299,7 +316,9 @@ try {
   });
   await check('reference inventory search resolves an exact ID without claiming completion', async () => {
     await page.evaluate(() => { location.hash = 'reference=crychart-example-1720-derivedDataProperties'; }); await page.waitForFunction(() => window.__CRY_GALLERY__?.status === 'reference');
-    await page.getByLabel('搜索示例').fill('1720'); assert.equal(await page.locator('#demo-list button').count(), 1); assert.equal(await page.locator('.status-pill').textContent(), '待验收');
+    await page.getByLabel('搜索示例').fill('1720'); assert.equal(await page.locator('#demo-list button').count(), 1); assert.equal(await page.locator('.status-pill.pending').textContent(), '演示场景');
+    assert.equal(await page.locator('.reference-id').textContent(), 'crychart-example-1720-derivedDataProperties');
+    assert.deepEqual(await page.locator('.check-item span').allTextContents(), Array(4).fill('独立验证'));
     return { matched: 1, status: 'pending' };
   });
   await check('responsive layout resizes chart canvas and supports a light theme', async () => {

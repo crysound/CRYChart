@@ -18,7 +18,7 @@ function request(source: DataSetXY, first?: number, end?: number): LineBlockRequ
     visibleSegments: {first: first ?? retainedFirst, end: end ?? next - 1}, domain: {x: {start: 0, end: 100}, y: {start: -2, end: 2}},
     style: {color: [0, 1, 1, 1], thickness: 2}, monotonicX: order.finite && order.strict ? 'verified-strict' : 'invalid'};
 }
-function blocks(result: LineBlockResult) {assert.equal(result.kind, 'blocks'); if (result.kind !== 'blocks') throw new Error(result.reason); return result;}
+function blocks(result: LineBlockResult) {if (result.kind !== 'blocks') assert.fail(result.reason); assert.equal(result.kind, 'blocks'); return result;}
 function verifySamples(source: DataSetXY, result: ReturnType<typeof blocks>) {
   const retainedFirst = source.getNextSampleIndex() - source.getSampleCount();
   for (const packet of result.packets) {

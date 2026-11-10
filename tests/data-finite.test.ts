@@ -52,7 +52,7 @@ test('finite-only full-scan oracle agrees through deterministic append, resize, 
   for(const storage of [Float32Array,Float64Array])for(const paged of [false,true]){
     const data=make(storage,paged);let seed=0x10203040;
     const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed;};
-    const values=(n:number)=>storage.from({length:n},()=>{const x=random();return x%17===0?NaN:x%19===0?Infinity:x%23===0?-Infinity:x%13===0?-0:x%11===0?0:(x%10000-5000)/37;});
+    const values=(n:number)=>new storage(Array.from({length:n},()=>{const x=random();return x%17===0?NaN:x%19===0?Infinity:x%23===0?-Infinity:x%13===0?-0:x%11===0?0:(x%10000-5000)/37;}));
     try{
       for(let step=0;step<160;step++){
         const operation=random()%8,n=1+random()%37;

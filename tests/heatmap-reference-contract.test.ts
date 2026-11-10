@@ -93,7 +93,7 @@ for (const dataOrder of [undefined, 'rows', 'columns']) {
         { name: 'undefined input', make: () => undefined },
       ];
       for (const item of invalid) {
-        assert.throws(() => heat.invalidateIntensityValues(item.make()), undefined, item.name);
+        assert.throws(() => heat.invalidateIntensityValues(item.make()), item.name);
         assert.deepEqual(new Uint8Array(heat.data.buffer), beforeBytes, item.name);
         assert.equal(heat.data, beforeBuffer); assert.equal(heat.revision, revision); assert.equal(heat.dataRevision, dataRevision);
         assert.equal(heat.dataUpdate, update); assert.equal(invalidations, 0);

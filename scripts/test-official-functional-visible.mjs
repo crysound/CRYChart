@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {readFile, writeFile, mkdir} from 'node:fs/promises';
-import {createHash} from 'node:crypto';
+import {createHash,randomUUID} from 'node:crypto';
 import {resolve, dirname, join} from 'node:path';
 import {fileURLToPath, pathToFileURL} from 'node:url';
 import {loadSpecializedEvidence,resolveCaseEvidence} from './summarize-official-functional.mjs';
@@ -11,10 +11,14 @@ const stamp=()=>new Date().toISOString().replace(/[:.]/g,'-');
 const plainError=error=>({name:error?.name??'Error',message:String(error?.message??error),stack:error?.stack});
 
 export function parseOptions(argv,env=process.env){
-  const options={baseURL:env.CRYCHART_BASE_URL??'http://127.0.0.1:4180',ids:[],out:undefined,expectedSHA:undefined,dryRun:false,evidenceOnly:false,reconcile:undefined};
+  const options={baseURL:env.CRYCHART_BASE_URL??'http://127.0.0.1:4180',ids:[],out:undefined,expectedSHA:undefined,dryRun:false,evidenceOnly:false,reconcile:undefined,contracts:undefined,sessionId:undefined,fresh:true};
   for(let i=0;i<argv.length;i++){
     const arg=argv[i],get=name=>arg.startsWith(name+'=')?arg.slice(name.length+1):argv[++i];
     if(arg==='--dry-run')options.dryRun=true;
+    else if(arg==='--fresh')options.fresh=true;
+    else if(arg==='--allow-historical-evidence')options.fresh=false;
+    else if(arg==='--contracts'||arg.startsWith('--contracts='))options.contracts=get('--contracts');
+    else if(arg==='--session-id'||arg.startsWith('--session-id='))options.sessionId=get('--session-id');
     else if(arg==='--evidence-only')options.evidenceOnly=true;
     else if(arg==='--reconcile'||arg.startsWith('--reconcile=')){options.reconcile=get('--reconcile');options.evidenceOnly=true;}
     else if(arg==='--all')options.ids=[];
@@ -140,8 +144,24 @@ async function auditIndependentTraces(page){
 
 export const deriveCaseResult=resolveCaseEvidence;
 
+export function canReuseCurrentSpecialized(contract,evidence,{currentRun,sessionId,contractSessionId,fresh},record={id:contract.id,errors:[]}){
+  if(fresh!==true||currentRun!==true||!sessionId||sessionId!==contractSessionId)return false;
+  if(!Array.isArray(contract.legacyChecks)||contract.legacyChecks.length!==0)return false;
+  if(!contract.specializedEvidence?.length||!evidence?.diagnostics?.length||evidence.diagnostics.some(d=>!d.eligible))return false;
+  if(record.errors?.length||evidence.attempts?.some(c=>c.status==='failed')||evidence.unresolvedBlockingErrors?.length)return false;
+  return resolveCaseEvidence(record,contract,{},evidence).functionalComplete===true;
+}
+
+export function currentContracts(input, options){
+  const contracts=structuredClone(input);
+  const current=contracts.currentRun===true&&typeof options.sessionId==='string'&&contracts.sessionId===options.sessionId;
+  if(options.fresh!==false&&!current)for(const item of contracts.examples){item.specializedEvidence=[];item.specializedSourceEquivalence=[];item.specializedSourceExclusions=[];}
+  return contracts;
+}
+
 export async function run(options){
-  const contractPath=join(ROOT,'examples/official/functional-contracts.json'),contractBytes=await readFile(contractPath),contracts=JSON.parse(contractBytes);
+  const contractPath=resolve(options.contracts??join(ROOT,'examples/official/functional-contracts.json'));
+  const contracts=currentContracts(JSON.parse(await readFile(contractPath,'utf8')),options),contractBytes=Buffer.from(JSON.stringify(contracts));
   const sourcePath=join(ROOT,'examples/official/test-visible.mjs'),sourceBytes=await readFile(sourcePath),source=sourceBytes.toString('utf8');
   const known=new Map(contracts.examples.map(e=>[e.id,e])),ids=options.ids.length?options.ids:[...known.keys()];
   for(const id of ids)if(!known.has(id))throw new RangeError(`Unknown exact catalog ID: ${id}`);
@@ -149,7 +169,7 @@ export async function run(options){
   if(options.expectedSHA)assert.equal(bundleSHA256,options.expectedSHA,'Requested official bundle SHA differs from disk');
   const directory=resolve(options.out??join(ROOT,'codex_artifact/official-functional-visible',stamp()));
   const adapter=adaptLegacyHarness(source,{directory,baseURL:options.baseURL,ids,helperURL:pathToFileURL(join(ROOT,'scripts/visible-browser.mjs')).href});
-  const identity={sessionId:contracts.sessionId,coreSHA256:hash(await readFile(join(ROOT,'dist/crychart.js'))),bundleSHA256,executedBundle:'dist/official.js',coreFileRole:'disk build metadata; the standalone core file is not separately executed by the official page',contractsSHA256:hash(contractBytes),legacyHarnessSHA256:hash(sourceBytes),adapterSHA256:hash(adapter),driverSHA256:hash(await readFile(fileURLToPath(import.meta.url)))};
+  const identity={sessionId:options.sessionId??randomUUID(),coreSHA256:hash(await readFile(join(ROOT,'dist/crychart.js'))),bundleSHA256,executedBundle:'dist/official.js',coreFileRole:'disk build metadata; the standalone core file is not separately executed by the official page',contractsSHA256:hash(contractBytes),legacyHarnessSHA256:hash(sourceBytes),adapterSHA256:hash(adapter),driverSHA256:hash(await readFile(fileURLToPath(import.meta.url)))};
   if(options.dryRun){console.log(JSON.stringify({mode:'dry-run-no-browser',identity,baseURL:options.baseURL,selected:ids.length,legacyMapped:ids.filter(id=>known.get(id).legacyChecks.length>0).length,IDs:ids,output:directory}));return;}
   const specialized=await loadSpecializedEvidence(ids.map(id=>known.get(id)),ROOT);
   if(options.evidenceOnly){
@@ -164,7 +184,7 @@ export async function run(options){
   const served=await fetch(options.baseURL+'/dist/official.js');assert.ok(served.ok);assert.equal(hash(Buffer.from(await served.arrayBuffer())),bundleSHA256,'Served official bundle differs before run');
   await mkdir(directory,{recursive:true});await writeFile(join(directory,'legacy-adapter.mjs'),adapter);await writeFile(join(directory,'contracts.json'),contractBytes);
   const report={schemaVersion:1,kind:'official-functional-visible',startedAt:new Date().toISOString(),identity,baseURL:options.baseURL,selectedIds:ids,browserVisible:true,performanceAcceptance:false,fullReferenceEquivalence:false,protocol:{reuse:'Unmodified specialized check bodies from the SHA-pinned legacy harness',data:'Bounded independent trace source audit; unsupported is retained',lifecycle:'Explicit dispose twice, rebuild, dispose; standard GL object counters are not GPU resident memory',completion:'Every required feature must have a reviewed mapping; colored pixels do not establish interaction or equivalence'},cases:[],errors:[]};
-  const records=new Map(),visited=new Set();let active,legacy={examples:[],checks:[],errors:[],captures:[]};
+  const records=new Map(),visited=new Set();let active,ownedPage,ownedBrowser,legacy={examples:[],checks:[],errors:[],captures:[]};
   const save=()=>writeFile(join(directory,'report.json'),JSON.stringify(report,null,2)+'\n');
   async function finish({page}){
     if(!active)return;const current=active;active=undefined;const record=records.get(current);
@@ -198,7 +218,7 @@ export async function run(options){
   }
   const previousHook=globalThis.__officialFunctionalHook,previousExitCode=process.exitCode;
   globalThis.__officialFunctionalHook={
-    async preparePage(page){await page.addInitScript(installStandardResourceProbe);},
+    async preparePage(page){ownedPage=page;ownedBrowser=page.context().browser();await page.addInitScript(installStandardResourceProbe);},
     async beforeMount({id,page}){await finish({page});active=id;visited.add(id);records.set(id,{id,startedAt:new Date().toISOString(),errors:[]});},
     async prepareExample({id,page}){
       if(id!=='crychart-example-0039-audioVisualization')return;
@@ -213,6 +233,13 @@ export async function run(options){
     async runUnvisited({page,mount}){
       const available=new Set(await page.evaluate(()=>window.__CRY_OFFICIAL__?.definitions?.map(x=>x.id)??[]));
       for(const id of ids){if(visited.has(id))continue;if(!available.has(id)){records.set(id,{id,errors:[],status:'not-implemented',unavailableReason:'Exact ID is absent from this executed official bundle'});continue;}
+        const evidence=specialized.get(id);
+        if(canReuseCurrentSpecialized(known.get(id),evidence,{currentRun:contracts.currentRun,sessionId:options.sessionId,contractSessionId:contracts.sessionId,fresh:options.fresh},records.get(id))){
+          records.set(id,{id,errors:[],executionSource:'current-session-specialized',duplicateMountSkipped:true,
+            evidenceSources:evidence.diagnostics.map(d=>({path:d.path,reportSHA256:d.reportSHA256,bundleSHA256:d.bundleSHA256,finishedAt:d.finishedAt})),
+            scope:'All required checks and dimensions were executed by this session’s source-bound specialized runners; this case declares no legacy checks.'});
+          continue;
+        }
         try{await mount(id);await finish({page});}catch(error){const record=records.get(id)??{id,errors:[]};record.errors.push(plainError(error));records.set(id,record);await finish({page});}
       }
     },
@@ -221,15 +248,19 @@ export async function run(options){
   try{await import(pathToFileURL(join(directory,'legacy-adapter.mjs')).href+'?sha='+identity.adapterSHA256);}
   catch(error){report.errors.push(plainError(error));}
   finally{
+    // Also release our page when an adapter report write fails before its cleanup.
+    if(ownedPage&&!ownedPage.isClosed())await ownedPage.close().catch(()=>{});
+    if(ownedBrowser?.isConnected())await ownedBrowser.close().catch(()=>{});
     globalThis.__officialFunctionalHook=previousHook;process.exitCode=previousExitCode;
     report.finishedAt=new Date().toISOString();
     report.cases=ids.map(id=>deriveCaseResult(records.get(id)??{id,errors:[],unavailableReason:'Not reached by the harness'},known.get(id),legacy,specialized.get(id)));
     report.legacyErrors=legacy.errors;report.legacyCaptures=legacy.captures;report.browser=legacy.browser;report.viewport=legacy.viewport;
-    report.summary={selected:ids.length,mounted:legacy.examples.length,legacyChecks:legacy.checks.length,legacyPassed:legacy.checks.filter(c=>c.status==='passed').length,functionallyComplete:report.cases.filter(c=>c.functionalComplete).length,failed:report.cases.filter(c=>c.status==='failed').length,incomplete:report.cases.filter(c=>c.status==='incomplete').length};
+    report.summary={selected:ids.length,mounted:legacy.examples.length,specializedOnly:report.cases.filter(c=>c.executionSource==='current-session-specialized').length,legacyChecks:legacy.checks.length,legacyPassed:legacy.checks.filter(c=>c.status==='passed').length,functionallyComplete:report.cases.filter(c=>c.functionalComplete).length,failed:report.cases.filter(c=>c.status==='failed').length,incomplete:report.cases.filter(c=>c.status==='incomplete').length};
     report.status=report.errors.length||report.summary.failed||legacy.errors.length?'failed':report.summary.functionallyComplete===ids.length?'passed':'incomplete';await save();
   }
   console.log(JSON.stringify({report:join(directory,'report.json'),status:report.status,summary:report.summary,identity}));
   if(report.status==='failed')process.exitCode=1;else if(report.status==='incomplete')process.exitCode=2;
+  return report;
 }
 
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url))await run(parseOptions(process.argv.slice(2)));

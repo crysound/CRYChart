@@ -27,11 +27,11 @@ test('default world3D fit preserves frozen initial/replacement extrema exactly',
 
 test('world3D retains effective geometry margin independently of public raw fit bounds',()=>{
   const chart=new Chart3D();try{
-    const line=addBounds(chart,[[0,1],[0,1],[0,1]]).setStrokeStyle(style=>style.setThickness(2));
+    const line=addBounds(chart,[[0,1],[0,1],[0,1]]).setStrokeStyle((style:import('../src/core/styles.js').SolidLine)=>style.setThickness(2));
     axes(chart).forEach(axis=>axis.fit(false,false));
     assert.deepEqual(chart.axisX.getInterval(),{start:0,end:1});
     near(chart.translateCoordinate({x:1,y:1,z:1},chart.coordsAxis,chart.coordsWorld).x,.28668889566180467,2e-14);
-    line.setStrokeStyle(style=>style.setThickness(8));chart.axisX.fit(false,false);
+    line.setStrokeStyle((style:import('../src/core/styles.js').SolidLine)=>style.setThickness(8));chart.axisX.fit(false,false);
     near(chart.translateCoordinate({x:1,y:1,z:1},chart.coordsAxis,chart.coordsWorld).x,.28089085877435155,2e-14);
     chart.axisX.setScrollMargins(false).fit(false,false);
     near(chart.translateCoordinate({x:1,y:1,z:1},chart.coordsAxis,chart.coordsWorld).x,.2886751345948129,2e-14);

@@ -6,7 +6,7 @@ import {build} from 'esbuild';
 import {chromium} from 'playwright';
 
 const arg=new Map();for(let i=2;i<process.argv.length;i+=2)arg.set(process.argv[i],process.argv[i+1]);
-const base=arg.get('--base')??'http://127.0.0.1:4180',cases=(arg.get('--cases')??'0025,0054,0055,0056').split(','),stamp=new Date().toISOString().replace(/[:.]/g,'-'),directory=resolve('codex_artifact/functional-priority/annotation-images',stamp);
+const base=arg.get('--base')??(process.env.CRYCHART_BASE_URL ?? 'http://127.0.0.1:4180'),cases=(arg.get('--cases')??'0025,0054,0055,0056').split(','),stamp=new Date().toISOString().replace(/[:.]/g,'-'),directory=(process.env.CRYCHART_SPECIALIZED_OUT ? resolve(process.env.CRYCHART_SPECIALIZED_OUT) : resolve('codex_artifact/functional-priority/annotation-images',stamp));
 await mkdir(directory,{recursive:true});const sha=value=>createHash('sha256').update(value).digest('hex');
 const sources=['examples/official/annotation-images.ts','examples/official/annotation-images-data.ts','examples/official/controls.ts','examples/official/helpers.ts'];
 const sourceSHA256=Object.fromEntries(await Promise.all(sources.map(async file=>[file,sha(await readFile(file))])));
@@ -28,10 +28,10 @@ await writeFile(resolve(directory,'build-inputs.json'),JSON.stringify({inputs:bu
 const buildInputsManifest={path:'build-inputs.json',sha256:sha(await readFile(resolve(directory,'build-inputs.json'))),files:Object.keys(buildInputs).length};
 const bundleSHA256=sha(await readFile(resolve(directory,'fixture.js'))),urlPath='/'+relative(process.cwd(),directory).replaceAll('\\','/'),css=(await readFile('examples/official/index.html','utf8')).match(/<style>([\s\S]*?)<\/style>/)[1];
 await writeFile(resolve(directory,'index.html'),`<!doctype html><meta charset="utf-8"><title>Image annotations · functional checks</title><style>${css}body{padding:20px}#stage{position:relative;display:flex;flex-direction:column;width:942px;height:700px;background:#101112;border:1px solid #40544b;margin:auto;overflow:hidden}</style><h1>Original image annotation examples</h1><div id="stage"></div><script type="module" src="${urlPath}/fixture.js"></script>`);
-const report={createdAt:new Date().toISOString(),sourceSHA256,buildInputsManifest,bundleSHA256,checks:[],errors:[],screenshots:[],browserVisible:true,headless:false,performanceRun:false,sharedDistModified:false,scope:'Original example-layer functionality. Current public reference descriptions and images define purposes; these assertions do not establish pixel equality or general ImageFill API compatibility.'};
+const report={sessionId:process.env.CRYCHART_FUNCTIONAL_SESSION_ID,createdAt:new Date().toISOString(),sourceSHA256,buildInputsManifest,bundleSHA256,checks:[],errors:[],screenshots:[],browserVisible:true,headless:false,performanceRun:false,sharedDistModified:false,scope:'Original example-layer functionality. Current public reference descriptions and images define purposes; these assertions do not establish pixel equality or general ImageFill API compatibility.'};
 const save=()=>writeFile(resolve(directory,'report.json'),JSON.stringify(report,null,2)+'\n');
 const bytes=await fetch(base+urlPath+'/fixture.js').then(r=>r.arrayBuffer());assert.equal(sha(Buffer.from(bytes)),bundleSHA256);
-const browser=await chromium.connectOverCDP('http://127.0.0.1:9223'),page=await browser.contexts()[0].newPage();await page.setViewportSize({width:1280,height:960});await page.bringToFront();page.on('pageerror',e=>report.errors.push(String(e)));
+const browser=await chromium.connectOverCDP(process.env.CRYCHART_CDP ?? 'http://127.0.0.1:9223'),page=await browser.contexts()[0].newPage();await page.setViewportSize({width:1280,height:960});await page.bringToFront();page.on('pageerror',e=>report.errors.push(String(e)));
 let id='';const settle=()=>page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
 const snapshot=()=>page.evaluate(()=>window.__ANN.snapshot());
 const details=state=>state.detail.imageLayers?.[0]??state.detail.imageLayer;

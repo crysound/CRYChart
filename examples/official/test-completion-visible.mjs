@@ -6,16 +6,16 @@ import {resolve,relative,dirname} from 'node:path';
 import {chromium} from 'playwright';
 
 const names=['0002-styledSplines','0014-highPrecisionAxis','0023-decayingLineChart','0026-temperatureAnomalyChart','0031-logBars','0041-sweepingLineChartNew','0052-linePaletteValue','0103-layeredAreas','0104-stackedMountains','0105-temperatureVariations','0150-ecg','1711-scatterZoomOverlay','1716-symLog','1720-derivedDataProperties'];
-const filters=process.argv.slice(2),selected=names.filter(name=>!filters.length||filters.some(id=>name.startsWith(id))),base='http://127.0.0.1:4180';
+const filters=process.argv.slice(2),selected=names.filter(name=>!filters.length||filters.some(id=>name.startsWith(id))),base=(process.env.CRYCHART_BASE_URL ?? 'http://127.0.0.1:4180');
 assert(selected.length,'No matching examples');
-const directory=resolve('codex_artifact/functional-completion',new Date().toISOString().replace(/[:.]/g,'-'));await mkdir(directory,{recursive:true});
+const directory=(process.env.CRYCHART_SPECIALIZED_OUT ? resolve(process.env.CRYCHART_SPECIALIZED_OUT) : resolve('codex_artifact/functional-completion',new Date().toISOString().replace(/[:.]/g,'-')));await mkdir(directory,{recursive:true});
 const sha=bytes=>createHash('sha256').update(bytes).digest('hex'),sources={};
 await build({entryPoints:['examples/official/main.ts'],bundle:true,format:'esm',target:'es2022',outfile:directory+'/official.js',plugins:[{name:'source-identity',setup(b){b.onLoad({filter:/\.ts$/},async({path})=>{const text=await readFile(path,'utf8');sources[relative(process.cwd(),path).replaceAll('\\','/')]=sha(text);return{contents:text,loader:'ts',resolveDir:dirname(path)}})}}]});
 const bundleSHA256=sha(await readFile(directory+'/official.js')),webPath='/'+relative(process.cwd(),directory).replaceAll('\\','/');
 await writeFile(directory+'/index.html',(await readFile('examples/official/index.html','utf8')).replace('/dist/official.js',webPath+'/official.js'));
 assert.equal(sha(Buffer.from(await fetch(base+webPath+'/official.js').then(r=>r.arrayBuffer()))),bundleSHA256);
-const report={startedAt:new Date().toISOString(),directory,bundleSHA256,sources,visibleChrome:true,headless:false,checks:[],examples:[],errors:[],scope:'Example functional checks only. Public reference, pixel equivalence and matched performance are separately recorded.'};
-const browser=await chromium.connectOverCDP('http://127.0.0.1:9223'),page=await browser.contexts()[0].newPage();await page.setViewportSize({width:1360,height:1180});await page.bringToFront();report.browser=browser.version();
+const report={sessionId:process.env.CRYCHART_FUNCTIONAL_SESSION_ID,startedAt:new Date().toISOString(),directory,bundleSHA256,sources,visibleChrome:true,headless:false,checks:[],examples:[],errors:[],scope:'Example functional checks only. Public reference, pixel equivalence and matched performance are separately recorded.'};
+const browser=await chromium.connectOverCDP(process.env.CRYCHART_CDP ?? 'http://127.0.0.1:9223'),page=await browser.contexts()[0].newPage();await page.setViewportSize({width:1360,height:1180});await page.bringToFront();report.browser=browser.version();
 await page.addInitScript(()=>{
  const kinds=['Buffer','Texture','Program','Shader','Framebuffer','Renderbuffer','VertexArray'],live=new Map();
  for(const C of [window.WebGLRenderingContext,window.WebGL2RenderingContext].filter(Boolean))for(const kind of kinds){const make=C.prototype['create'+kind],drop=C.prototype['delete'+kind];if(!make||!drop||make.__completionProbe)continue;const wrapped=function(...args){const result=make.apply(this,args);if(result)live.set(result,kind);return result};wrapped.__completionProbe=true;C.prototype['create'+kind]=wrapped;C.prototype['delete'+kind]=function(value,...args){const result=drop.call(this,value,...args);live.delete(value);return result};}

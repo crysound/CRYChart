@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {DateTimeFormatting} from '../src/date-time-formatting.js';
-import {Axis,DateTimeTickStrategy,type AxisHost} from '../src/axis.js';
+import {Axis,DateTimeTickStrategy,type TickStyle,type AxisHost} from '../src/axis.js';
 
 const range={start:0,end:259200000};
 const origin=Date.UTC(2022,0,1);
@@ -72,7 +72,7 @@ test('default DateTime cursor keeps local calendar fields and nonfinite values r
 
 test('Axis DateTime configuration reaches rendered tick labels and public cursor formatting after reset',()=>{
   let paints=0;
-  const host:AxisHost={plot:{left:0,top:0,width:800,height:400},invalidate(){paints++;},boundsFor(){return undefined;}};
+  const host:AxisHost={plot:{width:800,height:400},invalidate(){paints++;},boundsFor(){return undefined;}};
   const axis=new Axis(host,'x').setInterval(range);
   const seen:any[]=[];
   axis.setTickStrategy('DateTime',(strategy:DateTimeTickStrategy)=>strategy.setUTC(true).setLocale('en-US').setDateOrigin(new Date(origin))
@@ -91,7 +91,7 @@ test('Axis DateTime configuration reaches rendered tick labels and public cursor
 });
 
 test('DateTime formatter calls cannot mutate the actual axis interval or its typed source values',()=>{
-  const host:AxisHost={plot:{left:0,top:0,width:800,height:400},invalidate(){},boundsFor(){return undefined;}};
+  const host:AxisHost={plot:{width:800,height:400},invalidate(){},boundsFor(){return undefined;}};
   const source=new Float64Array([0,45,86400000]),before=new Uint8Array(source.buffer).slice();
   const axis=new Axis(host,'x').setInterval(range).setTickStrategy('DateTime',(s:DateTimeTickStrategy)=>s
     .setDateOrigin(new Date(origin)).setCursorFormatter((value:number,interval:any)=>{interval.end=-1;return `${value}`;}));
@@ -100,7 +100,7 @@ test('DateTime formatter calls cannot mutate the actual axis interval or its typ
 });
 
 test('DateTime default week and month labels use the selected calendar layer and public locale options',()=>{
-  const host:AxisHost={plot:{left:0,top:0,width:700,height:400},invalidate(){},boundsFor(){return undefined;}};
+  const host:AxisHost={plot:{width:700,height:400},invalidate(){},boundsFor(){return undefined;}};
   const week=new Axis(host,'x').setInterval({start:Date.UTC(2022,0,1),end:Date.UTC(2022,0,29)})
     .setTickStrategy('DateTime',(s:DateTimeTickStrategy)=>s.setUTC(true).setLocale('en-US'));
   const weekTicks=week.tickLayout(640,undefined,()=>30);
@@ -123,14 +123,14 @@ test('DateTime great style is independent, defaults hidden, and all-level style 
   assert.equal(strategy.getMinorTickStyle().getLabelFillStyle(),strategy.getMajorTickStyle().getLabelFillStyle());
   assert.ok(strategy.getMinorTickStyle().hasLabelFontOverride());
   const major=strategy.getMajorTickStyle(),minor=strategy.getMinorTickStyle();
-  strategy.setGreatTickStyle(tick=>tick.setTickLength(13));
+  strategy.setGreatTickStyle((tick:TickStyle)=>tick.setTickLength(13));
   assert.equal(strategy.getGreatTickStyle().getTickLength(),13);assert.equal(major.getTickLength(),7);assert.equal(minor.getTickLength(),4);
-  let calls=0;strategy.setTickStyle(tick=>{calls++;return tick.setTickLength(9);});
+  let calls=0;strategy.setTickStyle((tick:TickStyle)=>{calls++;return tick.setTickLength(9);});
   assert.equal(calls,3);for(const tick of[strategy.getGreatTickStyle(),major,minor])assert.equal(tick.getTickLength(),9);
 });
 
 test('calendar placement keeps callback values/range/locale and zoom-specific overrides',()=>{
-  const host:AxisHost={plot:{left:0,top:0,width:800,height:400},invalidate(){},boundsFor(){return undefined;}};
+  const host:AxisHost={plot:{width:800,height:400},invalidate(){},boundsFor(){return undefined;}};
   const end=28*86400000,seen:any[]=[];
   const axis=new Axis(host,'x').setInterval({start:0,end}).setTickStrategy('DateTime',(s:DateTimeTickStrategy)=>s
     .setUTC(true).setLocale('en-US').setDateOrigin(new Date(origin))

@@ -243,9 +243,9 @@ test('calibration Time labels with explicit14px HH:mm:ss stay disjoint after end
   const timeHost:AxisHost={plot:area,invalidate(){},boundsFor(){return undefined;}};
   const x=new Axis(timeHost,'x').setInterval({start:0,end:60000});
   x.setTickStrategy('Time',s=>s
-    .setMajorTickStyle(style=>style.setLabelFont(font=>font.setSize(14)))
-    .setMinorTickStyle(style=>style.setLabelFont(font=>font.setSize(14)))
-    .setFormattingFunction(value=>`00:${Math.floor(value/60000).toString().padStart(2,'0')}:${Math.floor(value/1000%60).toString().padStart(2,'0')}`));
+    .setMajorTickStyle((style:TickStyle)=>style.setLabelFont((font:FontSettings)=>font.setSize(14)))
+    .setMinorTickStyle((style:TickStyle)=>style.setLabelFont((font:FontSettings)=>font.setSize(14)))
+    .setFormattingFunction((value:number)=>`00:${Math.floor(value/60000).toString().padStart(2,'0')}:${Math.floor(value/1000%60).toString().padStart(2,'0')}`));
   const layout=x.tickLayout(area.width,undefined,()=>56);
   drawAxisCanvas(ctx.context,{plot:area,axesX:[x],axesY:[]});
   const labels=ctx.texts.filter(t=>/^00:\d\d:\d\d$/.test(t.text)).sort((a,b)=>a.x-b.x);

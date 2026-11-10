@@ -41,7 +41,11 @@
     "test:opentest-contract": "node scripts/test.mjs --opentest",
     "benchmark": "node scripts/benchmark.mjs",
     "dev": "node scripts/serve.mjs",
-    "verify": "npm run typecheck && npm test && npm run build && npm run test:browser && npm run test:gallery"
+    "verify": "npm run typecheck && npm run typecheck:tests && npm test && npm run build && npm run test:browser && npm run test:gallery && npm run test:functional && npm run test:performance",
+    "typecheck:tests": "tsc -p tsconfig.tests.json --noEmit",
+    "test:functional": "node scripts/run-functional.mjs",
+    "test:performance": "node scripts/run-performance.mjs",
+    "test:performance:quick": "node scripts/run-performance.mjs --quick"
   },
   "devDependencies": {
     "@types/node": "24.10.0",

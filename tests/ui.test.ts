@@ -37,7 +37,7 @@ test('cursor draws only configured crosshair directions and independently hides 
   cursor.setResultTable(table => table.setContent([['secret table']]));
   const {context, lines, text} = drawing(); cursor.draw(context, rect, p => ({x: p.x * 10, y: p.y * 10}));
   assert.deepEqual(lines, [[20, 10], [20, 210]]);
-  assert.deepEqual(text, []);
+  assert.equal(text.length, 0);
   cursor.setResultTableVisible(true); cursor.draw(context, rect, p => ({x: p.x * 10, y: p.y * 10}));
   assert.ok(text.includes('secret table'));
   cursor.dispose(); assert.equal(cursor.resultTable.isDisposed(), true);

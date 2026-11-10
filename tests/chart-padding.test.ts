@@ -32,7 +32,7 @@ test('invalid or throwing padding updates cannot partly commit earlier sides',()
       assert.throws(()=>chart.setPadding(value as any));
       assert.deepEqual(chart.getPadding(),{left:4,right:4,top:4,bottom:4});
     }
-    assert.throws(()=>chart.setPadding({left:12,get right(){throw new Error('caller getter');}}),/caller getter/);
+    assert.throws(()=>chart.setPadding({left:12,get right():number{throw new Error('caller getter');}}),/caller getter/);
     assert.deepEqual(chart.getPadding(),{left:4,right:4,top:4,bottom:4});
   }finally{chart.dispose();}
 });

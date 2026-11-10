@@ -1,0 +1,810 @@
+{
+  "schemaVersion": 1,
+  "product": "CRYChart",
+  "kind": "historical-performance-reference",
+  "generatedFrom": {
+    "path": "C:/Users/iwuyo/Desktop/CRYChart性能问题与优化记录汇总-20261110.md",
+    "sha256": "9a5d7b6be9e91df1ce3e0837c1a7bc02876e6dce17dd32ff616d542a9b6c360f",
+    "section": "3.0",
+    "date": "2026-11-10"
+  },
+  "sources": [
+    {
+      "id": "B64",
+      "path": "codex_artifact/integrated-contained64-reference-stability-benchmark/2026-11-03T05-26-22-967Z/compact-summary.json",
+      "sha256": "a86db20fb8d6f26067f2124a8e3fb240f4aed4ecf982816d8ae9ac9c3f9ca32b"
+    },
+    {
+      "id": "B128",
+      "path": "codex_artifact/origin-suspend128-reference-stability-benchmark/2026-11-03T04-24-09-328Z/review.json",
+      "sha256": "eceb0642bd82955b878b54f6494d35f7ac02f86ec4791ad1ea02e1d48f931760"
+    },
+    {
+      "id": "BScope",
+      "path": "codex_artifact/brand-cleanup-20261109/root/browser/native-worker-2026-11-09T09-38-05.772Z/report.json",
+      "sha256": "7126722121e2799d3b748e2f7994a3d2e023fefddd9a21469e4e3486462d2949"
+    },
+    {
+      "id": "B64-protocol",
+      "path": "codex_artifact/integrated-contained64-reference-stability-benchmark/2026-11-03T05-26-22-967Z/review.json",
+      "sha256": "c49daefc1a61b1e0e061adbfb5953bd61804829fb37dcbd7de9d1e97f61df8f6"
+    },
+    {
+      "id": "B64-measurements",
+      "path": "codex_artifact/integrated-contained64-reference-stability-visible/2026-11-03T05-26-23-363Z-diagnostic/results.json",
+      "sha256": "b3ff75027ca3a49d3108d1ecb0906e1d9a385d265b10e5ec55b07672d8ea22d8"
+    },
+    {
+      "id": "B128-resources",
+      "path": "codex_artifact/origin-suspend128-reference-stability-benchmark/2026-11-03T04-24-09-328Z/resources-and-tail-latency.json",
+      "sha256": "e8149554bb83c167462e1a84a7b7b8fe9d15c215afcb0d54a791fbe17193ddf5"
+    }
+  ],
+  "policy": {
+    "currentPairedComparison": false,
+    "defaultLimits": null,
+    "performanceAcceptance": "unconfigured",
+    "historicalRatiosAreAcceptance": false,
+    "qualification": "历史数据只作同口径静态参照，没有本轮对照库配对；缺值保留null，历史比例不构成通过门槛。",
+    "historicalStageLimit": {
+      "scenario": "B64",
+      "metric": "workMs.p50",
+      "relativeGapMaximum": 0.15,
+      "appliesToCurrentAcceptance": false
+    }
+  },
+  "scenarios": {
+    "B64": {
+      "historicalBuildSHA256": "591a06cb6cc8e2cc1f22f765c1dd2858c0faf2b973e7ccd6dc2f0d29a8de9b3e",
+      "reference": {
+        "label": "对照库",
+        "version": "8.2.0",
+        "sha256": "77236196aec72aa0e833e89760bdd2ff47af855451408e88852ab886434bcee5"
+      },
+      "sourceRefs": [
+        "B64",
+        "B64-protocol",
+        "B64-measurements"
+      ],
+      "protocol": {
+        "channels": 64,
+        "sampleRate": 48000,
+        "batchSize": 960,
+        "batchNominalMs": 20,
+        "historySeconds": 15,
+        "samplesPerChannel": 720000,
+        "totalRetainedSamples": 46080000,
+        "rawStorage": "Float64Array",
+        "renderStorage": "Float64Array",
+        "rawRenderShareBacking": false,
+        "columnStorage": "independent-dense",
+        "x": "automatic",
+        "yLayout": "independent-stacks",
+        "warmupFrames": 30,
+        "measureFrames": 128,
+        "repeats": 3,
+        "lineWidthCSSPx": 2,
+        "opacity": 1,
+        "containerCSS": {
+          "width": 1000,
+          "height": 600
+        },
+        "plotCSS": {
+          "width": 800,
+          "height": 420
+        },
+        "browser": "visible Chrome 156",
+        "backend": "AMD ANGLE Direct3D11",
+        "submission": "每批等待实际绘制完成后才继续，不按墙钟强制20毫秒投递",
+        "prefill": "协作式预填；末批首帧不是冷启动首帧",
+        "statistics": "每轮全部128帧nearest-rank P50/P95，分别取三轮分位数中位数，不是合并帧P95",
+        "gpu": "单像素readPixels同步读回与异步GPU查询分别报告，重叠区间不能相加",
+        "experimentalOptions": {
+          "experimentalOwnedCoverageFrame": true,
+          "experimentalGpuClipPolicy": "contained"
+        },
+        "dpr": null,
+        "dprQualification": "历史桌面汇总未提供该组可核对DPR，不推定与当前机器一致",
+        "optionQualification": "历史显式实验选项；当前默认选项不自动具备同协议资格"
+      },
+      "metrics": {
+        "workMs": {
+          "unit": "ms",
+          "aggregation": "median-of-round-quantiles",
+          "candidate": {
+            "p50": 9.7,
+            "p95": 11
+          },
+          "reference": {
+            "p50": 8.7,
+            "p95": 9.8
+          },
+          "rounds": {
+            "candidateP50": [
+              9.8,
+              9.5,
+              9.7
+            ],
+            "referenceP50": [
+              8.7,
+              9.1,
+              8.6
+            ],
+            "candidateP95": [
+              11,
+              11,
+              10.9
+            ],
+            "referenceP95": [
+              9.8,
+              10.5,
+              9.8
+            ]
+          }
+        },
+        "mutationMs": {
+          "unit": "ms",
+          "aggregation": "median-of-round-quantiles",
+          "candidate": {
+            "p50": 0.4,
+            "p95": 0.6
+          },
+          "reference": {
+            "p50": 0.8,
+            "p95": 1.1
+          },
+          "rounds": {
+            "candidateP50": [
+              0.4,
+              0.4,
+              0.5
+            ],
+            "referenceP50": [
+              0.8,
+              0.8,
+              0.8
+            ],
+            "candidateP95": [
+              0.6,
+              0.5,
+              0.6
+            ],
+            "referenceP95": [
+              1.1,
+              1.1,
+              1.1
+            ]
+          }
+        },
+        "callbackCpuMs": {
+          "unit": "ms",
+          "aggregation": "median-of-round-quantiles",
+          "candidate": {
+            "p50": 4.9,
+            "p95": 5.8
+          },
+          "reference": {
+            "p50": 4.6,
+            "p95": 5.5
+          },
+          "rounds": {
+            "candidateP50": [
+              4.9,
+              4.9,
+              5
+            ],
+            "referenceP50": [
+              4.6,
+              4.5,
+              4.7
+            ],
+            "candidateP95": [
+              5.8,
+              5.8,
+              5.8
+            ],
+            "referenceP95": [
+              5.6,
+              5.3,
+              5.5
+            ]
+          }
+        },
+        "gpuElapsedMs": {
+          "unit": "ms",
+          "aggregation": "median-of-round-quantiles",
+          "candidate": {
+            "p50": 2.94302,
+            "p95": 3.47566
+          },
+          "reference": {
+            "p50": 3.15187,
+            "p95": 3.92004
+          },
+          "rounds": {
+            "candidateP50": [
+              2.95314,
+              2.94302,
+              2.90586
+            ],
+            "referenceP50": [
+              3.15187,
+              3.57607,
+              3.13214
+            ],
+            "candidateP95": [
+              3.4953,
+              3.47566,
+              3.47013
+            ],
+            "referenceP95": [
+              3.75251,
+              4.64581,
+              3.92004
+            ]
+          }
+        },
+        "syncWaitMs": {
+          "unit": "ms",
+          "aggregation": "median-of-round-quantiles",
+          "candidate": {
+            "p50": 4.7,
+            "p95": 5.6
+          },
+          "reference": {
+            "p50": 4.1,
+            "p95": 4.8
+          },
+          "rounds": {
+            "candidateP50": [
+              4.8,
+              4.6,
+              4.7
+            ],
+            "referenceP50": [
+              4.1,
+              4.6,
+              4.1
+            ],
+            "candidateP95": [
+              5.7,
+              5.6,
+              5.6
+            ],
+            "referenceP95": [
+              4.8,
+              5.8,
+              4.8
+            ]
+          }
+        },
+        "activeWorkMs": {
+          "unit": "ms",
+          "aggregation": "median-of-round-quantiles",
+          "candidate": {
+            "p50": 10.3,
+            "p95": 11.4
+          },
+          "reference": {
+            "p50": 9.5,
+            "p95": 10.6
+          },
+          "rounds": {
+            "candidateP50": [
+              10.3,
+              10,
+              10.3
+            ],
+            "referenceP50": [
+              9.5,
+              10,
+              9.5
+            ],
+            "candidateP95": [
+              11.4,
+              11.4,
+              11.3
+            ],
+            "referenceP95": [
+              10.6,
+              11.4,
+              10.6
+            ]
+          }
+        },
+        "requestLatencyMs": {
+          "unit": "ms",
+          "aggregation": "median-of-round-quantiles",
+          "candidate": {
+            "p50": 24.1,
+            "p95": 26.1
+          },
+          "reference": {
+            "p50": 22.2,
+            "p95": 24.9
+          },
+          "rounds": {
+            "candidateP50": [
+              24.3,
+              23.8,
+              24.1
+            ],
+            "referenceP50": [
+              22.2,
+              22.7,
+              21.6
+            ],
+            "candidateP95": [
+              26.2,
+              26.1,
+              25.9
+            ],
+            "referenceP95": [
+              24.9,
+              25.6,
+              24.7
+            ]
+          }
+        },
+        "uploadedBytes": {
+          "unit": "B",
+          "aggregation": "median-of-round-quantiles",
+          "candidate": {
+            "p50": 10624,
+            "p95": 15736
+          },
+          "reference": {
+            "p50": 2156,
+            "p95": 3180
+          }
+        }
+      },
+      "nominalInput": {
+        "samplePositionsPerSecond": 3072000,
+        "samplePositionsPerBatch": 61440,
+        "twoYColumnsBytesPerSecond": 49152000,
+        "measuredSustainedThroughput": null
+      },
+      "resources": {
+        "sourceNumericBytes": {
+          "candidate": 737280000,
+          "reference": null,
+          "unit": "B"
+        },
+        "sampledHeapPeakBytes": {
+          "candidate": 971375002,
+          "reference": 1270605232,
+          "unit": "B",
+          "aggregation": "max-of-round-sampled-peaks"
+        },
+        "trackedGLBufferPeakBytes": {
+          "candidate": 2097664,
+          "reference": 1695862,
+          "unit": "B"
+        },
+        "afterDisposeTrackedBufferBytes": {
+          "candidate": 0,
+          "reference": 0,
+          "unit": "B"
+        },
+        "processRSSPeakBytes": {
+          "candidate": null,
+          "reference": null,
+          "unit": "B"
+        },
+        "gpuResidentBytes": {
+          "candidate": null,
+          "reference": null,
+          "unit": "B"
+        }
+      }
+    },
+    "B128": {
+      "historicalBuildSHA256": "d135c45f802495f2c6cadd947dd5fcc4f07e26929e5b680c992078a8dc8b235d",
+      "reference": {
+        "label": "对照库",
+        "version": "8.2.0",
+        "sha256": "77236196aec72aa0e833e89760bdd2ff47af855451408e88852ab886434bcee5"
+      },
+      "sourceRefs": [
+        "B128",
+        "B128-resources"
+      ],
+      "protocol": {
+        "channels": 128,
+        "sampleRate": 48000,
+        "batchSize": 960,
+        "batchNominalMs": 20,
+        "historySeconds": 15,
+        "samplesPerChannel": 720000,
+        "totalRetainedSamples": 92160000,
+        "rawStorage": "Float64Array",
+        "renderStorage": "Float64Array",
+        "rawRenderShareBacking": false,
+        "columnStorage": "independent-dense",
+        "x": "automatic",
+        "yLayout": "independent-stacks",
+        "warmupFrames": 30,
+        "measureFrames": 128,
+        "repeats": 3,
+        "lineWidthCSSPx": 2,
+        "opacity": 1,
+        "containerCSS": {
+          "width": 1000,
+          "height": 600
+        },
+        "plotCSS": {
+          "width": 800,
+          "height": 420
+        },
+        "browser": "visible Chrome 156",
+        "backend": "AMD ANGLE Direct3D11",
+        "submission": "每批等待实际绘制完成后才继续，不按墙钟强制20毫秒投递",
+        "prefill": "协作式预填；末批首帧不是冷启动首帧",
+        "statistics": "每轮全部128帧nearest-rank P50/P95，分别取三轮分位数中位数，不是合并帧P95",
+        "gpu": "单像素readPixels同步读回与异步GPU查询分别报告，重叠区间不能相加",
+        "experimentalOptions": {
+          "experimentalOwnedCoverageFrame": true
+        },
+        "dpr": null,
+        "dprQualification": "历史桌面汇总未提供该组可核对DPR，不推定与当前机器一致",
+        "optionQualification": "历史显式实验选项；当前默认选项不自动具备同协议资格"
+      },
+      "metrics": {
+        "workMs": {
+          "unit": "ms",
+          "aggregation": "median-of-round-quantiles",
+          "candidate": {
+            "p50": 15.4,
+            "p95": 16.9
+          },
+          "reference": {
+            "p50": 15.1,
+            "p95": 17.1
+          },
+          "rounds": {
+            "candidateP50": [
+              15.3,
+              15.4,
+              15.4
+            ],
+            "referenceP50": [
+              15.1,
+              15.1,
+              13
+            ],
+            "candidateP95": [
+              16.9,
+              16.9,
+              17.4
+            ],
+            "referenceP95": [
+              17.2,
+              17.1,
+              15.5
+            ]
+          }
+        },
+        "mutationMs": {
+          "unit": "ms",
+          "aggregation": "median-of-round-quantiles",
+          "candidate": {
+            "p50": 0.9,
+            "p95": 1.1
+          },
+          "reference": {
+            "p50": 1.5,
+            "p95": 2
+          },
+          "rounds": {
+            "candidateP50": [
+              0.9,
+              0.8,
+              0.9
+            ],
+            "referenceP50": [
+              1.5,
+              1.5,
+              1.5
+            ],
+            "candidateP95": [
+              1.1,
+              1.1,
+              1.1
+            ],
+            "referenceP95": [
+              2.1,
+              2,
+              1.8
+            ]
+          }
+        },
+        "callbackCpuMs": {
+          "unit": "ms",
+          "aggregation": "median-of-round-quantiles",
+          "candidate": {
+            "p50": 9.5,
+            "p95": 10.9
+          },
+          "reference": {
+            "p50": 10.4,
+            "p95": 11.5
+          },
+          "rounds": {
+            "candidateP50": [
+              9.4,
+              9.6,
+              9.5
+            ],
+            "referenceP50": [
+              10.4,
+              10.4,
+              8.4
+            ],
+            "candidateP95": [
+              10.8,
+              10.9,
+              11.2
+            ],
+            "referenceP95": [
+              11.6,
+              11.5,
+              9.5
+            ]
+          }
+        },
+        "gpuElapsedMs": {
+          "unit": "ms",
+          "aggregation": "median-of-round-quantiles",
+          "candidate": {
+            "p50": 4.07158,
+            "p95": 4.54046
+          },
+          "reference": {
+            "p50": 4.10781,
+            "p95": 5.3546
+          },
+          "rounds": {
+            "candidateP50": [
+              4.07158,
+              4.09021,
+              4.06774
+            ],
+            "referenceP50": [
+              4.11542,
+              4.10781,
+              4.00014
+            ],
+            "candidateP95": [
+              4.5189,
+              4.54626,
+              4.54046
+            ],
+            "referenceP95": [
+              5.28809,
+              5.3546,
+              5.42379
+            ]
+          }
+        },
+        "syncWaitMs": {
+          "unit": "ms",
+          "aggregation": "median-of-round-quantiles",
+          "candidate": {
+            "p50": 5.8,
+            "p95": 6.9
+          },
+          "reference": {
+            "p50": 4.7,
+            "p95": 6.1
+          },
+          "rounds": {
+            "candidateP50": [
+              5.8,
+              5.7,
+              5.9
+            ],
+            "referenceP50": [
+              4.8,
+              4.7,
+              4.5
+            ],
+            "candidateP95": [
+              6.9,
+              6.5,
+              7
+            ],
+            "referenceP95": [
+              6.4,
+              5.9,
+              6.1
+            ]
+          }
+        },
+        "activeWorkMs": {
+          "unit": "ms",
+          "aggregation": "median-of-round-quantiles",
+          "candidate": {
+            "p50": 16.3,
+            "p95": 17.8
+          },
+          "reference": {
+            "p50": 16.6,
+            "p95": 18.8
+          },
+          "rounds": {
+            "candidateP50": [
+              16.2,
+              16.3,
+              16.3
+            ],
+            "referenceP50": [
+              16.8,
+              16.6,
+              14.6
+            ],
+            "candidateP95": [
+              17.8,
+              17.7,
+              18.2
+            ],
+            "referenceP95": [
+              18.8,
+              19,
+              17.1
+            ]
+          }
+        },
+        "requestLatencyMs": {
+          "unit": "ms",
+          "aggregation": "median-of-round-quantiles",
+          "candidate": {
+            "p50": 17.2,
+            "p95": 21.9
+          },
+          "reference": {
+            "p50": 18.2,
+            "p95": 31.9
+          },
+          "rounds": {
+            "candidateP50": [
+              17.1,
+              17.7,
+              17.2
+            ],
+            "referenceP50": [
+              18.2,
+              18.2,
+              17.9
+            ],
+            "candidateP95": [
+              23,
+              21.9,
+              21.1
+            ],
+            "referenceP95": [
+              31.9,
+              32.1,
+              29.2
+            ]
+          }
+        }
+      },
+      "nominalInput": {
+        "samplePositionsPerSecond": 6144000,
+        "samplePositionsPerBatch": 122880,
+        "twoYColumnsBytesPerSecond": 98304000,
+        "measuredSustainedThroughput": null
+      },
+      "resources": {
+        "sourceNumericBytes": {
+          "candidate": 1474560000,
+          "reference": null,
+          "unit": "B"
+        },
+        "sampledHeapPeakBytes": {
+          "candidate": 1898319865,
+          "reference": 2503475403,
+          "unit": "B",
+          "aggregation": "max-of-round-sampled-peaks"
+        },
+        "trackedGLBufferPeakBytes": {
+          "candidate": 4260864,
+          "reference": 3240054,
+          "unit": "B"
+        },
+        "afterDisposeTrackedBufferBytes": {
+          "candidate": 0,
+          "reference": 0,
+          "unit": "B"
+        },
+        "processRSSPeakBytes": {
+          "candidate": null,
+          "reference": null,
+          "unit": "B"
+        },
+        "gpuResidentBytes": {
+          "candidate": null,
+          "reference": null,
+          "unit": "B"
+        }
+      }
+    },
+    "BScope": {
+      "historicalBuildSHA256": "e58478f1d6b2d9ad49d2cb7d29ddd17a26d97c4fc810dbaf7c2661d1be7d91c0",
+      "reference": null,
+      "sourceRefs": [
+        "BScope"
+      ],
+      "protocol": {
+        "historyCharts": 2,
+        "channelsPerHistoryChart": 2,
+        "sampleRate": 48000,
+        "historySeconds": 60,
+        "totalRetainedSamples": 11520000,
+        "scopePointsPerFrame": 19200,
+        "smallCharts": 6,
+        "axisType": "linear-highPrecision",
+        "lineWidthCSSPx": 1,
+        "browser": "visible Chrome 156",
+        "dpr": 1.75,
+        "workerBatchMs": 20,
+        "prefillSeconds": [
+          28,
+          60
+        ],
+        "summaryPrefillSeconds": 60,
+        "statistics": "单次短测窗口原始样本分位数",
+        "scope": "受控Worker时间线；不是硬件采集、IPC或屏幕出光延迟"
+      },
+      "metrics": {
+        "scopeSubmitMs": {
+          "unit": "ms",
+          "aggregation": "single-window-quantiles",
+          "candidate": {
+            "p50": 15.78,
+            "p95": 18.7051
+          },
+          "reference": null
+        },
+        "pointerMs": {
+          "unit": "ms",
+          "aggregation": "single-window-quantiles",
+          "candidate": {
+            "p50": 10.0625,
+            "p95": 18.625
+          },
+          "reference": null
+        },
+        "rafMs": {
+          "unit": "ms",
+          "aggregation": "single-window-quantiles",
+          "candidate": {
+            "p50": 16.69,
+            "p95": 16.785
+          },
+          "reference": null
+        }
+      },
+      "sharedTimeline": {
+        "producedSamples": 336960,
+        "ingestedSamples": 336960,
+        "durationMs": 7035.76,
+        "derivedSamplesPerSecond": 47892.48069860257,
+        "scope": "共享时间线计数，不能当作四条序列合计或最大稳定吞吐"
+      },
+      "resources": {
+        "processRSSPeakBytes": {
+          "candidate": null,
+          "reference": null,
+          "unit": "B"
+        },
+        "gpuResidentBytes": {
+          "candidate": null,
+          "reference": null,
+          "unit": "B"
+        }
+      }
+    }
+  }
+}

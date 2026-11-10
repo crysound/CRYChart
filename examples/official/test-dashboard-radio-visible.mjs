@@ -12,7 +12,7 @@ const bytes=await readFile(bundlePath),sha=createHash('sha256').update(bytes).di
 if(args['expected-sha'])assert.equal(sha,args['expected-sha'],'Frozen bundle SHA');
 const stamp=new Date().toISOString().replace(/[:.]/g,'-'),directory=resolve(String(args.output??`codex_artifact/official-dashboard-radio-validation/visible-${stamp}`));await mkdir(directory,{recursive:true});
 const names={'0029':'htmlScrollDashboard','0033':'sweepingLineDashboard','0039':'audioVisualization','0044':'multiChannelHTML','0057':'stickyXAxis','1713':'sunBurstChartDashboard','1717':'idocDashboard','1708':'scrollingHeatmapAggregation','1718':'rfMonitoringSpectrumSurveillance','1719':'rfJamming'};
-const ids=args.ids?String(args.ids).split(','):Object.keys(names),report={createdAt:new Date().toISOString(),bundlePath,bundleSHA256:sha,base,scope:ids,checks:[],examples:[],errors:[],fullEquivalent:false,performanceTest:false,verificationScope:'Native implementation behavior only; this run does not measure performance.'};
+const ids=args.ids?String(args.ids).split(','):Object.keys(names),report={sessionId:process.env.CRYCHART_FUNCTIONAL_SESSION_ID,createdAt:new Date().toISOString(),bundlePath,bundleSHA256:sha,base,scope:ids,checks:[],examples:[],errors:[],fullEquivalent:false,performanceTest:false,verificationScope:'Native implementation behavior only; this run does not measure performance.'};
 for(const id of ids)assert.ok(names[id],`Unknown scoped ID ${id}`);
 const server=await ensureTestServer(Number(new URL(base).port)),connected=await connectVisibleChrome(),browser=connected.browser;
 // Use a dedicated task page; do not navigate or close another agent's page.

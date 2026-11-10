@@ -355,7 +355,7 @@ test('small one-channel CPU profile (opt in with CRY_PAGED_PROFILE=1)', {skip: p
       allocatedPageBytes: after.allocatedPageBytes, poolTargetBytes: after.poolTargetBytes});
     data.dispose(); assert.equal(data.getStorageStats().allocatedPageBytes, 0);
   }
-  const directory = resolve('codex_artifact/paged-columns-node/profile'); mkdirSync(directory, {recursive: true});
+  const directory = resolve(process.env.CRY_PAGED_EVIDENCE ?? 'codex_artifact/paged-columns-node', 'profile'); mkdirSync(directory, {recursive: true});
   writeFileSync(resolve(directory, 'summary.json'), JSON.stringify({node: process.version, results}, null, 2));
   console.log(JSON.stringify(results));
 });
@@ -436,7 +436,7 @@ test('bounded Node storage benchmark, three repeats (opt in with CRY_PAGED_BENCH
     const timings = Object.fromEntries(timingKeys.map(key => [key, {median: percentile(group.map(row => row[key]), .5), p95: percentile(group.map(row => row[key]), .95), values: group.map(row => row[key])}]));
     summaries.push({...scenario, pattern, pageSize, repeats: group.length, timings, afterFill: group[0].afterFill, afterWarm: group[0].afterWarm, warmCounters: group[0].warmCounters});
   }
-  const directory = resolve('codex_artifact/paged-columns-node'); mkdirSync(directory, {recursive: true});
+  const directory = resolve(process.env.CRY_PAGED_EVIDENCE ?? 'codex_artifact/paged-columns-node'); mkdirSync(directory, {recursive: true});
   const report = {createdAt: new Date().toISOString(), node: process.version, platform: process.platform, arch: process.arch,
     scope: 'Node storage prototype only; not active DataSet backend, browser/GPU performance or a 128-channel 60-second result',
     measurement: 'Three repeats, rotated backend order. Cold means a fresh storage instance (not a fresh JS process): construction, first append and initial capacity fill are separate. Warm is 50 further 960-sample batches after capacity is full. Input generation and SHA256 are outside all append timers. P95 is linear interpolation over only three repeats; it is descriptive, not a stable tail-latency estimate.',

@@ -123,12 +123,12 @@ test('Polar radial public style getter/setter controls the actual spokes and lab
   try{
     const original=axis.getTickStyle();assert.equal(original,axis.tickStrategy.getMajorTickStyle());
     assert.equal(axis.setTickStyle(style=>style.setGridStrokeStyle(grid).setLabelFillStyle(label)),axis);
-    const before=new Canvas();chart.drawPolarAxes(before as any);assert.ok(before.strokes.filter(s=>s.color===grid.getFillStyle().getColor().toCSS()).length>=12);
+    const before=new Canvas();chart.drawPolarAxes(before as any);assert.ok(before.strokes.filter(s=>s.color===(grid.getFillStyle() as SolidFill).getColor().toCSS()).length>=12);
     assert.ok(before.texts.some(t=>t.color===label.getColor().toCSS()&&t.value.includes('°')));
     const hidden=new TickStyle().setGridStrokeStyle(emptyLine).setLabelFillStyle(emptyFill);
     assert.equal(axis.setTickStyle(hidden),axis);assert.equal(axis.getTickStyle(),hidden);
     const after=new Canvas();chart.drawPolarAxes(after as any);
-    assert.equal(after.strokes.filter(s=>s.color===grid.getFillStyle().getColor().toCSS()).length,0);
+    assert.equal(after.strokes.filter(s=>s.color===(grid.getFillStyle() as SolidFill).getColor().toCSS()).length,0);
     assert.equal(after.texts.filter(t=>t.color===label.getColor().toCSS()).length,0);
   }finally{chart.dispose();}
 });

@@ -45,12 +45,18 @@ context.dispose()
 
 ```powershell
 npm run typecheck
+npm run typecheck:tests
 npm test
-npm run test:opentest-contract
 npm run build
 npm run test:browser
 npm run test:gallery
+npm run test:functional
+npm run test:performance
 ```
+
+`npm run verify` 按顺序执行以上 CRYChart 检查。`typecheck:tests` 对测试代码及其依赖执行严格类型检查；`test:functional` 执行当前构建的完整功能场景，缺项或失败均返回非零退出码。`test:performance` 执行完整性能协议，含两组各 10 分钟长测和 128 通道容量测试；它需要足够的运行时间和内存。OpenTest 专用契约测试不属于这组本库验证。
+
+性能负载、历史基准和限值配置见 [性能自动化说明](docs/performance-automation.md)。没有显式性能限值时，报告区分执行通过与性能达标，不将历史基准当作当前保证。
 
 浏览器测试使用已安装的可见 Chrome。数据和接口测试不能替代图像、交互及性能测试。性能结果只适用于记录中的数据量、绘图区、设备像素比和机器配置。
 

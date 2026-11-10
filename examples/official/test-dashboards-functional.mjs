@@ -19,7 +19,7 @@ const names={
   '0510':'dashboardDynamic','0511':'dashboardDynamicStacked','0512':'manyCharts','0513':'overlappingCharts',
   '0514':'racingDashboard','1300':'dataGridCrypto','1301':'dataGridMonitoring','1302':'dataGridMonitoringHeatmap'
 };
-const ids=args.ids?String(args.ids).split(','):Object.keys(names),report={createdAt:new Date().toISOString(),bundlePath,bundleSHA256:sha,base,scope:ids,checks:[],examples:[],errors:[],fullEquivalent:false,performanceTest:false,verificationScope:'Native implementation behavior only; this run does not measure performance.'};
+const ids=args.ids?String(args.ids).split(','):Object.keys(names),report={sessionId:process.env.CRYCHART_FUNCTIONAL_SESSION_ID,createdAt:new Date().toISOString(),bundlePath,bundleSHA256:sha,base,scope:ids,checks:[],examples:[],errors:[],fullEquivalent:false,performanceTest:false,verificationScope:'Native implementation behavior only; this run does not measure performance.'};
 for(const id of ids)assert.ok(names[id],`Unknown scoped ID ${id}`);
 const server=await ensureTestServer(Number(new URL(base).port)),connected=await connectVisibleChrome(),browser=connected.browser;
 // Use a dedicated task page; do not navigate or close another agent's page.

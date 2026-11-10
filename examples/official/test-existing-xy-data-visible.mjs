@@ -6,15 +6,15 @@ import {dirname, relative, resolve} from 'node:path';
 import {chromium} from 'playwright';
 
 const root=process.cwd(), sha=bytes=>createHash('sha256').update(bytes).digest('hex');
-const directory=resolve('codex_artifact/functional-existing-xy-data',new Date().toISOString().replace(/[:.]/g,'-'));
+const directory=(process.env.CRYCHART_SPECIALIZED_OUT ? resolve(process.env.CRYCHART_SPECIALIZED_OUT) : resolve('codex_artifact/functional-existing-xy-data',new Date().toISOString().replace(/[:.]/g,'-')));
 const sourceHashes={}; await mkdir(directory,{recursive:true});
 await build({entryPoints:['examples/official/main.ts'],bundle:true,format:'esm',target:'es2022',outfile:directory+'/official.js',plugins:[{name:'record-build-inputs',setup(b){b.onLoad({filter:/\.ts$/},async({path})=>{const contents=await readFile(path,'utf8');sourceHashes[relative(root,path).replaceAll('\\','/')]=sha(contents);return {contents,loader:'ts',resolveDir:dirname(path)};});}}]});
 const webPath='/'+relative(root,directory).replaceAll('\\','/'),bundleSHA256=sha(await readFile(directory+'/official.js'));
 await writeFile(directory+'/index.html',(await readFile('examples/official/index.html','utf8')).replace('/dist/official.js',webPath+'/official.js'));
-assert.equal(sha(Buffer.from(await fetch('http://127.0.0.1:4180'+webPath+'/official.js').then(r=>r.arrayBuffer()))),bundleSHA256);
-const report={startedAt:new Date().toISOString(),directory,bundleSHA256,sourceHashes,runnerSHA256:sha(await readFile(import.meta.filename)),visibleChrome:true,headless:false,checks:[],errors:[],scope:'Supplementary data and derived geometry oracles. Existing visible interaction checks remain separate. Expected values are calculated in this browser independently of the production signal helpers.'};
+assert.equal(sha(Buffer.from(await fetch((process.env.CRYCHART_BASE_URL ?? 'http://127.0.0.1:4180')+webPath+'/official.js').then(r=>r.arrayBuffer()))),bundleSHA256);
+const report={sessionId:process.env.CRYCHART_FUNCTIONAL_SESSION_ID,startedAt:new Date().toISOString(),directory,bundleSHA256,sourceHashes,runnerSHA256:sha(await readFile(import.meta.filename)),visibleChrome:true,headless:false,checks:[],errors:[],scope:'Supplementary data and derived geometry oracles. Existing visible interaction checks remain separate. Expected values are calculated in this browser independently of the production signal helpers.'};
 const selected=['0006-pointClusters','0010-multiChannelLineProgressive','0015-confidenceEllipseXY','0018-refreshingLineSpectrum','0020-dateTimeAxis','0034-dashedProjection','0035-dashedSupplementaryTrends','0051-linePaletteY','0053-dataGaps','0550-zoomBandChart','0706-onScreenMenu'].filter(id=>!process.argv.slice(2).length||process.argv.slice(2).some(prefix=>id.startsWith(prefix)));
-const browser=await chromium.connectOverCDP('http://127.0.0.1:9223'),page=await browser.contexts()[0].newPage();
+const browser=await chromium.connectOverCDP(process.env.CRYCHART_CDP ?? 'http://127.0.0.1:9223'),page=await browser.contexts()[0].newPage();
 await page.setViewportSize({width:1360,height:1180});await page.bringToFront();report.browser=browser.version();let current;
 page.on('pageerror',error=>report.errors.push({id:current,error:String(error)}));
 const save=()=>writeFile(directory+'/report.json',JSON.stringify(report,null,2)+'\n');
@@ -23,7 +23,7 @@ async function check(name,fn){try{report.checks.push({id:current,name,status:'pa
 
 try{for(const id of selected){
  current='crychart-example-'+id;
- await page.goto('http://127.0.0.1:4180'+webPath+'/index.html#'+current,{waitUntil:'load'});
+ await page.goto((process.env.CRYCHART_BASE_URL ?? 'http://127.0.0.1:4180')+webPath+'/index.html#'+current,{waitUntil:'load'});
  await page.waitForFunction(id=>window.__CRY_OFFICIAL__?.snapshot().referenceId===id,current);await settle();
  if(await page.locator('#official-pause').isEnabled())await page.locator('#official-pause').click();await settle();
  await check('full-native-source-and-derived-geometry-audit',async()=>page.evaluate(prefix=>{

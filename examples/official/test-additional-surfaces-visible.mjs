@@ -13,15 +13,29 @@ const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const bundlePath = resolve(options.bundle ?? 'dist/official.js'), bundle = await readFile(bundlePath), bundleSHA256 = sha(bundle);
 if (options['expected-sha']) assert.equal(bundleSHA256, options['expected-sha']);
 const sourceManifest=options['source-manifest']?JSON.parse(await readFile(resolve(options['source-manifest']),'utf8')):undefined; if(sourceManifest)assert.equal(sourceManifest.bundleSHA256,bundleSHA256);
-const sourceHashes=sourceManifest?.sources??{};
+const sourceHashes={...sourceManifest?.sources};
+// These assets are loaded at runtime, so esbuild's input manifest cannot bind
+// them. Freeze their bytes before execution and serve exactly those bytes.
+const brainPath='examples/data/brain-drummyfish.obj',provenancePath='examples/data/brain-drummyfish.provenance.json';
+const brainBytes=await readFile(brainPath),provenanceBytes=await readFile(provenancePath);
+sourceHashes[brainPath]=sha(brainBytes);sourceHashes[provenancePath]=sha(provenanceBytes);
+const brainProvenance=JSON.parse(provenanceBytes);
+assert.equal(brainProvenance.outputSHA256,sourceHashes[brainPath]);
+assert.equal(brainProvenance.outputBytes,brainBytes.length);
+const runtimeAssets={brain:{path:brainPath,sha256:sourceHashes[brainPath],bytes:brainBytes.length,requests:0},provenance:{path:provenancePath,sha256:sourceHashes[provenancePath],relationship:'outputSHA256/outputBytes match the frozen runtime OBJ'}};
 await build({entryPoints: ['examples/official/additional-surfaces-data.ts'], outfile: join(directory, 'oracle-data.mjs'), bundle: true, platform: 'node', format: 'esm'});
 const data = await import(pathToFileURL(join(directory, 'oracle-data.mjs')).href);
-const report = {schemaVersion: 1, at: new Date().toISOString(), bundlePath, bundleSHA256, sourceHashes, runnerSHA256:sha(await readFile(new URL(import.meta.url))), oracleSHA256:sha(await readFile(join(directory,'oracle-data.mjs'))), baseURL: base, visibleChrome: true, referenceEquivalence: false, pixelEqualityWithReference: false, performance: false, sourcePolicy: 'Original generated geometry/signals; attributed CC0 brain. Full retained data checked against independent input arrays or explicit input formulas; no reference data reconstruction.', checks: [], examples: [], captures: [], errors: []};
+const report = {sessionId:process.env.CRYCHART_FUNCTIONAL_SESSION_ID,schemaVersion: 1, at: new Date().toISOString(), bundlePath, bundleSHA256, sourceHashes, runnerSHA256:sha(await readFile(new URL(import.meta.url))), oracleSHA256:sha(await readFile(join(directory,'oracle-data.mjs'))), baseURL: base, visibleChrome: true, referenceEquivalence: false, pixelEqualityWithReference: false, performance: false, sourcePolicy: 'Original generated geometry/signals; attributed CC0 brain. Full retained data checked against independent input arrays or explicit input formulas; no reference data reconstruction.', checks: [], examples: [], captures: [], errors: []};
+report.runtimeAssets=runtimeAssets;
 const connection = await connectVisibleChrome(), browser = connection.browser, page = await browser.contexts()[0].newPage(); report.browser = connection.metadata;
 const cdp = await page.context().newCDPSession(page); let current = '', pageErrors = [];
 page.on('pageerror', e => pageErrors.push(String(e))); await page.setViewportSize({width: 1320, height: 1100}); await page.bringToFront();
 await page.route('**/__additional-oracle.mjs', route => route.fulfill({status:200,contentType:'text/javascript',path:join(directory,'oracle-data.mjs')}));
 await page.route('**/dist/official.js*', route => route.fulfill({status: 200, contentType: 'text/javascript', body: bundle}));
+await page.route('**/examples/data/brain-drummyfish.obj', async route => {
+  runtimeAssets.brain.requests++;
+  await route.fulfill({status:200,contentType:'text/plain',body:brainBytes});
+});
 await page.addInitScript(() => {
   window.__additionalContexts = new Map(); window.__additionalResources = new Map();
   const original = HTMLCanvasElement.prototype.getContext;
@@ -54,7 +68,13 @@ try {
       await check('real camera orbit/zoom and wireframe/lighting controls', 'interaction', async () => {const navigation = await geometryGesture(); await page.locator('[data-control=mesh-wireframe]').click(); await page.locator('[data-control=mesh-lighting]').click(); const d = (await snap()).moduleDetails; assert.equal(d.wireframe, true); assert.equal(d.lighting, false); await page.locator('[data-control=mesh-reset]').click(); await capture('interaction'); return {navigation, wireframe: d.wireframe, lighting: d.lighting, retained: await exactMesh(expected)};});
       if (id.includes('1502')) await check('one temperature step changes all eligible colors but no geometry', 'streaming', async () => {const before = (await snap()).moduleDetails; await page.locator('[data-control=mesh-step]').click(); const after = (await snap()).moduleDetails; assert.equal(after.version, before.version + 1); const sensors = data.sensorLocations(expected.positions, 8), weights = data.sensorWeights(expected.positions, sensors), values = data.interpolateSensors(weights, after.sensorValues); const actual = await page.evaluate(() => [...window.__CRY_OFFICIAL__.inspect().charts[0].getSeries().find(s => s.getGeometry).getGeometry().values]); assert.deepEqual(actual, [...values]); assert.notDeepEqual(after.valueSummary, before.valueSummary); return {valuesCompared: values.length, versionBefore: before.version, versionAfter: after.version, geometry: await exactMesh(expected)};});
     } else if (id.includes('1503')) {
-      const brain = data.normalizeModel(data.parseOBJ(await readFile('examples/data/brain-drummyfish.obj', 'utf8')));
+      await check('runtime brain asset matches its frozen bytes and provenance', 'data', async () => {
+        assert.ok(runtimeAssets.brain.requests>0,'The mounted model must request the frozen OBJ');
+        assert.equal(sha(await readFile(brainPath)),sourceHashes[brainPath],'Runtime asset changed during execution');
+        assert.equal(sha(await readFile(provenancePath)),sourceHashes[provenancePath],'Provenance changed during execution');
+        return runtimeAssets;
+      });
+      const brain = data.normalizeModel(data.parseOBJ(brainBytes.toString('utf8')));
       await check('complete brain indices/XYZ and all ten 1 kHz retained traces', 'data', async () => {const mesh = await exactMesh(brain, 1); const result = await page.evaluate(() => {const api = window.__CRY_OFFICIAL__, d = api.snapshot().moduleDetails; let compared = 0, mismatch = 0; for (let c = 0; c < 10; c++) {const s = api.inspect().traces[c].series, count = s.getSampleCount(); for (let i = 0; i < count; i++) {const sample = d.nextSample - count + i, t = sample / 1000, raw = 28 * Math.sin(2 * Math.PI * (8 + c * .43) * t + c * .6) + 12 * Math.sin(2 * Math.PI * 1.7 * t + c) + 4 * Math.cos(2 * Math.PI * 31 * t - c), actual = s.getSample(i); if (!Object.is(actual.x, t) || !Object.is(actual.y, c + raw / 150)) mismatch++; compared++;}} return {compared, mismatch, nextSample: d.nextSample, mean: d.meanValues};}); assert.equal(result.mismatch, 0); assert.ok(result.compared >= 10000); const expectedMeans = Array.from({length: 10}, (_, c) => {let sum = 0; for (let i = result.nextSample - 100; i < result.nextSample; i++) sum += data.eegSample(c, i); return sum / 100;}); const meanError = Math.max(...expectedMeans.map((v, i) => Math.abs(v - result.mean[i]))); assert.ok(meanError < 2e-12); const sensors = data.sensorLocations(brain.positions, 10), values = data.interpolateSensors(data.sensorWeights(brain.positions, sensors), result.mean), actual = await page.evaluate(() => [...window.__CRY_OFFICIAL__.inspect().charts[1].getSeries().find(s => s.getGeometry).getGeometry().values]); assert.deepEqual(actual, [...values]); return {mesh, raw: result, meanError, vertexValuesCompared: values.length};});
       await check('EEG pause/resume, sensors toggle and real model orbit', 'interaction', async () => {const first = (await snap()).moduleDetails.nextSample; await waitFrames(5); assert.equal((await snap()).moduleDetails.nextSample, first); await page.locator('#official-pause').click(); await page.waitForFunction(n => window.__CRY_OFFICIAL__.snapshot().moduleDetails.nextSample > n + 30, first); await page.locator('#official-pause').click(); const second = (await snap()).moduleDetails.nextSample; await page.locator('[data-control=mesh-sensors]').click(); assert.equal((await snap()).moduleDetails.sensorsVisible, false); const navigation = await geometryGesture(1); await capture('interaction'); return {before: first, resumed: second, sensorMarkersHidden: true, navigation};});
     } else if (id.includes('1601')) {

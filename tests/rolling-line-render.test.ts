@@ -279,7 +279,7 @@ test('default 1px bounded growing window reaches the real arena before capacity 
    assert.ok(Object.is(back.y![i],value(first+i)),`complete raw F64 source index${first+i}`);
   }
   const index=next-3,x=base+index*step;
-  assert.equal(line.findNearestXIndex(x),index-first,'Nearest query uses the retained source index, not a reduced display index');
+  assert.deepEqual(line.findNearestX(x),line.getSample(index-first),'Nearest query uses the retained source index, not a reduced display index');
   assert.ok(Object.is(line.findNearestX(x)!.y,value(index)));
  };
  const frame=()=>{
@@ -323,7 +323,7 @@ test('default 1px bounded growing window reaches the real arena before capacity 
   frame();verifySource();assert.equal(data.getSampleCount(),limit);assert.equal(data.getNextSampleIndex(),limit);
   next=data.getNextSampleIndex();data.appendSamples({y:Float64Array.from({length:batch},(_,i)=>value(next+i))},{step});
   const wrapped=frame();verifySource();assert.equal(data.getSampleCount(),limit);assert.equal(data.getNextSampleIndex()-data.getSampleCount(),batch);
-  assert.equal(line.findNearestXIndex(base+batch*step),0,'The first full-ring wrap expires the original prefix without shifting source identities');
+  assert.deepEqual(line.findNearestX(base+batch*step),line.getSample(0),'The first full-ring wrap expires the original prefix without shifting source identities');
   context.diagnostic(JSON.stringify({growingUploads,firstFullWrap:wrapped}));
  }finally{h.chart.dispose();assert.equal(data.isDisposed(),false);data.dispose();assert.equal(h.gl.createdBuffers,h.gl.deletedBuffers);}
 });

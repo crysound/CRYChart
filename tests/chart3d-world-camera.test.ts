@@ -37,10 +37,10 @@ test('requested interval remains public while an explicit equal request updates 
   const chart=new Chart3D();
   try{
     chart.axisX.setInterval({start:0,end:1});let events=0;chart.axisX.onIntervalChange(()=>events++);
-    const series=chart.addLineSeries().setStrokeStyle(style=>style.setThickness(2)).add([{x:0,y:0,z:0},{x:1,y:1,z:1}]);
+    const series=chart.addLineSeries().setStrokeStyle((style:import('../src/core/styles.js').SolidLine)=>style.setThickness(2)).add([{x:0,y:0,z:0},{x:1,y:1,z:1}]);
     const x=()=>chart.translateCoordinate({x:1,y:1,z:1},chart.coordsAxis,chart.coordsWorld).x;
     near(x(),.2886751345948129,2e-14);chart.axisX.setInterval({start:0,end:1});near(x(),.28668889566180467,2e-14);
-    series.setStrokeStyle(style=>style.setThickness(8));near(x(),.28668889566180467,2e-14);
+    series.setStrokeStyle((style:import('../src/core/styles.js').SolidLine)=>style.setThickness(8));near(x(),.28668889566180467,2e-14);
     chart.axisX.setInterval({start:0,end:1});near(x(),.28089085877435155,2e-14);
     assert.deepEqual(chart.axisX.getInterval(),{start:0,end:1});assert.equal(events,0);
     chart.axisX.setScrollMargins(false).setInterval({start:0,end:1});near(x(),.2886751345948129,2e-14);

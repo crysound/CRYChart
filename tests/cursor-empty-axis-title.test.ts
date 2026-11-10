@@ -24,7 +24,7 @@ function result(chart:ChartXY,point={x:2,y:3.5},mode:'show-nearest'|'show-all'='
 test('无标题坐标行在百万点命中时保持单值结构',()=>{
   const {chart,series}=fixture();
   try{
-    chart.axisX.setTickStrategy(AxisTickStrategies.Numeric,t=>t.setCursorFormatter(v=>v.toFixed(0)));
+    chart.axisX.setTickStrategy(AxisTickStrategies.Numeric,t=>t.setCursorFormatter((v:number)=>v.toFixed(0)));
     const y=0.6377996831227095;series.clear().appendSamples({x:[0],y:[y]});
     const {hits,rows}=result(chart,{x:0,y});
     assert.equal(rows[0][0].component,series);
@@ -84,9 +84,9 @@ test('混合schema与不同X轴保留各自坐标行及独立标题单位',()=>{
   const {chart,series}=fixture();try{
     chart.axisX.setUnits('ms');chart.axisY.setUnits('Pa');
     const x2=chart.addAxisX({opposite:true}).setTitle('Elapsed').setUnits('s').setInterval({start:0,end:4});
-    x2.setTickStrategy(AxisTickStrategies.Numeric,t=>t.setCursorFormatter(v=>v.toFixed(2)));
+    x2.setTickStrategy(AxisTickStrategies.Numeric,t=>t.setCursorFormatter((v:number)=>v.toFixed(2)));
     const y2=chart.addAxisY({opposite:true}).setTitle('Voltage').setUnits('mV').setInterval({start:0,end:8});
-    y2.setTickStrategy(AxisTickStrategies.Numeric,t=>t.setCursorFormatter(v=>v.toFixed(2)));
+    y2.setTickStrategy(AxisTickStrategies.Numeric,t=>t.setCursorFormatter((v:number)=>v.toFixed(2)));
     const other=chart.addLineSeries({axisX:x2,axisY:y2,schema:{x:{storage:Float64Array,pattern:'progressive'},y:{storage:Float64Array}}})
       .setDataMapping({x:'x',y:'y'}).setName('Other').appendSamples({x:[0,2,4],y:[2,4.5,7]});
     const {rows}=result(chart,undefined,'show-all');assert.equal(rows.length,6);

@@ -8,7 +8,7 @@
   },
   "legacyHarness": {
     "path": "examples/official/test-visible.mjs",
-    "sha256": "8ebd6e249bb95def0d900a024ba1dac57d9f3112209186bf6f26479f641ef85b",
+    "sha256": "b94de6362450424f938c1dd93ac985fa8477996c73c721e31a4f675e371a0cda",
     "historicalMappingSource": "codex_artifact/official-candidates-visible/report.json",
     "historicalBundleSHA256": "9a3c0f98f21b69ea2f8dea5f3766d8da14eca67ef93d79ba32649c2d78f2df4f",
     "historicalChecks": 121,
@@ -24,6 +24,28 @@
         "reviewPath": "codex_artifact/gradient-0018-diagnostic/review.json",
         "reviewSHA256": "9ec8729699f76c24b019aeaaa9c2695d2ed05d25e528c22123dc06a56a0c7982",
         "scope": "Sample the actual native chart composition instead of uncomposited transparent RGB. Preserve x=160, y=0.2/0.6, DPR/floor conversion, and the exact green-channel difference >30 assertion. Raw RGBA remains recorded. Other check bodies are byte-identical; their shifted source lines are metadata only."
+      },
+      {
+        "checkName": "ten pie slices update values, geometry, lookup colors, and legend swatches together",
+        "beforeHarnessSHA256": "2ecc73a456f20d44b309d1372c0c0ba4186a78b383537c975ee842f1770997af",
+        "afterHarnessSHA256": "86f842b704feb30d55d13f4ed8e1762aa1b3d4f4294bc0d68ef7fadcd0e42868",
+        "beforeBodySHA256": "eacab2361849d076def8f98b8a629ed0009556079f7b5422fe0ea2aef28a195a",
+        "afterBodySHA256": "3177376721380afc77dd06e53166c7b798d84008095ad11f2c44d42a8670a327",
+        "sourceLine": 368,
+        "reviewPath": "codex_artifact/functional-current/pie-baseline-source-binding.json",
+        "reviewSHA256": "522d69314c21292c219ab04951cf09b362fad5ea5a46707a3bbe8484d8104316",
+        "scope": "0452 freezes baseline values, pixels and swatches in one paused update bucket, resumes and waits for a newer bucket, then pauses and asserts the same value/color/geometry changes. No requirement or tolerance is weakened. All other check bodies are unchanged after newline normalization; line offsets and body hashes are refreshed from the actual source bytes."
+      },
+      {
+        "checkName": "hovering an actual projected measurement resolves its UTC timestamp and both measured pollutants",
+        "beforeHarnessSHA256": "86f842b704feb30d55d13f4ed8e1762aa1b3d4f4294bc0d68ef7fadcd0e42868",
+        "afterHarnessSHA256": "b94de6362450424f938c1dd93ac985fa8477996c73c721e31a4f675e371a0cda",
+        "beforeBodySHA256": "ca5020806e9b9a3fd10796f8c82a5bdc641cb8b9bc34c2ef1762a83d96c0c2d8",
+        "afterBodySHA256": "e0a50374f8e7090ba206decfc2b3ccd8f4ac4ad99eaeaf5db328771dc00dd518",
+        "sourceLine": 713,
+        "reviewPath": "codex_artifact/functional-current/pie-measurement-source-binding.json",
+        "reviewSHA256": "ef1f2ad71761f3975c9bc5920ce9b8a4b218166d67d5a41b311f2e58da58ade2",
+        "scope": "0452 freezes baseline values, pixels and swatches in one paused update bucket, resumes and waits for a newer bucket, then pauses and asserts the same value/color/geometry changes. 1709 reads row 480 from the existing independent synthetic-air-quality.json input instead of the obsolete hard-coded 2025 sample, checks all timestamp/pollutant fields and tooltip, and adds a public translateCoordinate versus probe error below 0.01 pixel. No product implementation or requirement was modified. All other check bodies are unchanged after newline normalization; line offsets and body hashes are refreshed from the actual source bytes."
       }
     ]
   },
@@ -1966,7 +1988,7 @@
       "legacyCheckLocations": [
         {
           "name": "scrolling custom ticks are created and retired by the real viewport while the input stream can pause",
-          "line": 471,
+          "line": 482,
           "usesRealInput": true
         }
       ],
@@ -1984,7 +2006,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 471,
+            "line": 482,
             "bodySHA256": "fc35895349a75d86f9ecdd308381aa1c0ffa3b7b9ebc6788d70da08b36f4c617"
           }
         }
@@ -2079,7 +2101,7 @@
       "legacyCheckLocations": [
         {
           "name": "eight hours use real duration labels and rectangular zoom changes both ranges",
-          "line": 476,
+          "line": 487,
           "usesRealInput": true
         }
       ],
@@ -2097,7 +2119,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 476,
+            "line": 487,
             "bodySHA256": "68340344c402f177c6cf253e1ec18b7ba395dc3cd87079cd3131f698aad79467"
           }
         }
@@ -2198,7 +2220,7 @@
       "legacyCheckLocations": [
         {
           "name": "three real-time channels share a sixty-second elapsed-time window and pause together",
-          "line": 481,
+          "line": 492,
           "usesRealInput": true
         }
       ],
@@ -2216,7 +2238,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 481,
+            "line": 492,
             "bodySHA256": "dad887ccc7c905dde5a676081809807c174c1096c08da12a2ca4ed23f02e7b51"
           }
         }
@@ -3568,7 +3590,7 @@
       "legacyCheckLocations": [
         {
           "name": "monthly date records keep a fixed percent axis while calendar ticks change from years to months",
-          "line": 486,
+          "line": 497,
           "usesRealInput": true
         }
       ],
@@ -3586,7 +3608,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 486,
+            "line": 497,
             "bodySHA256": "d8f45d6738fa2687d64bdc1d8e80e9ca06caaf78e16592d178405a56e50850fa"
           }
         },
@@ -3756,7 +3778,7 @@
       "legacyCheckLocations": [
         {
           "name": "both areas share relative samples but cursor timestamps respect distinct date origins",
-          "line": 491,
+          "line": 502,
           "usesRealInput": true
         }
       ],
@@ -3774,7 +3796,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 491,
+            "line": 502,
             "bodySHA256": "42976fe38f5dcf88cde7a5eab592ccf88529ede082cd911b73f4da9b9c34afa7"
           }
         }
@@ -3868,7 +3890,7 @@
       "legacyCheckLocations": [
         {
           "name": "twenty thousand outliers use per-point distance colors and hover reports their actual distance",
-          "line": 411,
+          "line": 422,
           "usesRealInput": true
         }
       ],
@@ -3886,7 +3908,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 411,
+            "line": 422,
             "bodySHA256": "270b5063521fe58267360443410f2a42fd2c14f784445308fb3b4baa618ca7b1"
           }
         }
@@ -4180,7 +4202,7 @@
       "legacyCheckLocations": [
         {
           "name": "all 7.5 million retained samples render in three linked panels and zoom reuses geometry",
-          "line": 496,
+          "line": 507,
           "usesRealInput": true
         }
       ],
@@ -4198,7 +4220,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 496,
+            "line": 507,
             "bodySHA256": "9aa6caaebd0f9295fbfc3cf596305279c54b05ab4f4992bc84eee34188448cce"
           }
         },
@@ -4765,7 +4787,7 @@
       "legacyCheckLocations": [
         {
           "name": "Y fits only the actual selected X samples and boundary segments after a visible box gesture",
-          "line": 501,
+          "line": 512,
           "usesRealInput": true
         }
       ],
@@ -4783,7 +4805,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 501,
+            "line": 512,
             "bodySHA256": "53919d8fa942676b860ac43747462f3748ee7eb1c68afcf24cc1b516e3a9cf66"
           }
         }
@@ -5848,7 +5870,7 @@
       "legacyCheckLocations": [
         {
           "name": "history and forecast join continuously, with a growing real interval and GPU dash gaps",
-          "line": 392,
+          "line": 403,
           "usesRealInput": false
         }
       ],
@@ -5864,7 +5886,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 392,
+            "line": 403,
             "bodySHA256": "2a206dbf2ad5c69b3f06c8c792ecfde60bf102ef8df7974ef896a21a6817ff53"
           }
         },
@@ -6051,7 +6073,7 @@
       "legacyCheckLocations": [
         {
           "name": "two spline paths have nine monthly nodes, distinct strokes, and shared data hover",
-          "line": 399,
+          "line": 410,
           "usesRealInput": true
         }
       ],
@@ -6069,7 +6091,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 399,
+            "line": 410,
             "bodySHA256": "30d01b718e13e962a1ef6036d62b4b5ae1d61ccd69ecaa538ef43000b0b06f9b"
           }
         },
@@ -6239,7 +6261,7 @@
       "legacyCheckLocations": [
         {
           "name": "two temperature traces cross a real red dashed 120-degree threshold and support XY box zoom",
-          "line": 404,
+          "line": 415,
           "usesRealInput": true
         }
       ],
@@ -6257,7 +6279,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 404,
+            "line": 415,
             "bodySHA256": "8f0345656328c3794bebafba12cac82d76cfc51ac9c9f2001f9dd73edff30049"
           }
         }
@@ -6358,7 +6380,7 @@
       "legacyCheckLocations": [
         {
           "name": "three groups have 500 independent bubble sizes, translucent interiors, outlines and three-KPI hover",
-          "line": 416,
+          "line": 427,
           "usesRealInput": true
         }
       ],
@@ -6376,7 +6398,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 416,
+            "line": 427,
             "bodySHA256": "c0a868d5abf02e7cf670f12d2fb7f33245cf16afaac92dfa8cb0bf0c844bf182"
           }
         }
@@ -6477,7 +6499,7 @@
       "legacyCheckLocations": [
         {
           "name": "three groups retain 650 individually sized 3D bubbles and actual legend and camera gestures change the scene",
-          "line": 561,
+          "line": 572,
           "usesRealInput": true
         }
       ],
@@ -6495,7 +6517,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 561,
+            "line": 572,
             "bodySHA256": "678460efa2099356bb577f3bd7bc8e2c0ff433b0a5d3c7c586cb85beb28dc635"
           }
         },
@@ -6914,7 +6936,7 @@
       "legacyCheckLocations": [
         {
           "name": "real polygon clicks close the lasso, enlarge selected samples and populate only matching ID/X/Y rows",
-          "line": 614,
+          "line": 625,
           "usesRealInput": true
         }
       ],
@@ -6932,7 +6954,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 614,
+            "line": 625,
             "bodySHA256": "c4d111b01bd9fe4321bd19bd0ab6b9b3fa5537dcd3106ed06bc6dc9981b18c87"
           }
         },
@@ -7550,7 +7572,7 @@
       "legacyCheckLocations": [
         {
           "name": "both left-drag directions recolor the actual selected range while preserving the full axis window",
-          "line": 618,
+          "line": 629,
           "usesRealInput": true
         }
       ],
@@ -7568,7 +7590,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 618,
+            "line": 629,
             "bodySHA256": "e6528a84db276c0ee5a7447ed040a2a12024e51a9cefdd812a19d8fb091eb460"
           }
         }
@@ -8140,7 +8162,7 @@
       "legacyCheckLocations": [
         {
           "name": "a real million BigInt samples retain adjacent nanoseconds in the GPU block and overview handles change the window",
-          "line": 506,
+          "line": 517,
           "usesRealInput": true
         }
       ],
@@ -8158,7 +8180,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 506,
+            "line": 517,
             "bodySHA256": "ecb8a4833a85c19e6e355e5be73ac226926ce823289a4dcd0eb1dd6431731186"
           }
         },
@@ -8547,7 +8569,7 @@
       "legacyCheckLocations": [
         {
           "name": "two multi-year trends change to calendar days while retaining Y and linked cursor visibility",
-          "line": 511,
+          "line": 522,
           "usesRealInput": true
         }
       ],
@@ -8565,7 +8587,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 511,
+            "line": 522,
             "bodySHA256": "fea0e159a9bf8c95eb2fcf4aefbd1aac8385e2f9a024cf24438bfb02f2d6f69a"
           }
         }
@@ -8659,7 +8681,7 @@
       "legacyCheckLocations": [
         {
           "name": "one ECG line uses twelve discrete X windows and retains both GPU colors after zoom",
-          "line": 421,
+          "line": 432,
           "usesRealInput": true
         }
       ],
@@ -8677,7 +8699,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 421,
+            "line": 432,
             "bodySHA256": "8823aeba8aad53587b67737857b5578ad9c243d656de1710ce9315b51e68868e"
           }
         }
@@ -8778,7 +8800,7 @@
       "legacyCheckLocations": [
         {
           "name": "one line visibly switches red/yellow/green at the two Y thresholds without splitting source samples",
-          "line": 426,
+          "line": 437,
           "usesRealInput": false
         }
       ],
@@ -8794,7 +8816,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 426,
+            "line": 437,
             "bodySHA256": "1855206517b90d64f5aa1ff565843b1563f23840e24c20bfa7a7a8524e5f5333"
           }
         },
@@ -9174,7 +9196,7 @@
       "legacyCheckLocations": [
         {
           "name": "actual price and volume samples preserve overnight NaN breaks and the overview handles synchronize both windows",
-          "line": 623,
+          "line": 634,
           "usesRealInput": true
         }
       ],
@@ -9192,7 +9214,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 623,
+            "line": 634,
             "bodySHA256": "1f373c277f52c440904c3d7666f27fb9b7228ef1a2821c4a7286f4c7ac4dd2a9"
           }
         },
@@ -10315,7 +10337,7 @@
       "legacyCheckLocations": [
         {
           "name": "real LiDAR replay appends newly timed points and pause freezes both the count and age palette",
-          "line": 687,
+          "line": 698,
           "usesRealInput": true
         }
       ],
@@ -10333,7 +10355,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 687,
+            "line": 698,
             "bodySHA256": "05a61bd3198e5fe6a07c1d5e64097d187e8a43f7e7655b4c1428d3f48009c1e9"
           }
         },
@@ -10544,7 +10566,7 @@
       "legacyCheckLocations": [
         {
           "name": "five bounded 3D scatter channels advance equally and a real legend control hides only its own channel",
-          "line": 691,
+          "line": 702,
           "usesRealInput": true
         }
       ],
@@ -10562,7 +10584,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 691,
+            "line": 702,
             "bodySHA256": "4ffe8bd1fd22701df64f44abe23d17bc8fb9ac65591e96f91af6363ca3522c44"
           }
         },
@@ -11734,7 +11756,7 @@
       "legacyCheckLocations": [
         {
           "name": "actual category controls rebuild grouped or stacked bars while preserving the recorded source values",
-          "line": 647,
+          "line": 658,
           "usesRealInput": true
         }
       ],
@@ -11752,7 +11774,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 647,
+            "line": 658,
             "bodySHA256": "88372ec37a66f073fa244fa0d6e23cc771f030ccef9a7ccf30bee11df215d77c"
           }
         },
@@ -12076,7 +12098,7 @@
       "legacyCheckLocations": [
         {
           "name": "nine mosaic cells conserve total area and a real pointer resolves the correct conditional percentage",
-          "line": 650,
+          "line": 661,
           "usesRealInput": true
         }
       ],
@@ -12094,7 +12116,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 650,
+            "line": 661,
             "bodySHA256": "c289cc02246de8f7b9d518df7381ed3131932a333d42d4366e88507af786153a"
           }
         },
@@ -12250,7 +12272,7 @@
       "legacyCheckLocations": [
         {
           "name": "eight historical total-case bars use actual loaded dates and pause preserves both interpolated values and ranking",
-          "line": 654,
+          "line": 665,
           "usesRealInput": true
         }
       ],
@@ -12268,7 +12290,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 654,
+            "line": 665,
             "bodySHA256": "3aafd14e52dcb078ef1eb72195fc07efdb94dd09ffbcd0b1862d0337c6bb52e0"
           }
         },
@@ -12423,7 +12445,7 @@
       "legacyCheckLocations": [
         {
           "name": "actual category controls rebuild grouped or stacked bars while preserving the recorded source values",
-          "line": 647,
+          "line": 658,
           "usesRealInput": true
         }
       ],
@@ -12441,7 +12463,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 647,
+            "line": 658,
             "bodySHA256": "88372ec37a66f073fa244fa0d6e23cc771f030ccef9a7ccf30bee11df215d77c"
           }
         },
@@ -13224,7 +13246,7 @@
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
             "line": 368,
-            "bodySHA256": "cb5382e01c8f63501163acbcb40a28050df033c8ffa1865239d323f4fadce4aa"
+            "bodySHA256": "3177376721380afc77dd06e53166c7b798d84008095ad11f2c44d42a8670a327"
           }
         },
         {
@@ -16675,7 +16697,7 @@
       "legacyCheckLocations": [
         {
           "name": "three profession boxes and distinct outliers render with real statistic hover values",
-          "line": 658,
+          "line": 669,
           "usesRealInput": true
         }
       ],
@@ -16693,7 +16715,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 658,
+            "line": 669,
             "bodySHA256": "490c235296fa956fe38eaa32f095830de8d5bc47d1082139bcf02a79b2036d4d"
           }
         },
@@ -16892,7 +16914,7 @@
       "legacyCheckLocations": [
         {
           "name": "the eight-second distribution settles into normalized CDF, PDF, violin and an independently toggleable horizontal box",
-          "line": 662,
+          "line": 673,
           "usesRealInput": true
         }
       ],
@@ -16910,7 +16932,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 662,
+            "line": 673,
             "bodySHA256": "b5c39e622e84e1120f46591015f8e8b92131a6ba5ddcdec4be0ff452f6e4202f"
           }
         },
@@ -17119,7 +17141,7 @@
       "legacyCheckLocations": [
         {
           "name": "actual drags move both band edges, preserve width at its center and move X/Y constant lines",
-          "line": 629,
+          "line": 640,
           "usesRealInput": true
         }
       ],
@@ -17137,7 +17159,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 629,
+            "line": 640,
             "bodySHA256": "39525df468a7d64cd0fdae84dd8b182b461041ae2c523f03ccccae0174994ef1"
           }
         }
@@ -17229,7 +17251,7 @@
       "legacyCheckLocations": [
         {
           "name": "three independent live cursor labels expose unshifted values at one real sample and pause freezes all channels",
-          "line": 634,
+          "line": 645,
           "usesRealInput": true
         }
       ],
@@ -17247,7 +17269,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 634,
+            "line": 645,
             "bodySHA256": "5bd8db7cd9abd0bcd85b92f3a8297ef9ce4042008ae7bf61c2738a440643892f"
           }
         },
@@ -17449,7 +17471,7 @@
       "legacyCheckLocations": [
         {
           "name": "the HTML cursor follows a real sample, reports its date/value and fades after pointer leave",
-          "line": 638,
+          "line": 649,
           "usesRealInput": true
         }
       ],
@@ -17467,7 +17489,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 638,
+            "line": 649,
             "bodySHA256": "3b2e6a2f179177832bdd1ba627064557445c0025ccf2b744feb56543efceb6b2"
           }
         }
@@ -17559,7 +17581,7 @@
       "legacyCheckLocations": [
         {
           "name": "visible menu buttons independently change X/Y, fit both views and hide actual intersection markers",
-          "line": 642,
+          "line": 653,
           "usesRealInput": true
         }
       ],
@@ -17577,7 +17599,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 642,
+            "line": 653,
             "bodySHA256": "de143274ef6da2c0381a6e8f17cd8afff535bd123bfc3fd5f014b5a25b550a09"
           }
         },
@@ -18210,7 +18232,7 @@
       "legacyCheckLocations": [
         {
           "name": "browser-decoded stereo WAV produces two actual Hann STFT textures and synchronized time axes",
-          "line": 670,
+          "line": 681,
           "usesRealInput": true
         }
       ],
@@ -18228,7 +18250,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 670,
+            "line": 681,
             "bodySHA256": "70b0aad496b65b799837930d7744cbd6fb4f79add085d94a244e0812823ae973"
           }
         },
@@ -18438,7 +18460,7 @@
       "legacyCheckLocations": [
         {
           "name": "the scrolling grid writes real 500-value vectors and updates only changed texture bytes between frames",
-          "line": 674,
+          "line": 685,
           "usesRealInput": true
         }
       ],
@@ -18456,7 +18478,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 674,
+            "line": 685,
             "bodySHA256": "15474a91f1634e716949b98af1dfa3ef5fa81f6a425dda9638aaaa2f9ad0e00e"
           }
         },
@@ -18889,7 +18911,7 @@
       "legacyCheckLocations": [
         {
           "name": "a real heatmap hover extracts matching row and column values from all 1048576 source cells",
-          "line": 678,
+          "line": 689,
           "usesRealInput": true
         }
       ],
@@ -18907,7 +18929,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 678,
+            "line": 689,
             "bodySHA256": "c171ce92498b7d06590bb1d6ae6321ee794da462c7d852b4c98ef48fb9bec825"
           }
         },
@@ -19130,7 +19152,7 @@
       "legacyCheckLocations": [
         {
           "name": "the fixed sweeping grid preserves unwritten zeros, then really wraps its 250-column write head",
-          "line": 682,
+          "line": 693,
           "usesRealInput": true
         }
       ],
@@ -19148,7 +19170,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 682,
+            "line": 693,
             "bodySHA256": "cf236cfd1badb7628be0c20dea7f562d34be0cfd60240a2f964b8c5ef33e33a5"
           }
         },
@@ -19359,7 +19381,7 @@
       "legacyCheckLocations": [
         {
           "name": "the same grid is genuinely smooth on the left and constant inside cells on the right, with interpolated hover",
-          "line": 516,
+          "line": 527,
           "usesRealInput": true
         }
       ],
@@ -19377,7 +19399,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 516,
+            "line": 527,
             "bodySHA256": "62f3c6195b2e1c43a69db5de4a81104e0f26358b5415c5fec2e523ae7bcb50f0"
           }
         },
@@ -19585,7 +19607,7 @@
       "legacyCheckLocations": [
         {
           "name": "4800 real 3D positions use separate upper spherical markers and lower cuboid instances",
-          "line": 565,
+          "line": 576,
           "usesRealInput": true
         }
       ],
@@ -19603,7 +19625,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 565,
+            "line": 576,
             "bodySHA256": "595aa039a8a4abacb0e28e024605f0de645029266bef0dfe48b00b195166279b"
           }
         },
@@ -19922,7 +19944,7 @@
       "legacyCheckLocations": [
         {
           "name": "7200 spectrum boxes keep a bounded stream while data and camera animation have independent real controls",
-          "line": 569,
+          "line": 580,
           "usesRealInput": true
         }
       ],
@@ -19940,7 +19962,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 569,
+            "line": 580,
             "bodySHA256": "ddf83f74c39feefbb95b3c3a9f714032d5d7b4579a0fdf797cd0b7c5d4d8bc23"
           }
         },
@@ -20361,7 +20383,7 @@
       "legacyCheckLocations": [
         {
           "name": "one hundred animated columns preserve height data while rounded and sharp geometry produce different actual pixels",
-          "line": 573,
+          "line": 584,
           "usesRealInput": true
         }
       ],
@@ -20379,7 +20401,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 573,
+            "line": 584,
             "bodySHA256": "f58668f09aa2e3fe6cde125bd82271ad5e8bef9c5065c912a88bca3c6f34ac4e"
           }
         },
@@ -20581,7 +20603,7 @@
       "legacyCheckLocations": [
         {
           "name": "each 3D point frame replaces all ten thousand retained samples and pause freezes their actual coordinates",
-          "line": 577,
+          "line": 588,
           "usesRealInput": true
         }
       ],
@@ -20599,7 +20621,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 577,
+            "line": 588,
             "bodySHA256": "643f174cb94b64336ea66369f7cbd10afb6c661e49800d9614622c75ca7fe8f9"
           }
         },
@@ -20794,7 +20816,7 @@
       "legacyCheckLocations": [
         {
           "name": "five independent 3D streams advance together inside a real thousand-index window and retain their group visibility",
-          "line": 581,
+          "line": 592,
           "usesRealInput": true
         }
       ],
@@ -20812,7 +20834,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 581,
+            "line": 592,
             "bodySHA256": "d103876da0755e49f084ccbd2d955e92aba464a0e8028e154a7efe21ab8baf98"
           }
         },
@@ -21014,7 +21036,7 @@
       "legacyCheckLocations": [
         {
           "name": "the complete attributed LiDAR dataset uploads actual points and responds to a visible camera drag",
-          "line": 695,
+          "line": 706,
           "usesRealInput": true
         }
       ],
@@ -21032,7 +21054,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 695,
+            "line": 706,
             "bodySHA256": "43aa1b515fc54a22a2881db4b041d38ee521b5b18f64cce8857f4e7c9f60908b"
           }
         },
@@ -21226,7 +21248,7 @@
       "legacyCheckLocations": [
         {
           "name": "the complete attributed LiDAR dataset uploads actual points and responds to a visible camera drag",
-          "line": 695,
+          "line": 706,
           "usesRealInput": true
         }
       ],
@@ -21244,7 +21266,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 695,
+            "line": 706,
             "bodySHA256": "43aa1b515fc54a22a2881db4b041d38ee521b5b18f64cce8857f4e7c9f60908b"
           }
         },
@@ -21438,7 +21460,7 @@
       "legacyCheckLocations": [
         {
           "name": "the heatmap and indexed 3D surface both render all 1048576 samples and lighting changes actual surface pixels",
-          "line": 585,
+          "line": 596,
           "usesRealInput": true
         }
       ],
@@ -21456,7 +21478,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 585,
+            "line": 596,
             "bodySHA256": "5e10b4163d222c363c298a6120d9d05a77845f008f64b181710943196734ed08"
           }
         },
@@ -21658,7 +21680,7 @@
       "legacyCheckLocations": [
         {
           "name": "two true FFT streams retain equal 2D and 3D latest values even after the 256-row history wraps",
-          "line": 698,
+          "line": 709,
           "usesRealInput": true
         }
       ],
@@ -21676,7 +21698,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 698,
+            "line": 709,
             "bodySHA256": "57e2ecbc819e05501ab16b416c04b9f19e6f0c54bf71a62368458a1e64db2b10"
           }
         },
@@ -21870,7 +21892,7 @@
       "legacyCheckLocations": [
         {
           "name": "ten thousand heights and separate intensities survive actual filled, wireframe-only and lighting controls",
-          "line": 589,
+          "line": 600,
           "usesRealInput": true
         }
       ],
@@ -21888,7 +21910,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 589,
+            "line": 600,
             "bodySHA256": "924eb71117b10c7476027ee6112581e73fcffbeafc7f8a994af278a46cfd844a"
           }
         },
@@ -22090,7 +22112,7 @@
       "legacyCheckLocations": [
         {
           "name": "moving 16 by 16 height patches alter the visible 200 by 200 surface without replacing untouched samples",
-          "line": 593,
+          "line": 604,
           "usesRealInput": true
         }
       ],
@@ -22108,7 +22130,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 593,
+            "line": 604,
             "bodySHA256": "e4587e3a5bcb0b972ae272145709f41001e1ae7865db1edec0ddd78b9287abb3"
           }
         },
@@ -22310,7 +22332,7 @@
       "legacyCheckLocations": [
         {
           "name": "four actual 1024-square chunks retain 4194304 heights and create four independently submitted indexed surfaces",
-          "line": 597,
+          "line": 608,
           "usesRealInput": true
         }
       ],
@@ -22328,7 +22350,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 597,
+            "line": 608,
             "bodySHA256": "f2feebb4d147abf43481ca381d0003ed7bf005c3553432bf718872bb04e9975c"
           }
         },
@@ -22523,7 +22545,7 @@
       "legacyCheckLocations": [
         {
           "name": "a covariance-derived translucent ellipsoid renders around one thousand points and can be hidden independently",
-          "line": 601,
+          "line": 612,
           "usesRealInput": true
         }
       ],
@@ -22541,7 +22563,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 601,
+            "line": 612,
             "bodySHA256": "2f0555838c87f78bc00bbf945c1cddb69d6d08fde3c5ad07609ae28c9dcaea48"
           }
         },
@@ -22736,7 +22758,7 @@
       "legacyCheckLocations": [
         {
           "name": "eight hundred irregular samples produce a real triangulated surface with an independent fourth color variable",
-          "line": 605,
+          "line": 616,
           "usesRealInput": true
         }
       ],
@@ -22754,7 +22776,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 605,
+            "line": 616,
             "bodySHA256": "e8553b6aba06e782e046f9e96caf719f08ad01987a32f5d7af68f824c036b0d2"
           }
         },
@@ -22954,7 +22976,7 @@
       "legacyCheckLocations": [
         {
           "name": "two real surface clicks create a 400-sample profile whose pointer position updates the 3D path marker",
-          "line": 609,
+          "line": 620,
           "usesRealInput": true
         }
       ],
@@ -22972,7 +22994,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 609,
+            "line": 620,
             "bodySHA256": "887b2119e0448a375cb5a0d25ec209bba9266fafc7906600529ec6c952a1edb0"
           }
         },
@@ -24162,7 +24184,7 @@
       "legacyCheckLocations": [
         {
           "name": "real country polygons support region selection, geographic wheel zoom and drag pan",
-          "line": 521,
+          "line": 532,
           "usesRealInput": true
         }
       ],
@@ -24180,7 +24202,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 521,
+            "line": 532,
             "bodySHA256": "cbebb7204e49ac06cdc62fa4a5413a7ff3f2506e30f681bd21281d192b035792"
           }
         },
@@ -24367,7 +24389,7 @@
       "legacyCheckLocations": [
         {
           "name": "country color values come from the 2018 dataset and actual hover draws Poland population",
-          "line": 526,
+          "line": 537,
           "usesRealInput": true
         }
       ],
@@ -24385,7 +24407,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 526,
+            "line": 537,
             "bodySHA256": "d86a61f5fb35c80eeb3351b5cf0fb43bffb1f44a9f079e03ffe59d6e220bb299"
           }
         },
@@ -24579,7 +24601,7 @@
       "legacyCheckLocations": [
         {
           "name": "year playback and the real range input update all three continental maps",
-          "line": 531,
+          "line": 542,
           "usesRealInput": true
         }
       ],
@@ -24597,7 +24619,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 531,
+            "line": 542,
             "bodySHA256": "2581df4a2f69483f193ea313f0d1c5438f54d2be52b89df07cb5399b01970a75"
           }
         },
@@ -24811,7 +24833,7 @@
       "legacyCheckLocations": [
         {
           "name": "vaccination date control changes real geographical bubbles and the global coverage figure",
-          "line": 536,
+          "line": 547,
           "usesRealInput": false
         }
       ],
@@ -24829,7 +24851,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 536,
+            "line": 547,
             "bodySHA256": "eff09db8fae21438a91329675aca7d026015dbe2d247234656654b28a63da748"
           }
         },
@@ -25037,7 +25059,7 @@
       "legacyCheckLocations": [
         {
           "name": "200000 registered grid values animate and transparency removes heat pixels while preserving state boundaries",
-          "line": 541,
+          "line": 552,
           "usesRealInput": true
         }
       ],
@@ -25055,7 +25077,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 541,
+            "line": 552,
             "bodySHA256": "2b71f9efde13233256a5e52dbc4ec99a0e4efa205d7a60c35720d3b56c4cc040"
           }
         },
@@ -25216,7 +25238,7 @@
       "legacyCheckLocations": [
         {
           "name": "map clicks drill from world to continent to country and actual-value controls update the four histories",
-          "line": 546,
+          "line": 557,
           "usesRealInput": true
         }
       ],
@@ -25234,7 +25256,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 546,
+            "line": 557,
             "bodySHA256": "1186bef1ec64aca42be7e8809556c4e80c4ea9ee1242e128fcac559607b7c3cd"
           }
         },
@@ -26121,7 +26143,7 @@
       "legacyCheckLocations": [
         {
           "name": "all 50000 source samples are accounted for and a real bin hover exposes its exact count",
-          "line": 666,
+          "line": 677,
           "usesRealInput": true
         }
       ],
@@ -26139,7 +26161,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 666,
+            "line": 677,
             "bodySHA256": "cc03e4497ab8c1b2e1c2df6f4477ccddb6c105aad6f58dd32990c6c46ebe980e"
           }
         },
@@ -26984,7 +27006,7 @@
       "legacyCheckLocations": [
         {
           "name": "nested tree rectangles support pointer drill-down and parent return with meaningful hierarchy",
-          "line": 374,
+          "line": 385,
           "usesRealInput": true
         }
       ],
@@ -27002,7 +27024,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 374,
+            "line": 385,
             "bodySHA256": "06b7809a7d0687a32da0a3c1629b9299a5d51c90c329971acffe684ab614e062"
           }
         },
@@ -27195,7 +27217,7 @@
       "legacyCheckLocations": [
         {
           "name": "nested tree rectangles support pointer drill-down and parent return with meaningful hierarchy",
-          "line": 374,
+          "line": 385,
           "usesRealInput": true
         }
       ],
@@ -27213,7 +27235,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 374,
+            "line": 385,
             "bodySHA256": "06b7809a7d0687a32da0a3c1629b9299a5d51c90c329971acffe684ab614e062"
           }
         },
@@ -27413,7 +27435,7 @@
       "legacyCheckLocations": [
         {
           "name": "nested tree rectangles support pointer drill-down and parent return with meaningful hierarchy",
-          "line": 374,
+          "line": 385,
           "usesRealInput": true
         }
       ],
@@ -27431,7 +27453,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 374,
+            "line": 385,
             "bodySHA256": "06b7809a7d0687a32da0a3c1629b9299a5d51c90c329971acffe684ab614e062"
           }
         },
@@ -27649,7 +27671,7 @@
       "legacyCheckLocations": [
         {
           "name": "autonomous 270-degree speed gauge updates its value and freezes on pause",
-          "line": 382,
+          "line": 393,
           "usesRealInput": true
         }
       ],
@@ -27667,7 +27689,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 382,
+            "line": 393,
             "bodySHA256": "2502a44b9ca24a6cdac6bd1da754f3e7ae8e1b95186916ce2d9e2ab03d1c5c2a"
           }
         },
@@ -28042,7 +28064,7 @@
       "legacyCheckLocations": [
         {
           "name": "four real gauges track four streamed line series with synchronized 30-second windows",
-          "line": 387,
+          "line": 398,
           "usesRealInput": true
         }
       ],
@@ -28060,7 +28082,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 387,
+            "line": 398,
             "bodySHA256": "46fab606355e0dbe5541996304bae09d53e27eb814bba827f2e2f5c6b0b57986"
           }
         },
@@ -28432,7 +28454,7 @@
       "legacyCheckLocations": [
         {
           "name": "three visible records share independent axes and hovering B draws the aggregate values",
-          "line": 431,
+          "line": 442,
           "usesRealInput": true
         }
       ],
@@ -28450,7 +28472,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 431,
+            "line": 442,
             "bodySHA256": "990882270033e5c0d824718165b278eb8e92b1dad1f73de36d5efd8b8ca7e88c"
           }
         },
@@ -28655,7 +28677,7 @@
       "legacyCheckLocations": [
         {
           "name": "all 8192 records render across twelve dimensions and hovering produces an actual twelve-value tooltip",
-          "line": 436,
+          "line": 447,
           "usesRealInput": true
         }
       ],
@@ -28673,7 +28695,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 436,
+            "line": 447,
             "bodySHA256": "32848063480c0755e651fa48db45f7cbdedf38b07fee37d10c771d31f6d5cfdf"
           }
         },
@@ -28880,7 +28902,7 @@
       "legacyCheckLocations": [
         {
           "name": "accuracy colors four-dimensional paths and pointer selection identifies a real record",
-          "line": 441,
+          "line": 452,
           "usesRealInput": true
         }
       ],
@@ -28898,7 +28920,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 441,
+            "line": 452,
             "bodySHA256": "cd497aa9c9e98a7e1b0317ad865bd7bbc30b6af645a0b5b6f28fe3b24471b894"
           }
         },
@@ -29103,7 +29125,7 @@
       "legacyCheckLocations": [
         {
           "name": "date, duration and category axes retain their data types and render a complete record tooltip",
-          "line": 446,
+          "line": 457,
           "usesRealInput": true
         }
       ],
@@ -29121,7 +29143,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 446,
+            "line": 457,
             "bodySHA256": "c6b163ea7878a147468947644a829dfdccb070c769f143ca96df634a3b525200"
           }
         },
@@ -29326,7 +29348,7 @@
       "legacyCheckLocations": [
         {
           "name": "all four axis threshold intervals render red while three records remain available",
-          "line": 451,
+          "line": 462,
           "usesRealInput": true
         }
       ],
@@ -29344,7 +29366,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 451,
+            "line": 462,
             "bodySHA256": "64409817886232860d7111de7539ec73ced995513e5a01fbf86fb1a5e2aa1691"
           }
         },
@@ -29542,7 +29564,7 @@
       "legacyCheckLocations": [
         {
           "name": "real axis double-click and handle drag filter the sorted grid, whose row selection links back to the curve",
-          "line": 456,
+          "line": 467,
           "usesRealInput": true
         }
       ],
@@ -29560,7 +29582,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 456,
+            "line": 467,
             "bodySHA256": "1ee3f4fdfc35f5edb48e16539d73bdd49dd6cb407146c824ad2e1cc8471d9b85"
           }
         },
@@ -29774,7 +29796,7 @@
       "legacyCheckLocations": [
         {
           "name": "streaming five-dimensional rows roll over the 96-record limit and stop when paused",
-          "line": 461,
+          "line": 472,
           "usesRealInput": true
         }
       ],
@@ -29792,7 +29814,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 461,
+            "line": 472,
             "bodySHA256": "c98d87b805a92f44c582e77b3961bd5a25547882a50017b9240814390fc58a6d"
           }
         },
@@ -29986,7 +30008,7 @@
       "legacyCheckLocations": [
         {
           "name": "price filtering genuinely recomputes all four linked dashboard panels from the selected records",
-          "line": 466,
+          "line": 477,
           "usesRealInput": true
         }
       ],
@@ -30004,7 +30026,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 466,
+            "line": 477,
             "bodySHA256": "b8eb1fca74f2a665a6d8f43ddb8edfe3c3d5df6dd4ad39b3d35e81d531c87172"
           }
         },
@@ -30449,7 +30471,7 @@
       "legacyCheckLocations": [
         {
           "name": "hovering an actual projected measurement resolves its UTC timestamp and both measured pollutants",
-          "line": 702,
+          "line": 713,
           "usesRealInput": true
         }
       ],
@@ -30467,8 +30489,8 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 702,
-            "bodySHA256": "ca5020806e9b9a3fd10796f8c82a5bdc641cb8b9bc34c2ef1762a83d96c0c2d8"
+            "line": 713,
+            "bodySHA256": "e0a50374f8e7090ba206decfc2b3ccd8f4ac4ad99eaeaf5db328771dc00dd518"
           }
         },
         {
@@ -30669,7 +30691,7 @@
       "legacyCheckLocations": [
         {
           "name": "an actual million-point cloud click and a 2D cutting-line drag recompute all three exact slab selections",
-          "line": 706,
+          "line": 727,
           "usesRealInput": true
         }
       ],
@@ -30687,7 +30709,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 706,
+            "line": 727,
             "bodySHA256": "f576dab1fac99ae625973a4ba7282f5df614d25ff797d11dc35e7395e211f087"
           }
         },
@@ -31492,7 +31514,7 @@
       "legacyCheckLocations": [
         {
           "name": "fifteen geographic mini charts and the selected zone respond to real energy filters",
-          "line": 551,
+          "line": 562,
           "usesRealInput": true
         }
       ],
@@ -31510,7 +31532,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 551,
+            "line": 562,
             "bodySHA256": "b137ef7963b4de085bee21ea2e65ce140bd530f4151ef736801c10f2bd3fa3d8"
           }
         },
@@ -31851,7 +31873,7 @@
       "legacyCheckLocations": [
         {
           "name": "one real measurement dataset drives both views and full-route statistics exclude timestamp gaps",
-          "line": 556,
+          "line": 567,
           "usesRealInput": false
         }
       ],
@@ -31869,7 +31891,7 @@
           "required": true,
           "assertionSource": {
             "path": "examples/official/test-visible.mjs",
-            "line": 556,
+            "line": 567,
             "bodySHA256": "0ad8700c856418098821f034c5a8d78d80f7176ebc338d09b15600b35e48f96a"
           }
         },

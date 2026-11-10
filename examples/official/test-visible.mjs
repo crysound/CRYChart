@@ -366,7 +366,18 @@ try {
 
   initial = await mount('crychart-example-0452-pieLUT');
   await check('ten pie slices update values, geometry, lookup colors, and legend swatches together', async () => {
-    assert.equal(initial.moduleDetails.values.length,10);const before=await pixels(),swatches=await page.locator('[data-business-legend] button span').evaluateAll(nodes=>nodes.map(node=>getComputedStyle(node).backgroundColor));await page.waitForFunction(bucket=>window.__CRY_OFFICIAL__.snapshot().moduleDetails.lookupUpdates>bucket,initial.moduleDetails.lookupUpdates,{timeout:5000});await page.locator('#official-pause').click();const state=await snapshot(),after=await pixels(),updated=await page.locator('[data-business-legend] button span').evaluateAll(nodes=>nodes.map(node=>getComputedStyle(node).backgroundColor));assert.notDeepEqual(state.moduleDetails.values.map(item=>item.value),initial.moduleDetails.values.map(item=>item.value));assert.notDeepEqual(updated,swatches);assert.notEqual(after[0].checksum,before[0].checksum);await capture(`${current}-updated.png`);return{lookupUpdates:state.moduleDetails.lookupUpdates,values:state.moduleDetails.values,swatchesChanged:true,geometryChanged:true};
+    assert.equal(initial.moduleDetails.values.length,10);
+    // Freeze all baseline observations in the same update bucket; mounting and pixel readback can cross a 2.5 s update.
+    await page.locator('#official-pause').click(); await settle();
+    const baseline=await snapshot(),before=await pixels(),swatches=await page.locator('[data-business-legend] button span').evaluateAll(nodes=>nodes.map(node=>getComputedStyle(node).backgroundColor));
+    assert.equal(baseline.paused,true);
+    await page.locator('#official-pause').click();
+    await page.waitForFunction(bucket=>window.__CRY_OFFICIAL__.snapshot().moduleDetails.lookupUpdates>bucket,baseline.moduleDetails.lookupUpdates,{timeout:5000});
+    await page.locator('#official-pause').click(); await settle();
+    const state=await snapshot(),after=await pixels(),updated=await page.locator('[data-business-legend] button span').evaluateAll(nodes=>nodes.map(node=>getComputedStyle(node).backgroundColor));
+    assert.equal(state.paused,true);assert.ok(state.moduleDetails.lookupUpdates>baseline.moduleDetails.lookupUpdates);
+    assert.notDeepEqual(state.moduleDetails.values.map(item=>item.value),baseline.moduleDetails.values.map(item=>item.value));assert.notDeepEqual(updated,swatches);assert.notEqual(after[0].checksum,before[0].checksum);
+    await capture(`${current}-updated.png`);return{baselineLookupUpdates:baseline.moduleDetails.lookupUpdates,lookupUpdates:state.moduleDetails.lookupUpdates,values:state.moduleDetails.values,swatchesChanged:true,geometryChanged:true};
   });
 
   for(const [id,mode,expectedRoot] of [['crychart-example-1504-TreeMap','sectors','TECHNOLOGY'],['crychart-example-1505-TreeMapDrilldown','files','C:\\Python27'],['crychart-example-1506-TreeMapDynamic','dynamic',undefined]]){
@@ -700,7 +711,17 @@ try {
   });
   initial=await mount('crychart-example-1709-3dTimeSeries');
   await check('hovering an actual projected measurement resolves its UTC timestamp and both measured pollutants',async()=>{
-    assert.equal(initial.moduleDetails.samples,684);const probe=await chartPoint(0,initial.moduleDetails.probe.pixel);await page.mouse.move(probe.x,probe.y);await page.waitForFunction(()=>Boolean(window.__CRY_OFFICIAL__.snapshot().moduleDetails.hovered));const hovered=await snapshot();assert.equal(hovered.moduleDetails.hovered.time,Date.UTC(2025,10,22,1));assert.equal(hovered.moduleDetails.hovered.pm25,13.1);assert.equal(hovered.moduleDetails.hovered.no2,62.5);assert.match(hovered.moduleDetails.tooltip,/2025-11-22 01:00:00 UTC/);await capture(`${current}-measurement-tooltip.png`);return{samples:684,hovered:hovered.moduleDetails.hovered,tooltip:hovered.moduleDetails.tooltip};
+    const source=JSON.parse(await readFile(resolve('examples/data/synthetic-air-quality.json'),'utf8')),record=source[480];
+    assert.equal(source.length,684);assert.equal(initial.moduleDetails.samples,source.length);
+    const expected={time:Date.parse(record.datetime_utc),pm25:record.pm25,no2:record.no2};
+    assert.deepEqual({time:initial.moduleDetails.probe.time,pm25:initial.moduleDetails.probe.pm25,no2:initial.moduleDetails.probe.no2},expected);
+    const projected=await page.evaluate(point=>{const chart=window.__CRY_OFFICIAL__.inspect().charts[0];return chart.translateCoordinate({x:point.time,y:point.pm25,z:point.no2},chart.coordsPixel);},expected);
+    assert.ok(Math.hypot(projected.x-initial.moduleDetails.probe.pixel.x,projected.y-initial.moduleDetails.probe.pixel.y)<.01,'Hover probe must match the public projection used by the rendered chart');
+    const probe=await chartPoint(0,projected);await page.mouse.move(probe.x,probe.y);await page.waitForFunction(()=>Boolean(window.__CRY_OFFICIAL__.snapshot().moduleDetails.hovered));
+    const hovered=await snapshot();assert.deepEqual(hovered.moduleDetails.hovered,expected);
+    const timestamp=new Date(expected.time).toISOString().replace('T',' ').slice(0,19)+' UTC';
+    assert.ok(hovered.moduleDetails.tooltip.includes(timestamp));assert.ok(hovered.moduleDetails.tooltip.includes(expected.pm25.toFixed(2)));assert.ok(hovered.moduleDetails.tooltip.includes(expected.no2.toFixed(2)));
+    await capture(`${current}-measurement-tooltip.png`);return{samples:source.length,input:'examples/data/synthetic-air-quality.json',inputIndex:480,hovered:hovered.moduleDetails.hovered,tooltip:hovered.moduleDetails.tooltip};
   });
   initial=await mount('crychart-example-1710-3dSlicer');
   await check('an actual million-point cloud click and a 2D cutting-line drag recompute all three exact slab selections',async()=>{
