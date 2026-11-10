@@ -116,9 +116,9 @@ export class NumericTickStrategy {
     this.minor = new TickStyle(labelFont);
     const light=(theme?.backgroundFillStyle?.getColor?.()?.getR?.()??0)>127;
     this.major.grid = theme?.tickGridStrokeStyle??new SolidLine({thickness:1,fillStyle:new SolidFill({color:light?ColorRGBA(150,150,150,170):ColorRGBA(200,200,200,50)})});
-    this.minor.grid = theme?.tickGridStrokeStyle??new SolidLine({thickness:1,fillStyle:new SolidFill({color:light?ColorRGBA(150,150,150,100):ColorRGBA(200,200,200,20)})});
-    this.major.tick = new SolidLine({thickness:1,fillStyle:new SolidFill({color:light?ColorRGBA(150,150,150):ColorRGBA(220,220,220)})});
-    this.minor.tick = new SolidLine({thickness:1,fillStyle:new SolidFill({color:light?ColorRGBA(150,150,150,150):ColorRGBA(200,200,200,150)})});
+    this.minor.grid = theme?.minorTickGridStrokeStyle??theme?.tickGridStrokeStyle??new SolidLine({thickness:1,fillStyle:new SolidFill({color:light?ColorRGBA(150,150,150,100):ColorRGBA(200,200,200,20)})});
+    this.major.tick = theme?.axisTickStrokeStyle??new SolidLine({thickness:1,fillStyle:new SolidFill({color:light?ColorRGBA(150,150,150):ColorRGBA(220,220,220)})});
+    this.minor.tick = theme?.axisTickStrokeStyle??new SolidLine({thickness:1,fillStyle:new SolidFill({color:light?ColorRGBA(150,150,150,150):ColorRGBA(200,200,200,150)})});
     this.major.length = 7;
     this.major.fill = theme?.tickLabelFillStyle??new SolidFill({color:light?ColorRGBA(33,43,49):ColorRGBA(255,255,220)});
     this.minor.fill = emptyFill;
@@ -640,11 +640,17 @@ export class Axis {
       start !== this.interval.start || finish !== this.interval.end;
     this.interval = { start, end: finish };
     if(this.tickStrategy instanceof TimeTickStrategy)this.tickStrategy.refreshDefaults();
-    this.stopped = config.stopAxisAfter ?? true;
-    if (changed) {
-      this.events.emit("intervalchange", { axis: this, start, end: finish });
-      this.chart.invalidate();
-    }else if(conversionChanged||defaultGeometryChanged)this.chart.invalidate();
+    const nextStopped = config.stopAxisAfter ?? true;
+    const stoppedChanged = this.stopped !== nextStopped;
+    this.stopped = nextStopped;
+    try {
+      if (stoppedChanged) this.events.emit("stoppedchange", { isStopped: nextStopped });
+      if (changed) this.events.emit("intervalchange", { axis: this, start, end: finish });
+    } finally {
+      // Resume-only requests must wake fitting/progressive scrolling even when
+      // the caller deliberately omits the current endpoints (saved history).
+      if (changed || stoppedChanged || conversionChanged || defaultGeometryChanged) this.chart.invalidate();
+    }
     return this;
   }
   /** Only the finite positive constant object maximum used by Preview is enforced.

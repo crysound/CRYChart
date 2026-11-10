@@ -23,6 +23,7 @@ class RecordingGL {
   uniformMatrix4fv() {}
   uniformMatrix3fv(_location: string, _transpose: boolean, value: Float32Array) {this.rotations.push([...value]);}
   uniform2f(location: string, ...values: number[]) {this.uniforms.set(location, values);}
+  uniform3f(location: string, ...values: number[]) {this.uniforms.set(location, values);}
   uniform4f(location: string, ...values: number[]) {this.uniforms.set(location, values);}
   uniform1f(location: string, value: number) {this.uniforms.set(location, value);}
   uniform1i(location: string, value: number) {this.uniforms.set(location, value);}

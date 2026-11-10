@@ -27,6 +27,7 @@ class RecordingGL {
   viewport(...values: number[]) {this.viewportValues = values;} scissor() {} depthFunc() {} blendFuncSeparate(...values: number[]) {this.blendFactors = values;} useProgram() {} isContextLost() {return false;}
   uniformMatrix3fv(_location: string, _transpose: boolean, value: Float32Array) {this.rotations.push([...value]);}
   uniform2f(location: string, ...values: number[]) {this.uniforms.set(location, values);}
+  uniform3f(location: string, ...values: number[]) {this.uniforms.set(location, values);}
   uniform4f(location: string, ...values: number[]) {this.uniforms.set(location, values);}
   uniform1f(location: string, value: number) {this.uniforms.set(location, value);}
   uniform1i(location: string, value: number) {this.uniforms.set(location, value);}

@@ -10,8 +10,10 @@ export function worldStylePixels3D(size:number,depth:number,frame:WorldCameraFra
 export interface DrawPacket3D {
   id: number;
   revision: number;
-  /** Consecutive XYZ coordinates, normalized to the chart's [-1, 1] volume. */
+  /** Normalized XYZ coordinates. Certified constant dimensions use zero placeholders. */
   positions: Float32Array;
+  /** Source-certified constant coordinates, normalized with exact Float32 rounding. */
+  constantCoordinates?:Readonly<Partial<{x:number;y:number;z:number}>>;
   count: number;
   mode: 'line' | 'points' | 'triangles' | 'boxes';
   color: readonly [number, number, number, number];
@@ -125,11 +127,14 @@ uniform int u_boxSegments;
 uniform float u_roundness;
 uniform float u_dpr;
 uniform float u_maxPointSize;
+uniform int u_constantMask;
+uniform vec3 u_constantCoordinates;
 out vec4 v_color;
 out vec3 v_normal;
 flat out int v_valid;
 bool finite3(vec3 value) { return !any(isnan(value)) && !any(isinf(value)); }
 vec3 project(vec3 value) {
+  if((u_constantMask&1)!=0)value.x=u_constantCoordinates.x;if((u_constantMask&2)!=0)value.y=u_constantCoordinates.y;if((u_constantMask&4)!=0)value.z=u_constantCoordinates.z;
   vec3 rotated = u_rotation * (value * u_volume.xyz);
   // A rotated unit cube lies inside +/-sqrt(3); a fixed depth slab avoids zoom clipping.
   return vec3(rotated.xy * u_scale, rotated.z * 0.5);
@@ -217,11 +222,13 @@ uniform int u_boxSegments;
 uniform float u_roundness;
 uniform float u_dpr;
 uniform float u_maxPointSize;
+uniform int u_constantMask;
+uniform vec3 u_constantCoordinates;
 out vec4 v_color;
 out vec3 v_normal;
 flat out int v_valid;
 bool finite3(vec3 value) { return !any(isnan(value)) && !any(isinf(value)); }
-vec4 project(vec3 value) {return u_worldMatrix * vec4(value,1.0);}
+vec4 project(vec3 value) {if((u_constantMask&1)!=0)value.x=u_constantCoordinates.x;if((u_constantMask&2)!=0)value.y=u_constantCoordinates.y;if((u_constantMask&4)!=0)value.z=u_constantCoordinates.z;return u_worldMatrix * vec4(value,1.0);}
 bool clipDepth(vec4 first,vec4 last,inout float low,inout float high){
   vec2 a=vec2(first.z+first.w,first.w-first.z),b=vec2(last.z+last.w,last.w-last.z);
   for(int i=0;i<2;i++){if(a[i]<0.0&&b[i]<0.0)return false;if(a[i]<0.0)low=max(low,a[i]/(a[i]-b[i]));else if(b[i]<0.0)high=min(high,a[i]/(a[i]-b[i]));}
@@ -383,7 +390,7 @@ export class DataRenderer3D {
       gl.attachShader(program, vertex); gl.attachShader(program, fragment); gl.linkProgram(program);
       if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(`3D shader link failed: ${gl.getProgramInfoLog(program) ?? 'unknown error'}`);
       this.program = program;
-      this.uniforms = Object.fromEntries(['worldStyleScale', 'worldMatrix', 'rotation', 'volume', 'scale', 'viewport', 'color', 'width', 'pointSize', 'segment', 'vertexColors', 'points', 'vertexSizes', 'box', 'boxTopColors', 'boxSegments', 'roundness', 'dpr', 'maxPointSize', 'pointShape', 'lighting', 'unshaded'].map(name => [name, gl.getUniformLocation(program!, `u_${name}`)]));
+      this.uniforms = Object.fromEntries(['worldStyleScale', 'worldMatrix', 'rotation', 'volume', 'scale', 'viewport', 'color', 'width', 'pointSize', 'segment', 'vertexColors', 'points', 'vertexSizes', 'box', 'boxTopColors', 'boxSegments', 'roundness', 'dpr', 'maxPointSize', 'pointShape', 'lighting', 'unshaded', 'constantMask', 'constantCoordinates'].map(name => [name, gl.getUniformLocation(program!, `u_${name}`)]));
       if(world)this.worldProgram={program,uniforms:this.uniforms};else this.legacyProgram={program,uniforms:this.uniforms};
       const range = gl.getParameter(gl.ALIASED_POINT_SIZE_RANGE) as Float32Array | number[] | null;
       this.maximumPointSize = range?.[1] ?? 64;
@@ -439,6 +446,7 @@ export class DataRenderer3D {
   }
 
   private validatePacket(packet: DrawPacket3D): void {
+    if(packet.constantCoordinates!==undefined&&(!['line','points'].includes(packet.mode)||Object.entries(packet.constantCoordinates).some(([key,value])=>!['x','y','z'].includes(key)||typeof value!=='number'||!Number.isFinite(Math.fround(value)))))throw new RangeError('3D constant coordinates require finite Float32 XYZ values on lines or points');
     if (!Number.isFinite(packet.id) || !Number.isFinite(packet.revision)) throw new RangeError('3D packet identity and revision must be finite');
     if (!(packet.positions instanceof Float32Array) || !Number.isSafeInteger(packet.count) || packet.count < 0 || packet.count * 3 > packet.positions.length) throw new RangeError('3D packet positions do not match the vertex count');
     if (packet.colors && (!(packet.colors instanceof Float32Array) || packet.count * 4 > packet.colors.length)) throw new RangeError('3D packet colors do not match the vertex count');
@@ -533,6 +541,7 @@ export class DataRenderer3D {
     } else gl.disable(gl.CULL_FACE);
     gl.bindVertexArray(segment ? entry.segments : entry.plain);
     gl.uniform4f(this.uniforms.color, packet.color[0], packet.color[1], packet.color[2], packet.color[3]);
+    const constant=packet.constantCoordinates;gl.uniform1i(this.uniforms.constantMask,(constant?.x===undefined?0:1)|(constant?.y===undefined?0:2)|(constant?.z===undefined?0:4));gl.uniform3f(this.uniforms.constantCoordinates,constant?.x??0,constant?.y??0,constant?.z??0);
     gl.uniform1i(this.uniforms.vertexColors, entry.hasColors ? 1 : 0); gl.uniform1i(this.uniforms.segment, segment ? 1 : 0); gl.uniform1i(this.uniforms.points, packet.mode === 'points' ? 1 : 0);
     const worldStyle=packet.worldStyleUnits===true&&this.worldStyleScale>0;
     gl.uniform1f(this.uniforms.worldStyleScale,worldStyle?this.worldStyleScale:0);

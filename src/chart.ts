@@ -1,3 +1,5 @@
+import {getColumnOrder} from './data-order.js';
+import {CssTextFonts} from './css-text-fonts.js';
 import {pointStrokeRadius} from './point-stroke-geometry.js';
 import { Axis, PolarAxisRadial, mutate } from "./axis.js";
 import {
@@ -142,6 +144,8 @@ export class ChartXY {
   plot: Rect = { left: 64, top: 54, width: 710, height: 392 };
   padding: ChartPadding = {left:7,right:7,top:7,bottom:7};
   private axisCanvasLayout?:AxisCanvasLayout;
+  private cssTextFonts?:CssTextFonts;
+  readonly resolveTextFont=(font:FontSettings):FontSettings=>this.cssTextFonts?.resolve(font)??font;
   private customTickPlacementLengths?:Map<Axis,number>;
   private placementTitleMeasure?:{text:string;font:FontSettings;dpr:number;height:number};
   private frame = 0;
@@ -248,6 +252,10 @@ export class ChartXY {
       root.setAttribute("aria-label", this.title||"Interactive chart");
       this.root = root;
       container.append(root);
+      if(options.textRenderer?.kind==='html'){
+        this.cssTextFonts=new CssTextFonts(root,()=>this.invalidate());
+        this.cleanups.push(()=>this.cssTextFonts?.dispose());
+      }
       const underlay = document.createElement("canvas"),
         data = document.createElement("canvas"),
         overlay = document.createElement("canvas");
@@ -262,6 +270,7 @@ export class ChartXY {
       try {
         this.renderer = new DataRenderer(data, { antialias: options.antialias,renderer:options.renderer,lineCoverageUnion:options.experimentalLineCoverage===true,ownedCoverageFrame:options.experimentalOwnedCoverageFrame===true,gpuClipPolicy:this.gpuClipPolicy });
       } catch (error) {
+        this.cssTextFonts?.dispose();
         root.remove();
         throw error;
       }
@@ -503,8 +512,8 @@ export class ChartXY {
     }
     let titleHeight=0;
     if(this.hasVisibleChartTitle()){
-      const cached=this.placementTitleMeasure;
-      if(!cached||cached.text!==this.title||cached.font!==this.titleFont||cached.dpr!==this.dpr)this.placementTitleMeasure={text:this.title,font:this.titleFont,dpr:this.dpr,height:measureChartTitleContent(this.overlayContext??undefined,this.title,this.titleFont,this.dpr)};
+      const cached=this.placementTitleMeasure,font=this.resolveTextFont(this.titleFont);
+      if(!cached||cached.text!==this.title||cached.font!==font||cached.dpr!==this.dpr)this.placementTitleMeasure={text:this.title,font,dpr:this.dpr,height:measureChartTitleContent(this.overlayContext??undefined,this.title,font,this.dpr)};
       titleHeight=this.placementTitleMeasure!.height+(this.titleMarginRequest.top??0)+(this.titleMarginRequest.bottom??5);
     }
     const width=Math.max(1,this.width-this.padding.left-this.padding.right),height=Math.max(1,this.height-this.padding.top-this.padding.bottom-titleHeight),lengths=new Map<Axis,number>();
@@ -829,7 +838,7 @@ export class ChartXY {
     // Empty/title-less top axis solely as an application coordinate surface.
     const layoutAxesX=axesX.filter(axis=>this.hasAxisLaneContent(axis));
     const layoutAxesY=axesY.filter(axis=>this.hasAxisLaneContent(axis));
-    this.axisCanvasLayout=this.kind==='xy'?measureAxisCanvasLayout(this.overlayContext??undefined,layoutAxesX,layoutAxesY,this.theme):undefined;
+    this.axisCanvasLayout=this.kind==='xy'?measureAxisCanvasLayout(this.overlayContext??undefined,layoutAxesX,layoutAxesY,this.theme,this.resolveTextFont,!!this.cssTextFonts):undefined;
     const axisExtra=this.axisCanvasLayout?.extraMargins??{left:0,right:0,top:0,bottom:0};
     const legendMargin=this.overlayContext?this.legend.getLayout(this.overlayContext,this.legendArea()).margin:{left:0,right:0,top:0,bottom:0};
     if(this.kind==='polar'){
@@ -847,22 +856,27 @@ export class ChartXY {
       bottom =
         (axesX.some(axis=>!axis.opposite)&&!layoutAxesX.some(axis=>!axis.opposite)?0:53) + axisExtra.bottom + legendMargin.bottom + Math.max(0,parallelAxisCount(layoutAxesX,false)-1) *
           44;
+    const contentMargins=this.axisCanvasLayout?.contentMargins;
+    const layoutLeft=contentMargins?contentMargins.left+legendMargin.left:left;
+    const layoutRight=contentMargins?contentMargins.right+legendMargin.right:right;
+    const layoutTop=contentMargins?(this.hasVisibleChartTitle()?this.resolveTextFont(this.titleFont).getSize()+16+this.titleMargin.top+this.titleMargin.bottom:0)+contentMargins.top+legendMargin.top:top;
+    const layoutBottom=contentMargins?contentMargins.bottom+legendMargin.bottom:bottom;
     this.plot = {
-      left: left + (this.padding.left ?? 0),
-      top: top + (this.padding.top ?? 0),
+      left: layoutLeft + (this.padding.left ?? 0),
+      top: layoutTop + (this.padding.top ?? 0),
       width: Math.max(
         20,
         this.width -
-          left -
-          right -
+          layoutLeft -
+          layoutRight -
           (this.padding.left ?? 0) -
           (this.padding.right ?? 0),
       ),
       height: Math.max(
         20,
         this.height -
-          top -
-          bottom -
+          layoutTop -
+          layoutBottom -
           (this.padding.top ?? 0) -
           (this.padding.bottom ?? 0),
       ),
@@ -984,7 +998,7 @@ export class ChartXY {
         if (this.root)
           this.root.style.background = fillColor(this.background).toCSS();
         if(this.kind==='polar')(this as unknown as Polar).drawPolarAxes(backdrop??ctx,'grid');
-        else this.drawAxes(backdrop ?? ctx);
+        else {this.drawPlotFrame(backdrop ?? ctx);this.drawAxes(backdrop ?? ctx);}
       }
       if(backdrop??ctx)this.drawAnnotations((backdrop??ctx)!,false);
       const packets: DrawPacket[] = [];
@@ -1094,6 +1108,16 @@ export class ChartXY {
   }
   /** Internal post-render publication hook; consumer callbacks may request a new frame. */
   protected afterRender():void{}
+  protected drawPlotFrame(ctx:CanvasRenderingContext2D){
+    if(this.kind!=='xy')return;
+    const stroke=this.theme.chartXYSeriesBackgroundStrokeStyle,thickness=stroke?.getThickness?.()??0;
+    if(!Number.isFinite(thickness)||thickness<=0)return;
+    const ink=fillColor(stroke.getFillStyle?.(),ColorRGBA(0,0,0,0));if(ink.a<=0)return;
+    ctx.save();try{
+      ctx.strokeStyle=ink.toCSS();ctx.lineWidth=thickness;ctx.setLineDash(stroke.getPattern?.().map((part:number)=>part*(stroke.getPatternScale?.()??1))??[]);
+      ctx.strokeRect(this.plot.left,this.plot.top,this.plot.width,this.plot.height);
+    }finally{ctx.restore();}
+  }
   protected drawAxes(ctx: CanvasRenderingContext2D) {
     const r = this.plot,
       light = fillColor(this.background).r > 0.5;
@@ -1101,7 +1125,7 @@ export class ChartXY {
       this.plotBackground,
       ColorRGBA(0, 0, 0, 0),
     ).toCSS();
-    ctx.font = `${this.titleFont.getSize()}px ${this.titleFont.getFamily()}`;
+    ctx.font = this.cssTextFonts?this.resolveTextFont(this.titleFont).toCSS():`${this.titleFont.getSize()}px ${this.titleFont.getFamily()}`;
     ctx.fillStyle = fillColor(this.titleFill).toCSS();
     const topTitlePosition=this.kind==='xy'?this.titlePosition:'left-top';
     ctx.textAlign=topTitlePosition==='center-top'?'center':topTitlePosition==='right-top'?'right':'left';
@@ -1112,7 +1136,7 @@ export class ChartXY {
       return;
     }
     if (this.kind === "3d") return;
-    drawAxisCanvas(ctx,{plot:r,axesX:this.axesX,axesY:this.axesY,light,width:this.width,height:this.height,layout:this.axisCanvasLayout,theme:this.theme});
+    drawAxisCanvas(ctx,{plot:r,axesX:this.axesX,axesY:this.axesY,light,width:this.width,height:this.height,layout:this.axisCanvasLayout,theme:this.theme,resolveFont:this.resolveTextFont});
   }
   protected drawAnnotations(ctx: CanvasRenderingContext2D,onTop=true) {
     const r = this.plot;
@@ -2106,7 +2130,7 @@ export class Polar extends ChartXY {
     const font=style.hasLabelFontOverride()?style.getLabelFont():this.theme.polarAxisTickFont??this.theme.font??new FontSettings({size:14,family:'Segoe UI, -apple-system, Verdana, Helvetica'});
     const label=style.hasLabelFillStyleOverride()?style.getLabelFillStyle():this.theme.tickLabelFillStyle??(this.theme.textColor?new SolidFill({color:this.theme.textColor}):new SolidFill({color:ColorRGBA(167,182,201)}));
     const grid=style.hasGridStrokeStyleOverride()?style.getGridStrokeStyle():this.theme.tickGridStrokeStyle??new SolidLine({thickness:1,fillStyle:new SolidFill({color:ColorRGBA(52,64,85)})});
-    return {style,font,label,grid};
+    return {style,font:this.resolveTextFont(font),label,grid};
   }
   /** Internal layout bridge; callers reuse its geometry for all projections. */
   updatePolarLayout(ctx?:CanvasRenderingContext2D,legendMargin?:PolarInsets,titleMargin?:PolarInsets){
@@ -2114,8 +2138,8 @@ export class Polar extends ChartXY {
     const count=Math.max(1,Math.floor((angular as any).getDivision?.()??12));
     const angularLabels=angular.visible&&!angular.disposed?Array.from({length:count},(_,index)=>{const degrees=index*360/count;return{angleRadians:this.polarAngle(degrees),text:String(angular.getTickFormattingFunction()(degrees*Math.PI/180))};}):[];
     const amplitudeTicks=amplitude.visible&&!amplitude.disposed?amplitude.ticks(5).map(tick=>({fraction:amplitude.valueToFraction(tick.value),text:tick.label})):[];
-    const title=(axis:Axis)=>({text:axis.visible&&fillColor(axis.titleFill,ColorRGBA(0,0,0,0)).a>0?axis.getDisplayTitle():'',font:axis.titleFont});
-    this.polarLayout=computePolarLayout(ctx,{width:this.width,height:this.height,padding:this.padding,legendMargin,chartTitle:{text:this.title,font:this.titleFont},chartTitleMargin:titleMargin,angularLabels,amplitudeTicks,angularFont:angularAppearance.font,amplitudeFont:amplitudeAppearance.font,amplitudeTitle:title(amplitude),angularTitle:title(angular),radialAxisAngleRadians:this.radialAxisAngle*Math.PI/180,tickLength:Math.max(angularStyle.getTickLength(),amplitudeStyle.getTickLength()),marginAfterAngularTicks:angular.getMarginAfterTicks(),marginAfterAmplitudeTicks:amplitude.getMarginAfterTicks()});
+    const title=(axis:Axis)=>({text:axis.visible&&fillColor(axis.titleFill,ColorRGBA(0,0,0,0)).a>0?axis.getDisplayTitle():'',font:this.resolveTextFont(axis.titleFont)});
+    this.polarLayout=computePolarLayout(ctx,{width:this.width,height:this.height,padding:this.padding,legendMargin,chartTitle:{text:this.title,font:this.resolveTextFont(this.titleFont)},chartTitleMargin:titleMargin,angularLabels,amplitudeTicks,angularFont:angularAppearance.font,amplitudeFont:amplitudeAppearance.font,amplitudeTitle:title(amplitude),angularTitle:title(angular),radialAxisAngleRadians:this.radialAxisAngle*Math.PI/180,tickLength:Math.max(angularStyle.getTickLength(),amplitudeStyle.getTickLength()),marginAfterAngularTicks:angular.getMarginAfterTicks(),marginAfterAmplitudeTicks:amplitude.getMarginAfterTicks()});
     this.plot=this.polarLayout.plot;
     for(const axis of[...this.axesX,...this.axesY])axis.setScreenRange({start:0,end:1});
   }
@@ -2525,6 +2549,21 @@ export class Chart3D extends ChartXY {
     return new SolidLine({thickness:1,fillStyle:new SolidFill({color:fillColor(this.background).r>.5?ColorRGBA(130,148,165):ColorRGBA(113,128,153)})});
   }
   private gpu3d?: DataRenderer3D;
+  /** Equal endpoints and a finite monotonic source certificate prove an
+   * entire retained coordinate is constant, including hidden rows and gaps. */
+  protected getConstantCoordinates(series:PointLineAreaSeries):Partial<Vec3>{
+    const data=series.getDataSet(),mapping=series.getDataMapping(),count=data.getSampleCount(),constant:Partial<Vec3>={};
+    if(!count)return constant;
+    for(const dimension of ['x','y','z'] as const){
+      const key=mapping[dimension];
+      if(!key||!data.schema[key]){if(dimension==='z')constant.z=0;continue;}
+      const first=data.getValue(key,0),last=data.getValue(key,count-1);
+      if(first!==last||!Number.isFinite(first))continue;
+      const order=getColumnOrder(data,key);
+      if(order.finite&&order.monotonic)constant[dimension]=first;
+    }
+    return constant;
+  }
   private gpuPackets = new Map<number, { key: string; packet: DrawPacket3D; markers?:DrawPacket3D }>();
   private gpuRevision = 0;
   constructor(options: ChartOptions = {}) {
@@ -2617,11 +2656,20 @@ export class Chart3D extends ChartXY {
       const normalize = (value: number, index: number) =>
         this.axisValueToWorldFraction(axes[index]!,value) * 2 - 1;
       if(s instanceof Series3DBase){packets.push(...s.getDrawPackets(normalize,JSON.stringify(axes.map(a=>[this.worldAxisCacheKey(a),a.inverted,a.type]))));continue;}
+      const sourceConstants=s instanceof PointLineAreaSeries?this.getConstantCoordinates(s):{};
+      // Use exactly the Float32 coordinates that full CPU normalization stored.
+      // The GPU receives these unchanged values, with no affine approximation.
+      const constantCoordinates:Partial<Vec3>={};
+      for(const [index,dimension]of(['x','y','z'] as const).entries()){
+        const value=sourceConstants[dimension];
+        if(value!==undefined)constantCoordinates[dimension]=Math.fround(normalize(value,index));
+      }
+      if(Object.values(constantCoordinates).some(value=>!Number.isFinite(value)))continue;
       const key = JSON.stringify([
         s instanceof PointLineAreaSeries
           ? [s.getDataSet().revision, s.getDataBindingRevision(),s.getStyleRevision()]
           : s.revision,
-        axes.map((a) => [this.worldAxisCacheKey(a), a.inverted]),
+        axes.map((a,index) => sourceConstants[(['x','y','z'] as const)[index]!]!==undefined?null:[this.worldAxisCacheKey(a), a.inverted,a.type]),
         s instanceof SurfaceGridSeries
           ? [s.start, s.step, s.fill]
           : s.getDataMapping?.(),
@@ -2675,9 +2723,9 @@ export class Chart3D extends ChartXY {
           mode = s.kind === "points" ? "points" : "line";
           const data=s.getDataSet(),mapping=s.getDataMapping(),x=data.getColumn(mapping.x!),y=data.getColumn(mapping.y!),z=mapping.z&&data.schema[mapping.z]?data.getColumn(mapping.z):undefined;
           for (let i = 0; i < count; i++) {
-            positions[i * 3] = normalize(x[i]!, 0);
-            positions[i * 3 + 1] = normalize(y[i]!, 1);
-            positions[i * 3 + 2] = normalize(z?.[i]??0, 2);
+            positions[i * 3] = sourceConstants.x!==undefined?0:normalize(x[i]!, 0);
+            positions[i * 3 + 1] = sourceConstants.y!==undefined?0:normalize(y[i]!, 1);
+            positions[i * 3 + 2] = sourceConstants.z!==undefined?0:normalize(z?.[i]??0, 2);
           }
           const pointAttributes=(mode==='points'||s.pointSize>0)?s.drawPacket('points'):undefined;
           pointSizes=pointAttributes?.pointSizes;const shape=s.getPointShape();pointShape=shape===0||shape==='square'?'square':shape==='sphere'?'sphere':'circle';
@@ -2708,6 +2756,8 @@ export class Chart3D extends ChartXY {
         this.gpuPackets.set(s.id, cached);
       }
       const packet = cached.packet;
+      packet.constantCoordinates=constantCoordinates;
+      if(cached.markers)cached.markers.constantCoordinates=constantCoordinates;
       if (s instanceof PointLineAreaSeries) {
         const color = s.resolveRenderColor(fillColor(
           s.kind === "points" ? s.pointFill : s.stroke.getFillStyle(),
@@ -2824,29 +2874,27 @@ export class Chart3D extends ChartXY {
     ctx.lineWidth = 0.7;
     ctx.strokeStyle = light ? "#cdd6df" : "#344456";
     ctx.font = "11px sans-serif";
-    ctx.fillStyle = light ? "#425266" : "#a9bccf";
     ctx.textAlign = "center";
     ctx.textBaseline = "alphabetic";
     type TextBox={left:number;top:number;right:number;bottom:number;x:number;y:number};
     const labelBoxes:TextBox[]=[];
-    const labelCommands:Array<{value:string;box:TextBox;outer:boolean;tick?:boolean}>=[];
+    const labelCommands:Array<{value:string;box:TextBox;font:string;fill:string;rotation:number}>=[];
     const tickRequests:Axis3DTickRequest[]=[];
-    const labelBox=(value:string,x:number,y:number,outer=false):TextBox=>{
+    const labelBox=(value:string,x:number,y:number,outer=false,rotation=0):TextBox=>{
       const bounds=outer?{left:0,top:32,width:this.width,height:Math.max(1,this.height-32)}:this.plot;
-      const metrics=ctx.measureText(value),available=Math.max(1,bounds.width-4),width=Math.min(metrics.width,available),ascent=metrics.actualBoundingBoxAscent||11,descent=metrics.actualBoundingBoxDescent||3;
-      const left=bounds.left+2+width/2,right=bounds.left+bounds.width-2-width/2;
-      x=Math.max(left,Math.min(right,x));y=Math.max(bounds.top+ascent+2,Math.min(bounds.top+bounds.height-descent-2,y));
-      return {left:x-width/2,top:y-ascent,right:x+width/2,bottom:y+descent,x,y};
+      const metrics=ctx.measureText(value),half=metrics.width/2,ascent=metrics.actualBoundingBoxAscent??11,descent=metrics.actualBoundingBoxDescent??3,c=Math.cos(rotation),s=Math.sin(rotation);
+      const corners=[[-half,-ascent],[half,-ascent],[-half,descent],[half,descent]].map(([dx,dy])=>({x:dx!*c-dy!*s,y:dx!*s+dy!*c}));
+      const minX=Math.min(...corners.map(p=>p.x)),maxX=Math.max(...corners.map(p=>p.x)),minY=Math.min(...corners.map(p=>p.y)),maxY=Math.max(...corners.map(p=>p.y));
+      x=Math.max(bounds.left+2-minX,Math.min(bounds.left+bounds.width-2-maxX,x));y=Math.max(bounds.top+2-minY,Math.min(bounds.top+bounds.height-2-maxY,y));
+      return {left:x+minX,top:y+minY,right:x+maxX,bottom:y+maxY,x,y};
     };
-    const label=(value:string,x:number,y:number,outer=false)=>{
-      const box=labelBox(value,x,y,outer);labelBoxes.push(box);labelCommands.push({value,box,outer});
-    };
-    const paintLabels=()=>{ctx.save();ctx.font='11px sans-serif';ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.fillStyle=light?'#425266':'#a9bccf';for(const item of labelCommands){if(item.tick)ctx.fillText(item.value,item.box.x,item.box.y);else ctx.fillText(item.value,item.box.x,item.box.y,Math.max(1,(item.outer?this.width:this.plot.width)-4));}ctx.restore();};
+    const paintLabels=()=>{ctx.save();ctx.textAlign='center';ctx.textBaseline='alphabetic';for(const item of labelCommands){ctx.font=item.font;ctx.fillStyle=item.fill;if(item.rotation){ctx.save();ctx.translate(item.box.x,item.box.y);ctx.rotate(item.rotation);ctx.fillText(item.value,0,0);ctx.restore();}else ctx.fillText(item.value,item.box.x,item.box.y);}ctx.restore();};
     const axes = [
       this.getDefaultAxisX(),
       this.getDefaultAxisY(),
       this.getDefaultAxisZ(),
     ];
+    const strokeStyle=(style:any)=>{const ink=fillColor(style?.getFillStyle?.(),ColorRGBA(0,0,0,0)),width=style?.getThickness?.()??0;ctx.strokeStyle=ink.toCSS();ctx.lineWidth=width;ctx.setLineDash(style?.getPattern?.()??[]);return width>0&&ink.a>0;};
     type WorldAxisEdge=[[number,number,number],[number,number,number]];
     const floorY=worldFrame&&worldFrame.position.y<0?1:-1;
     const edgeScore=(edge:WorldAxisEdge,key:'x'|'y')=>{const a=this.project(...edge[0]),b=this.project(...edge[1]);return(a[key]+b[key])/2;};
@@ -2864,7 +2912,9 @@ export class Chart3D extends ChartXY {
       const ticks=axis.tickLayout(Math.hypot(tangent.x,tangent.y));
       for(const level of ['minor','major'] as const){
       const tickStyle=axis.tickStrategy[level];
-      gridStroke=tickStyle.hasGridStrokeStyleOverride()?tickStyle.getGridStrokeStyle():(this.theme as any).tickGridStrokeStyle??tickStyle.getGridStrokeStyle();
+      const tickFont=this.resolveTextFont(tickStyle.hasLabelFontOverride()?tickStyle.getLabelFont():this.theme.font??tickStyle.getLabelFont());
+      const themedGrid=level==='minor'?this.theme.minorTickGridStrokeStyle??this.theme.tickGridStrokeStyle:this.theme.tickGridStrokeStyle;
+      gridStroke=tickStyle.hasGridStrokeStyleOverride()?tickStyle.getGridStrokeStyle():themedGrid??tickStyle.getGridStrokeStyle();
       gridLength=Math.max(0,Math.min(1,tickStyle.getGridStrokeLength()));
       for (const tick of ticks[level]) {
         const f = this.axisValueToWorldFraction(axis,tick.value) * 2 - 1;
@@ -2892,17 +2942,18 @@ export class Chart3D extends ChartXY {
           marker = this.project(1, -1, f);
           preferred={x:marker.x+16,y:marker.y+10};
         }
-        const labelInk=fillColor(tickStyle.getLabelFillStyle());
-        if(tick.label&&labelInk.a>0)tickRequests.push({axis:dimension,order:f,text:tick.label,preferred,tangent,outward});
+        const labelInk=fillColor(tickStyle.hasLabelFillStyleOverride()?tickStyle.getLabelFillStyle():this.theme.tickLabelFillStyle??tickStyle.getLabelFillStyle());
+        if(tick.label&&labelInk.a>0)tickRequests.push({axis:dimension,order:f,text:tick.label,preferred,tangent,outward,font:tickFont.toCSS(),fill:labelInk.toCSS()});
       }
       }
     });
     gridStroke=undefined;gridLength=1;ctx.setLineDash([]);
     const tickLayout=layoutAxis3DTicks(ctx,tickRequests,{left:0,top:32,width:this.width,height:Math.max(1,this.height-32)});
-    for(const tick of tickLayout.labels){labelBoxes.push(tick);labelCommands.push({value:tick.text,box:tick,outer:true,tick:true});}
+    for(const tick of tickLayout.labels){labelBoxes.push(tick);labelCommands.push({value:tick.text,box:tick,font:tick.font!,fill:tick.fill!,rotation:0});}
     ctx.strokeStyle = light ? "#8294a5" : "#718099";
     ctx.lineWidth = 1;
     gridStroke=this.boundingBoxStroke;
+    if(this.cameraModel==='legacy'||this.boundingBoxStroke!==undefined)
     for (let dimension = 0; dimension < 3; dimension++)
       for (const a of [-1, 1])
         for (const b of [-1, 1]) {
@@ -2921,6 +2972,8 @@ export class Chart3D extends ChartXY {
           );
         }
     gridStroke=undefined;ctx.setLineDash([]);
+    axes.forEach((axis,dimension)=>{if(!axis.visible||!strokeStyle(axis.stroke))return;const edge=worldEdges[dimension]??(dimension===0?[[-1,-1,1],[1,-1,1]]:dimension===1?[[-1,-1,1],[-1,1,1]]:[[1,-1,-1],[1,-1,1]]);line(edge[0] as [number,number,number],edge[1] as [number,number,number]);});
+
     const titlePoints: [
       [number, number, number],
       [number, number, number],
@@ -2933,15 +2986,20 @@ export class Chart3D extends ChartXY {
     if(worldFrame)worldEdges.forEach((edge,index)=>{titlePoints[index]=edge[0].map((value,dimension)=>(value+edge[1][dimension]!)/2) as [number,number,number];});
     axes.forEach((axis, i) => {
       if (!axis.visible) return;
-      const p=this.project(...titlePoints[i]!),center=this.project(0,0,0),title=axis.getDisplayTitle()||["X","Y","Z"][i]!,length=Math.hypot(p.x-center.x,p.y-center.y)||1,nx=(p.x-center.x)/length,ny=(p.y-center.y)/length;
+      const title=axis.getDisplayTitle(),ink=fillColor(axis.titleFill,ColorRGBA(0,0,0,0));if(!title||ink.a<=0)return;
+      const edge=worldEdges[i]??(i===0?[[-1,-1,1],[1,-1,1]]:i===1?[[-1,-1,1],[-1,1,1]]:[[1,-1,-1],[1,-1,1]]),a=this.project(...edge[0] as [number,number,number]),b=this.project(...edge[1] as [number,number,number]);
+      let rotation=axis.titleRotation===undefined?Math.atan2(b.y-a.y,b.x-a.x):axis.titleRotation*Math.PI/180;
+      if(axis.titleRotation===undefined){if(rotation>Math.PI/2)rotation-=Math.PI;else if(rotation< -Math.PI/2)rotation+=Math.PI;}
+      ctx.font=this.resolveTextFont(axis.titleFont).toCSS();
+      const p=this.project(...titlePoints[i]!),center=this.project(0,0,0),length=Math.hypot(p.x-center.x,p.y-center.y)||1,nx=(p.x-center.x)/length,ny=(p.y-center.y)/length;
       let best:TextBox|undefined,bestScore=Infinity;
       for(const distance of [34,48,64,82,104])for(const slide of [0,-25,25,-50,50,-80,80]){
-        const box=labelBox(title,p.x+nx*distance-ny*slide,p.y+ny*distance+nx*slide,true);
+        const box=labelBox(title,p.x+nx*distance-ny*slide,p.y+ny*distance+nx*slide,true,rotation);
         const overlap=labelBoxes.reduce((sum,other)=>sum+Math.max(0,Math.min(box.right+7,other.right)-Math.max(box.left-7,other.left))*Math.max(0,Math.min(box.bottom+6,other.bottom)-Math.max(box.top-6,other.top)),0);
         const score=overlap*1000+distance+Math.abs(slide)*.25;
         if(score<bestScore){bestScore=score;best=box;}
       }
-      if(best)label(title,best.x,best.y,true);
+      if(best){labelBoxes.push(best);labelCommands.push({value:title,box:best,font:this.resolveTextFont(axis.titleFont).toCSS(),fill:ink.toCSS(),rotation});}
     });
     if (this.gpu3d) {
       ctx.restore();

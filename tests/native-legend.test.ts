@@ -1,3 +1,4 @@
+import {makeCustomTheme} from '../src/themes.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {EventHub} from '../src/core/events.js';
@@ -229,4 +230,32 @@ test('throwing formatter restores canvas state and can be corrected without repl
   assert.equal(drawing.stack.length, 0);
   legend.setEntryOptions(lut, {lutStepValueFormatter: step => String(step.value)});
   legend.draw(drawing.context, area); assert.ok(drawing.texts.length > 0); assert.equal(drawing.stack.length, 0);
+});
+
+test('LUT theme dimensions and fonts apply in both orientations while explicit options win',()=>{
+ const theme={...Themes.light,uiTextFont:{size:14,family:'Arial'},legendLUTLengthVertical:200,legendLUTThicknessVertical:25,legendLUTLengthHorizontal:200,legendLUTThicknessHorizontal:15,legendMarginOuter:0};
+ const drawing=canvas();
+ for(const [position,width,height]of [[LegendPosition.RightCenter,25,200],[LegendPosition.BottomCenter,200,15]] as const){
+  const lut=palette(),legend=new NativeLegend({invalidate(){},theme},{position}).add(lut);
+  const layout=legend.getLayout(drawing.context,area),entry=layout.entries[0];
+  assert.equal(entry.palette!.rect.width,width);assert.equal(entry.palette!.rect.height,height);
+  assert.equal(entry.font.size,14);assert.equal(entry.font.family,'Arial');
+  if(position===LegendPosition.RightCenter)assert.equal(layout.bounds.left+layout.bounds.width,area.width);
+  legend.setEntryOptions(lut,{lutLength:123,lutThickness:7,textFont:{size:19,family:'serif'}});
+  const override=legend.getLayout(drawing.context,area).entries[0];
+  assert.equal(override.font.size,19);assert.equal(override.font.family,'serif');
+  assert.equal(Math.max(override.palette!.rect.width,override.palette!.rect.height),123);
+  legend.dispose();
+ }
+});
+
+
+test('the public custom-theme factory supplies TDF palette dimensions and UI font defaults',()=>{
+ const theme=makeCustomTheme({fontFamily:'Arial',fontSize:{axisTitle:14,chartTitle:14}});
+ const legend=new NativeLegend({invalidate(){},theme}).add(palette(),{lutLength:200});
+ const drawing=canvas(),entry=legend.getLayout(drawing.context,area).entries[0];
+ assert.equal(entry.palette!.rect.width,25);assert.equal(entry.palette!.rect.height,200);
+ assert.equal(entry.font.size,14);assert.equal(entry.font.family,'Arial');
+ legend.setOptions({position:LegendPosition.BottomCenter,orientation:LegendOrientation.Horizontal});
+ const horizontal=legend.getLayout(drawing.context,area).entries[0];assert.equal(horizontal.palette!.rect.width,200);assert.equal(horizontal.palette!.rect.height,15);legend.dispose();
 });

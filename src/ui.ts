@@ -5,7 +5,8 @@ import type {Rect} from './contracts.js';
 import {prepareResultTableLayout,drawResultTableCells,type ResultTableLayout} from './result-table-layout.js';
 
 export interface UIPoint {x: number; y: number; [key: string]: any; }
-export interface UIHost {invalidate?(): void; readonly theme?: Partial<Theme>; readonly overlay?: HTMLCanvasElement; }
+export interface UIHost {invalidate?(): void; readonly theme?: Partial<Theme>; readonly overlay?: HTMLCanvasElement; readonly resolveTextFont?:(font:FontSettings)=>FontSettings; }
+const renderFont=(owner:UIHost,font:FontSettings)=>owner.resolveTextFont?.(font)??font;
 export type UIProject = (position: UIPoint, coordinates?: any) => UIPoint;
 type TextMeasurementContext = Pick<CanvasRenderingContext2D, 'font' | 'save' | 'restore' | 'measureText'>;
 const documentTextContexts = new WeakMap<Document, TextMeasurementContext>();
@@ -74,8 +75,8 @@ export class UIElement {
     throw new Error('Canvas2D text measurement is unavailable before the first UI draw');
   }
   private measureTextBox(ctx: TextMeasurementContext) {
-    ctx.font = this.font.toCSS();
-    const lines = this.text.split('\n'), lineHeight = this.font.size * 1.35;
+    ctx.font = renderFont(this.owner,this.font).toCSS();
+    const lines = this.text.split('\n'), lineHeight = renderFont(this.owner,this.font).size * 1.35;
     const control = this.kind === 'CheckBox' ? lineHeight : 0;
     const contentWidth = Math.max(1, ...lines.map(line => ctx.measureText(line).width)) + control;
     const contentHeight = lines.length * lineHeight;
@@ -144,7 +145,7 @@ export class UIElement {
     this.lastDrawingContext = ctx;
     ctx.save();
     try {
-    ctx.font = this.font.toCSS(); ctx.textAlign = 'left';
+    ctx.font = renderFont(this.owner,this.font).toCSS(); ctx.textAlign = 'left';
     const {lines, lineHeight, control, width, height} = this.measureTextBox(ctx), p = this.pixelPosition(rect, project);
     this.bounds = {left: p.x - width * this.origin.x + this.margin, top: p.y - height * (1 - this.origin.y) + this.margin, width, height};
     const b = this.bounds; this.drawBox(ctx, b); ctx.fillStyle = fillCSS(this.fill, '#eaf2ff'); ctx.textBaseline = 'top';
@@ -162,7 +163,7 @@ export class ResultTable extends UIElement {
   clear(): this { return this.setContent([]); }
   addRow(...cells: any[]): this { this.content.push(cells); this.changed(); return this; }
   prepareLayout(ctx:CanvasRenderingContext2D):ResultTableLayout {
-    return prepareResultTableLayout(ctx,this.content,this.font,this.fill,this.padding);
+    return prepareResultTableLayout(ctx,this.content,renderFont(this.owner,this.font),this.fill,this.padding);
   }
   override draw(ctx: CanvasRenderingContext2D, rect: Rect, project?: UIProject, prepared?:ResultTableLayout): void {
     if(!this.visible||this.disposed)return;
@@ -341,10 +342,10 @@ export class Cursor extends UIElement {
         if(!layout.rich){
           // Retain the pre-existing plain-string placement path, including its
           // row-based measurements. Rich rows use the prepared cell geometry.
-          ctx.font=table.font.toCSS();
+          ctx.font=renderFont(table.owner,table.font).toCSS();
           const lines=table.content.map(row=>row.map(cell=>String(cell??'')).join('    '));
           width=Math.max(1,...lines.map(line=>ctx.measureText(line).width))+table.padding*2;
-          height=Math.max(1,lines.length)*table.font.size*1.35+table.padding*2;
+          height=Math.max(1,lines.length)*renderFont(table.owner,table.font).size*1.35+table.padding*2;
         }
         const left = position.x - width * table.origin.x + table.margin, top = position.y - height * (1 - table.origin.y) + table.margin;
         const fitLeft = Math.max(rect.left, Math.min(left, rect.left + rect.width - width));
@@ -382,10 +383,10 @@ export class Cursor extends UIElement {
     }
     ctx.save();
     try {
-    ctx.font = this.font.toCSS(); ctx.fillStyle = fillCSS(this.fill, '#ffffff');
+    ctx.font = renderFont(this.owner,this.font).toCSS(); ctx.fillStyle = fillCSS(this.fill, '#ffffff');
     const format = (value: number) => Number.isFinite(value) ? Number(value.toPrecision(6)).toString() : '';
     const marker=(text:string,x:number,y:number,horizontal:boolean)=>{
-      const width=ctx.measureText(text).width+8,height=this.font.size*1.35+6,left=horizontal?x-width/2:x-width,top=horizontal?y:y-height/2;
+      const width=ctx.measureText(text).width+8,height=renderFont(this.owner,this.font).size*1.35+6,left=horizontal?x-width/2:x-width,top=horizontal?y:y-height/2;
       this.drawBox(ctx,{left,top,width,height});ctx.fillStyle=fillCSS(this.fill,'#ffffff');ctx.textAlign=horizontal?'center':'right';ctx.textBaseline=horizontal?'top':'middle';ctx.fillText(text,horizontal?x:x-4,horizontal?y+3:y);
     };
     const ticks = new Set<string>();
@@ -413,7 +414,7 @@ export class LegendBox extends UIElement {
   override draw(ctx: CanvasRenderingContext2D, rect: Rect, project?: UIProject): void {
     if (!this.visible || this.disposed) return;
     this.entries = this.entries.filter(entry => !entry.isDisposed?.());
-    ctx.save(); ctx.font = this.font.toCSS();
+    ctx.save(); ctx.font = renderFont(this.owner,this.font).toCSS();
     const labels = this.entries.map((entry, i) => entry.getName?.() || entry.name || `Series ${i + 1}`);
     const width = Math.max(90, ...labels.map(label => ctx.measureText(label).width + 42), ctx.measureText(this.title).width + 20);
     const titleHeight = this.title ? this.rowHeight : 0, height = this.entries.length * this.rowHeight + this.padding * 2 + titleHeight;

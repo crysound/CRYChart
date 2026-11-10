@@ -41,7 +41,7 @@ export interface LegendOptions {
   visible?: boolean; backgroundVisible?: boolean; backgroundFillStyle?: FillStyle;
   backgroundStrokeStyle?: LineStyle; entries?: LegendEntryOptions; autoHideThreshold?: number;
 }
-export interface LegendHost {invalidate(): void; theme?: any;}
+export interface LegendHost {invalidate(): void; theme?: any; resolveTextFont?(font:FontSettings):FontSettings;}
 
 /** Event target used by the public legend title/background interfaces. */
 export class LegendEventTarget {
@@ -80,7 +80,7 @@ export const LegendEntryClickBehaviors = Object.freeze({
 
 interface RecordEntry {component?: LegendComponent | LUT; options: LegendEntryOptions; automatic: boolean; sourceLUT?: LUT; effectiveOptions?: LegendEntryOptions;}
 interface PaletteLabel {text: string; fraction: number; width: number;}
-interface PaletteLayout {lut: LUT; rect: Rect; labels: PaletteLabel[]; vertical: boolean; proportional: boolean; font: FontSettings;}
+interface PaletteLayout {lut: LUT; rect: Rect; labels: PaletteLabel[]; vertical: boolean; proportional: boolean; font: FontSettings; labelMargin: number;}
 export interface LegendEntryLayout {
   entry: LegendEntry; bounds: Rect; text: string; textRect: Rect; font: FontSettings;
   buttonRect?: Rect; palette?: PaletteLayout;
@@ -151,8 +151,8 @@ export class NativeLegend {
   constructor(private readonly host: LegendHost, options: LegendOptions = {}) {
     this.positionExplicit = options.position !== undefined;
     this.options = {
-      addEntriesAutomatically: true, position: LegendPosition.BottomCenter, padding: 8,
-      entryMargin: 5, marginInner: 7, marginOuter: 8, visible: true,
+      addEntriesAutomatically: true, position: LegendPosition.BottomCenter,
+      entryMargin: 5, marginInner: 7, marginOuter: zeroMargin(), visible: true,
       renderOnTop: false, backgroundVisible: false, autoHideThreshold: .5,
       ...cloneLegendOptions(options),
     };
@@ -255,7 +255,7 @@ export class NativeLegend {
 
   private entryLayout(ctx: CanvasRenderingContext2D, record: RecordEntry, index: number, vertical: boolean): LegendEntryLayout {
     const entry = this.view(record), settings = entry.options, component = entry.component;
-    const entryFont = font(settings.textFont), lineHeight = entryFont.size + 6;
+    const baseFont = font({...this.host.theme?.uiTextFont, ...settings.textFont}),entryFont=this.host.resolveTextFont?.(baseFont)??baseFont, lineHeight = entryFont.size + 6;
     const represented = !(component instanceof LUT) && !record.sourceLUT ? component : undefined;
     const fill = componentFill(component);
     const lut = settings.lut === null ? undefined : settings.lut ?? record.sourceLUT ?? (component instanceof LUT ? component : fill?.getLUT?.() ?? fill?.getPalette?.() ?? fill?.lut);
@@ -277,16 +277,19 @@ export class NativeLegend {
         const text = String(settings.lutStepValueFormatter?.(step, lut) ?? step.label ?? `${step.value}${lut.getUnits() ? ` ${lut.getUnits()}` : ''}`);
         return {text, fraction: proportional && last !== first ? (step.value - first) / (last - first) : steps.length > 1 ? i / (steps.length - 1) : .5, width: ctx.measureText(text).width};
       });
-      const length = finiteSize(settings.lutLength, 160), thickness = finiteSize(settings.lutThickness, 12), gap = rowHeight ? 5 : 0;
+      const theme = this.host.theme;
+      const length = finiteSize(settings.lutLength, finiteSize(vertical ? theme?.legendLUTLengthVertical : theme?.legendLUTLengthHorizontal, 160));
+      const thickness = finiteSize(settings.lutThickness, finiteSize(vertical ? theme?.legendLUTThicknessVertical : theme?.legendLUTThicknessHorizontal, 12)), gap = rowHeight ? 5 : 0;
+      const labelMargin = finiteSize(theme?.legendLUTLabelMargin, vertical ? 6 : 4);
       const labelWidth = Math.max(0, ...labels.map(item => item.width));
       const leftGutter = vertical ? 0 : (labels[0]?.width ?? 0) / 2;
       const rightGutter = vertical ? 0 : (labels.at(-1)?.width ?? 0) / 2;
       const rect = vertical
         ? {left: 0, top: rowHeight + gap + lineHeight / 2, width: thickness, height: length}
         : {left: leftGutter, top: rowHeight + gap, width: length, height: thickness};
-      result.palette = {lut, rect, labels, vertical, proportional, font: entryFont};
-      width = Math.max(width, vertical ? thickness + 6 + labelWidth : leftGutter + length + rightGutter);
-      height += gap + (vertical ? length + lineHeight : thickness + lineHeight + 3);
+      result.palette = {lut, rect, labels, vertical, proportional, font: entryFont, labelMargin};
+      width = Math.max(width, vertical ? thickness + labelMargin + labelWidth : leftGutter + length + rightGutter);
+      height += gap + (vertical ? length + lineHeight : thickness + lineHeight + labelMargin);
     }
     result.bounds.width = Math.max(1, width); result.bounds.height = Math.max(1, height);
     return result;
@@ -300,13 +303,13 @@ export class NativeLegend {
     this.prune();
     const position = this.options.position ?? LegendPosition.BottomCenter;
     const vertical = this.options.orientation === LegendOrientation.Vertical || (this.options.orientation === undefined && (typeof position === 'object' || position < LegendPosition.TopLeft));
-    const padding = margin(this.options.padding, 8), outside = margin(this.options.marginOuter, 8);
+    const padding = margin(this.options.padding, finiteSize(this.host.theme?.legendPadding, 8)), outside = margin(this.options.marginOuter, 0);
     const entryGap = finiteSize(this.options.entryMargin, 5), inner = finiteSize(this.options.marginInner, 7);
     const entries: LegendEntryLayout[] = [];
     ctx.save();
     try {
     for (let i = 0; i < this.records.length; i++) if (this.view(this.records[i]).options.show !== false) entries.push(this.entryLayout(ctx, this.records[i], i, vertical));
-    const titleFont = font(this.options.titleFont, 13), titleHeight = this.options.title ? titleFont.size + 10 : 0;
+    const baseTitleFont = font({...this.host.theme?.legendTitleFont, ...this.options.titleFont}, 13),titleFont=this.host.resolveTextFont?.(baseTitleFont)??baseTitleFont, titleHeight = this.options.title ? titleFont.size + 10 : 0;
     ctx.font = titleFont.toCSS();
     let contentWidth = this.options.title ? ctx.measureText(this.options.title).width : 0, contentHeight = 0;
     // Horizontal legends wrap complete entries; LUT strips are never cut apart.
@@ -359,7 +362,7 @@ export class NativeLegend {
     } finally {ctx.restore();}
   }
 
-  private textFill(): string {return colorCSS(this.host.theme?.axisTitleFillStyle ?? this.host.theme?.chartTitleFillStyle, '#e7edf4');}
+  private textFill(): string {return colorCSS(this.host.theme?.uiTextFillStyle ?? this.host.theme?.axisTitleFillStyle ?? this.host.theme?.chartTitleFillStyle, '#e7edf4');}
   private drawPalette(ctx: CanvasRenderingContext2D, palette: PaletteLayout, options: LegendEntryOptions): void {
     const {lut, rect: r, vertical, proportional, labels} = palette;
     const steps = lut.getSteps().filter(step => Number.isFinite(step.value));
@@ -389,7 +392,7 @@ export class NativeLegend {
       if (accepted.some(a => start < a.end && end > a.start)) continue;
       accepted.push({start, end});
       ctx.textAlign = vertical ? 'left' : 'center'; ctx.textBaseline = vertical ? 'middle' : 'top';
-      ctx.fillText(label.text, vertical ? r.left + r.width + 6 : r.left + center, vertical ? r.top + center : r.top + r.height + 4);
+      ctx.fillText(label.text, vertical ? r.left + r.width + palette.labelMargin : r.left + center, vertical ? r.top + center : r.top + r.height + palette.labelMargin);
     }
   }
   private drawButton(ctx: CanvasRenderingContext2D, entry: LegendEntryLayout): void {
@@ -435,7 +438,7 @@ export class NativeLegend {
       if (stroke && stroke.getThickness() > 0) {ctx.strokeStyle = colorCSS(stroke.getFillStyle(), '#8a9aad'); ctx.lineWidth = stroke.getThickness(); ctx.strokeRect(layout.bounds.left, layout.bounds.top, layout.bounds.width, layout.bounds.height);}
     }
     if (layout.titleRect) {
-      ctx.font = font(this.options.titleFont, 13).toCSS(); ctx.fillStyle = colorCSS(this.options.titleFillStyle, this.textFill()); ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+      const baseTitleFont=font({...this.host.theme?.legendTitleFont, ...this.options.titleFont}, 13);ctx.font = (this.host.resolveTextFont?.(baseTitleFont)??baseTitleFont).toCSS(); ctx.fillStyle = colorCSS(this.options.titleFillStyle ?? this.host.theme?.legendTitleFillStyle, this.textFill()); ctx.textAlign = 'left'; ctx.textBaseline = 'top';
       ctx.fillText(this.options.title ?? '', layout.titleRect.left, layout.titleRect.top + 2);
     }
     for (const entry of layout.entries) {

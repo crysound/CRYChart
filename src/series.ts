@@ -813,7 +813,7 @@ export class PointLineAreaSeries {
     this.clearLineDisplayCache();
     const fill=this.stroke?.getFillStyle?.(),thickness=this.stroke?.getThickness?.()??1;
     const fallback=()=>{this.lineBlocks?.clear();this.lineBlockResult=undefined;return[{...this.drawPacket('line'),clipRect:rect}];};
-    if(this.constructor!==PointLineAreaSeries||this.kind==='points'||this.axisZ||!isAffineLineAxis(this.axisX.type)||!isAffineLineAxis(this.axisY.type)||this.pointSize>0||this.individualSize||this.stroke?.getPattern?.()?.length||fill?.getLUT?.()||fill?.kind==='individual'||!Number.isFinite(thickness)||thickness<=0||this.getSampleCount()<4096)return fallback();
+    if(this.constructor!==PointLineAreaSeries||this.kind==='points'||this.axisZ||!isAffineLineAxis(this.axisX.type)||!isAffineLineAxis(this.axisY.type)||this.pointSize>0||this.individualSize||this.stroke?.getPattern?.()?.length||fill?.getLUT?.()||fill?.kind==='individual'||this.resolveRenderColor(fillColor(fill)).a!==1||!Number.isFinite(thickness)||thickness<=0||this.getSampleCount()<4096)return fallback();
     const data=this.dataSet,x=this.mapping.x!,y=this.mapping.y!;
     if(!data.hasColumn(x)||!data.hasColumn(y))return fallback();
     const visibleSegments=visibleSourceSegments(data,x,this.axisX.getInterval(),rect.width,thickness);if(!visibleSegments)return fallback();
@@ -869,6 +869,10 @@ export class PointLineAreaSeries {
   drawLineDisplayPackets(plotRect:Rect,clipRect:Rect=plotRect,dpr=1,maximumPixelSpan=1,pagePackets=false,streamingArena=false):readonly DrawPacket[]{
     this.assertAlive();
     const fallback=()=>{this.clearLineDisplayCache();return this.drawLinePackets(clipRect,dpr,plotRect);};
+    if(this.resolveRenderColor(fillColor(this.stroke?.getFillStyle?.())).a!==1){
+      this.clearLineDisplayCache();this.lineBlocks?.clear();this.lineBlockResult=undefined;
+      return[{...this.drawPacket('line'),clipRect}];
+    }
     const fill=this.stroke?.getFillStyle?.(),thickness=this.stroke?.getThickness?.()??1;
     if(!this.visible||this.constructor!==PointLineAreaSeries||this.kind==='points'||this.axisZ||!isAffineLineAxis(this.axisX.type)||!isAffineLineAxis(this.axisY.type)||this.pointSize>0||this.individualSize||this.stroke?.getPattern?.()?.length||fill?.getLUT?.()||fill?.kind==='individual'||!Number.isFinite(thickness)||thickness<=0||this.getSampleCount()<4096)return fallback();
     const data=this.dataSet,x=this.mapping.x!,y=this.mapping.y!;

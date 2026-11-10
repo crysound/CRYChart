@@ -1,10 +1,12 @@
-import {Color, ColorHEX, FontSettings, SolidFill, SolidLine, Themes, TriangulatedPoints3D, emptyFill, type FillStyle, type LineStyle, type Theme} from './core/styles.js';
+import {Color, ColorHEX, FontSettings, SolidFill, SolidLine, Themes, TriangulatedPoints3D, emptyFill, emptyLine, type FillStyle, type LineStyle, type Theme} from './core/styles.js';
 
 export interface CustomThemeOptions {
   isDark?: boolean; effects?: boolean; gradients?: boolean; dataColors?: readonly Color[];
   backgroundColor?: Color | FillStyle; textColor?: Color; gridLineColor?: Color; axisColor?: Color;
   uiBackgroundColor?: Color; uiBorderColor?: Color; dashboardSplitterColor?: Color;
   fontFamily?: string;
+  axisTickStrokeStyle?:LineStyle;
+  minorTickGridStrokeStyle?:LineStyle;
   lineSeriesStrokeStyle?:LineStyle|((index:number)=>LineStyle);
   pointSeriesFillStyle?:Theme['pointSeriesFillStyle'];
   pointSeriesStrokeStyle?:Theme['pointSeriesStrokeStyle'];
@@ -58,6 +60,12 @@ export function makeCustomTheme(options: CustomThemeOptions = {}): Theme {
     xAxisTitleFillStyle:textFill, yAxisTitleFillStyle:textFill, zAxisTitleFillStyle:textFill,
     xAxisTitleFont:axisTitleFont, yAxisTitleFont:axisTitleFont, zAxisTitleFont:axisTitleFont,
     legendTitleFont: new FontSettings({size: sizes.legendTitle ?? 12, family}), font: new FontSettings({size: sizes.other ?? 14, family}),
+    uiTextFont: new FontSettings({size:sizes.other??14,family}), uiTextFillStyle: textFill,
+    legendPadding:5, legendLUTLengthHorizontal:160, legendLUTThicknessHorizontal:15,
+    legendLUTLengthVertical:140, legendLUTThicknessVertical:25,
+    legendLUTLabelMargin:7, legendLUTUnitLabelMargin:7,
+    axisTickStrokeStyle: options.axisTickStrokeStyle ?? emptyLine,
+    minorTickGridStrokeStyle: options.minorTickGridStrokeStyle ?? emptyLine,
     tickLabelFillStyle: textFill,
     axisStrokeStyle: new SolidLine({fillStyle: new SolidFill({color: axis})}),
     tickGridStrokeStyle: new SolidLine({fillStyle: new SolidFill({color: grid})}),
