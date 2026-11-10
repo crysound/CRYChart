@@ -828,6 +828,7 @@ export class ChartXY {
     this.invalidate();
     return this;
   }
+  protected usesWholeControl3DLayout(){return false;}
   protected layout() {
     const active = (axis: Axis) => axis.visible && !axis.disposed;
     const axesX=this.axesX.filter(active),axesY=this.axesY.filter(active);
@@ -843,6 +844,15 @@ export class ChartXY {
     const legendMargin=this.overlayContext?this.legend.getLayout(this.overlayContext,this.legendArea()).margin:{left:0,right:0,top:0,bottom:0};
     if(this.kind==='polar'){
       (this as unknown as Polar).updatePolarLayout(this.overlayContext??undefined,legendMargin,this.titleMargin);
+      return;
+    }
+    if(this.usesWholeControl3DLayout()){
+      // 3D decorations are projected around the box. Cartesian label lanes
+      // would cut the already fitted bottom/front edges off the scene.
+      const left=legendMargin.left+(this.padding.left??0),right=legendMargin.right+(this.padding.right??0);
+      const top=legendMargin.top+(this.padding.top??0)+(this.hasVisibleChartTitle()?52+this.titleMargin.top+this.titleMargin.bottom:0);
+      const bottom=legendMargin.bottom+(this.padding.bottom??0);
+      this.plot={left,top,width:Math.max(20,this.width-left-right),height:Math.max(20,this.height-top-bottom)};
       return;
     }
     const left =
@@ -2389,6 +2399,7 @@ export class Polar extends ChartXY {
   override dispose(){this.polarHeatCache?.clear();return super.dispose();}
 }
 export class Chart3D extends ChartXY {
+  protected override usesWholeControl3DLayout(){return this.cameraModel!=='legacy';}
   getAxisDefaultStrokeStyle():LineStyle|undefined{return this.theme.axisStrokeStyle;}
   get axisZ(){return this.getDefaultAxisZ()!;}
   protected override kind = "3d";
