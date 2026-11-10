@@ -1,6 +1,6 @@
 {
   "name": "crychart",
-  "version": "1.0.1-opentest.23",
+  "version": "1.0.1-opentest.24",
   "description": "CRYChart chart engine with streaming data, interactive axes and WebGL rendering",
   "type": "module",
   "main": "./dist/crychart.cjs",
