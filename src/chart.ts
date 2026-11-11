@@ -1008,7 +1008,7 @@ export class ChartXY {
         if (this.root)
           this.root.style.background = fillColor(this.background).toCSS();
         if(this.kind==='polar')(this as unknown as Polar).drawPolarAxes(backdrop??ctx,'grid');
-        else {this.drawPlotFrame(backdrop ?? ctx);this.drawAxes(backdrop ?? ctx);}
+        else this.drawAxes(backdrop ?? ctx);
       }
       if(backdrop??ctx)this.drawAnnotations((backdrop??ctx)!,false);
       const packets: DrawPacket[] = [];
@@ -1146,7 +1146,7 @@ export class ChartXY {
       return;
     }
     if (this.kind === "3d") return;
-    drawAxisCanvas(ctx,{plot:r,axesX:this.axesX,axesY:this.axesY,light,width:this.width,height:this.height,layout:this.axisCanvasLayout,theme:this.theme,resolveFont:this.resolveTextFont});
+    drawAxisCanvas(ctx,{plot:r,axesX:this.axesX,axesY:this.axesY,light,width:this.width,height:this.height,layout:this.axisCanvasLayout,theme:this.theme,resolveFont:this.resolveTextFont,paintFrame:()=>this.drawPlotFrame(ctx)});
   }
   protected drawAnnotations(ctx: CanvasRenderingContext2D,onTop=true) {
     const r = this.plot;

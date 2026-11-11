@@ -20,6 +20,7 @@ export interface AxisCanvasMetrics {
   titleAscent:number;
   titleDescent:number;
   rotation:number;
+  lineBoxTitleBaseline?:number;
 }
 export interface AxisCanvasLayout {
   contentMargins?:{left:number;right:number;top:number;bottom:number};
@@ -36,6 +37,7 @@ export interface AxisCanvasOptions {
   layout?:AxisCanvasLayout;
   theme?:AxisCanvasTheme;
   resolveFont?:(font:FontSettings)=>FontSettings;
+  paintFrame?:()=>void;
 }
 export interface AxisCanvasTheme {
   font?:FontSettings;
@@ -50,13 +52,20 @@ export interface AxisCanvasTheme {
 const color=(fill:any,fallback:Color)=>fill?.kind==='empty'?ColorRGBA(0,0,0,0):fill?.getColor?.()??fallback;
 const validFont=(font:FontSettings)=>font.toCSS?.()??`${font.getSize()}px sans-serif`;
 const isDefaultFont=(font:FontSettings)=>font.getSize()===12&&font.family==='sans-serif'&&font.weight==='normal'&&font.style==='normal'&&font.variant==='normal';
-type MeasuredText={width:number;ascent:number;descent:number};
+type MeasuredText={width:number;ascent:number;descent:number;baseline:number};
+// The HTML text mode uses a compact line box. Its typographic baseline is
+// relative to the font's box, not the particular glyphs in each label.
+const lineBoxHeight=(font:FontSettings)=>font.getSize()*.8;
+function lineBoxBaseline(metrics:TextMetrics|undefined,font:FontSettings){
+  const size=font.getSize();
+  return ((metrics?.fontBoundingBoxAscent??size*.8)-(metrics?.fontBoundingBoxDescent??size*.2))/2;
+}
 function textMetrics(ctx:CanvasRenderingContext2D|undefined,text:string,font:FontSettings,cache?:Map<string,MeasuredText>){
   const key=validFont(font)+'\0'+text,cached=cache?.get(key);if(cached)return cached;
   const previous=ctx?.font,previousBaseline=ctx?.textBaseline;if(ctx){ctx.font=validFont(font);ctx.textBaseline='alphabetic';}
   let measured:TextMetrics|undefined;
   try{measured=ctx?.measureText(text);}finally{if(ctx){if(previous!==undefined)ctx.font=previous;if(previousBaseline!==undefined)ctx.textBaseline=previousBaseline;}}
-  const result={width:measured?.width??text.length*font.getSize()*.6,ascent:measured?.actualBoundingBoxAscent??font.getSize()*.75,descent:measured?.actualBoundingBoxDescent??font.getSize()*.25};cache?.set(key,result);return result;
+  const result={width:measured?.width??text.length*font.getSize()*.6,ascent:measured?.actualBoundingBoxAscent??font.getSize()*.75,descent:measured?.actualBoundingBoxDescent??font.getSize()*.25,baseline:lineBoxBaseline(measured,font)};cache?.set(key,result);return result;
 }
 /** Content occupied by a one-line title, measured independently of axis labels.
  * Canvas glyph bounds include the baseline row in a positive descent; count it
@@ -130,6 +139,14 @@ function metrics(axis:Axis,ctx:CanvasRenderingContext2D|undefined,cache?:Map<str
   const layout=measuredTickLayout(axis,ctx,undefined,cache,theme,resolveFont),labels=visibleLevels.flatMap(({level,font,visible})=>visible?(layout[level]??[]).filter(t=>t.label.length).map(t=>textMetrics(ctx,t.label,font,cache)):[]);
   const labelWidth=Math.max(0,...labels.map(m=>m.width)),labelAscent=Math.max(labelFont.getSize()*.75,...labels.map(m=>m.ascent)),labelDescent=Math.max(labelFont.getSize()*.25,...labels.map(m=>m.descent));
   const title=textMetrics(ctx,titleText,titleFont,cache);
+  if(contentLayout&&axis.titleRotation===undefined){
+    const gutter=7,labelOffset=tickLength+gutter;
+    const labelBand=horizontal?Math.max(0,...visibleLevels.filter(level=>level.visible).map(level=>lineBoxHeight(level.font))):labelWidth;
+    const labelOuter=labels.length>0?labelOffset+labelBand:tickLength;
+    const titleHalf=lineBoxHeight(titleFont)/2,titleOffset=labelOuter+(labels.length>0?margin:0)+titleHalf;
+    const extent=Math.max(labelOuter,titleVisible?titleOffset+titleHalf:0);
+    return {measured:true,labelFont,titleFont,lane:0,laneOffset:0,laneSize:extent>0?extent+gutter:0,labelOffset,titleOffset,tickLength,labelWidth,labelAscent,labelDescent,titleWidth:title.width,titleAscent:title.ascent,titleDescent:title.descent,rotation,lineBoxTitleBaseline:title.baseline};
+  }
   const titleBox=rotatedBounds(title.width,title.ascent,title.descent,rotation);
   const labelOffset=titleOnly?0:horizontal?(axis.opposite?Math.max(10,tickLength+labelDescent+3):Math.max(20,tickLength+labelAscent+3)):Math.max(9,tickLength+(contentLayout?5:2));
   const labelOuter=titleOnly?0:horizontal?labelOffset+(axis.opposite?labelAscent:labelDescent):labelOffset+labelWidth;
@@ -218,6 +235,7 @@ function paintAxisLabels(ctx:CanvasRenderingContext2D,labels:AxisLabel[],axisLen
 /** Original XY axis renderer; keeps axis painting separate from chart lifetime. */
 export function drawAxisCanvas(ctx:CanvasRenderingContext2D,options:AxisCanvasOptions){
   const {plot:r,axesX,axesY,light=false,theme,resolveFont}=options,layout=options.layout??measureAxisCanvasLayout(ctx,axesX,axesY,theme,resolveFont);
+  const baselines:{stroke:LineStyle;from:{x:number;y:number};to:{x:number;y:number}}[]=[];
   ctx.save();try{ctx.textBaseline='alphabetic';
   for(const axis of[...axesX,...axesY]){
     if(!axis.visible||axis.disposed)continue;
@@ -235,7 +253,8 @@ export function drawAxisCanvas(ctx:CanvasRenderingContext2D,options:AxisCanvasOp
       if(horizontal)ctx.fillRect(Math.min(lineFrom.x,lineTo.x),linePosition+(outward<0?-m.laneSize:0),axisLength,m.laneSize);
       else ctx.fillRect(linePosition+(outward<0?-m.laneSize:0),Math.min(lineFrom.y,lineTo.y),m.laneSize,axisLength);
     }
-    paintStroke(ctx,axis.stroke,lineFrom,lineTo);
+    if(options.paintFrame){if(axis.stroke?.getThickness?.()>0)baselines.push({stroke:axis.stroke,from:lineFrom,to:lineTo});}
+    else paintStroke(ctx,axis.stroke,lineFrom,lineTo);
     const ticks=measuredTickLayout(axis,ctx,axisLength,strategy.kind==='datetime'||strategy.kind==='time'?new Map():undefined,theme,resolveFont),labels:AxisLabel[]=[],interval=axis.getInterval();
     for(const level of ['minor','major','great'] as const){
       const style=tickStyle(strategy,level);if(!style)continue;
@@ -258,7 +277,17 @@ export function drawAxisCanvas(ctx:CanvasRenderingContext2D,options:AxisCanvasOp
         const anchorX=horizontal?r.left+anchor*r.width+(level==='great'?2:0):x;
         const anchorY=horizontal?y:r.top+r.height-anchor*r.height;
         const labelX=horizontal?boundAxisLabelX(ctx,tick.label,anchorX,lineFrom.x,lineTo.x,measured):x+outward*m.labelOffset;
-        const labelY=anchorY+(horizontal?outward*m.labelOffset:4);
+        let labelY=anchorY+(horizontal?outward*m.labelOffset:4);
+        if(m.lineBoxTitleBaseline!==undefined){
+          const baseline=lineBoxBaseline(measured,labelFont),halfLine=lineBoxHeight(labelFont)/2;
+          labelY=anchorY+baseline+(horizontal?outward*(m.labelOffset+halfLine):0);
+          if(!horizontal){
+            // End labels keep their complete ink inside the physical axis.
+            const first=Math.min(lineFrom.y,lineTo.y)+Math.max(halfLine+baseline,measured.actualBoundingBoxAscent??labelFont.getSize()*.75);
+            const last=Math.max(lineFrom.y,lineTo.y)+Math.min(baseline-halfLine,-(measured.actualBoundingBoxDescent??labelFont.getSize()*.25));
+            if(first<=last)labelY=Math.max(first,Math.min(last,labelY));
+          }
+        }
         const halfLeft=level==='great'?0:width/2,halfRight=level==='great'?width:width/2;
         const low=horizontal?labelX-(Number.isFinite(measured.actualBoundingBoxLeft)?Math.max(halfLeft,measured.actualBoundingBoxLeft):halfLeft):labelY-(measured.actualBoundingBoxAscent??labelFont.getSize()*.75);
         const high=horizontal?labelX+(Number.isFinite(measured.actualBoundingBoxRight)?Math.max(halfRight,measured.actualBoundingBoxRight):halfRight):labelY+(measured.actualBoundingBoxDescent??labelFont.getSize()*.25);
@@ -284,7 +313,11 @@ export function drawAxisCanvas(ctx:CanvasRenderingContext2D,options:AxisCanvasOp
     const natural=Math.abs(m.rotation-(horizontal?0:-Math.PI/2))<1e-10;
     const alignment:CanvasTextAlign=natural?(position==='start'?'left':position==='end'?'right':'center'):'center';
     ctx.save();try{ctx.font=validFont(m.titleFont);ctx.fillStyle=titleColor.toCSS();ctx.textAlign=alignment;
-    ctx.translate(horizontal?along:linePosition+outward*m.titleOffset,horizontal?linePosition+outward*m.titleOffset:along);ctx.rotate(m.rotation);ctx.fillText(title,0,0);}finally{ctx.restore();}
+    ctx.translate(horizontal?along:linePosition+outward*m.titleOffset,horizontal?linePosition+outward*m.titleOffset:along);ctx.rotate(m.rotation);ctx.fillText(title,0,m.lineBoxTitleBaseline??0);}finally{ctx.restore();}
   }
+  // Grid strokes can coincide exactly with any of the four plot edges.
+  // Paint the frame above them, while preserving explicit axis strokes.
+  options.paintFrame?.();
+  for(const {stroke,from,to}of baselines)paintStroke(ctx,stroke,from,to);
   return layout;}finally{ctx.restore();}
 }
