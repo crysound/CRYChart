@@ -4,6 +4,18 @@ import {Chart3D} from '../src/chart.js';
 import {orbitWorldCamera3D} from '../src/world-camera.js';
 
 const near=(a:number,b:number,t=2e-10)=>assert.ok(Math.abs(a-b)<=t,`${a} != ${b}`);
+test('automatic whole-control fit keeps the complete default waterfall box inside its render clip',()=>{
+  const chart=new Chart3D({legend:{visible:false}}).setTitle('').resize(1440,749).setBoundingBox({x:1440/749,y:1,z:1});
+  try{
+    chart.setCameraLocation({x:.4269448779169913,y:.2681753168677113,z:.863597169196002}).setCameraAutomaticFittingEnabled(true);
+    const clip=chart.getWorldCameraDiagnostics().clip!;
+    for(const x of[-1,1])for(const y of[-1,1])for(const z of[-1,1]){
+      const box=chart.getBoundingBox(),scale=Math.hypot(box.x,box.y,box.z)*2;
+      const p=chart.translateCoordinate({x:x*box.x/scale,y:y*box.y/scale,z:z*box.z/scale},chart.coordsWorld,chart.coordsPixel);
+      assert.ok(p.x>=clip.left&&p.x<=clip.left+clip.width&&p.y>=clip.top&&p.y<=clip.top+clip.height,`Fitted box corner ${JSON.stringify(p)} is clipped by ${JSON.stringify(clip)}`);
+    }
+  }finally{chart.dispose();}
+});
 test('manual world projection follows independent whole-control perspective and orthographic equations',()=>{
   const chart=new Chart3D(),fixture=chart as any,oldOverlay=fixture.overlay;
   try{

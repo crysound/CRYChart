@@ -281,3 +281,18 @@ test('calendar layout measures the configured font and keeps a visible great con
   assert.equal(grids.length,ticks.major.length+ticks.minor.length,'the great label cannot remove a data grid line');
   assert.deepEqual(x.getInterval(),{start,end});assert.equal(layout.axes.get(x)!.labelFont.getSize(),22);
 });
+
+test('HTML chart axis text keeps endpoint ink inside the frame and leaves a gutter outside titles',()=>{
+ const ctx=new CanvasOracle(),x=axis('x').setTitle('Time').setMarginAfterTicks(7),y=axis('y').setTitle('Voltage').setMarginAfterTicks(7);
+ const layout=measureAxisCanvasLayout(ctx.context,[x],[y],undefined,undefined,true);
+ const r={...plot,left:layout.contentMargins!.left};
+ drawAxisCanvas(ctx.context,{plot:r,axesX:[x],axesY:[y],layout});
+ const yTicks=ctx.texts.filter(t=>t.align==='right');
+ assert.equal(yTicks.length,3);
+ assert(yTicks.every(t=>t.y-9>=r.top&&t.y+3<=r.top+r.height),'Endpoint tick glyphs must fit along the visible Y axis');
+ const title=ctx.texts.find(t=>t.text==='Voltage')!;
+ assert(title.x-9>=4,'The Y title must clear the outer chart edge');
+ const tick=ctx.texts.find(t=>t.text==='5'&&t.align==='center')!;
+ assert(tick.y-9-(r.top+r.height)<9,'The X ticks must sit close to the plot');
+ assert(Math.abs(layout.contentMargins!.bottom-40.2)<.001,'The font-relative axis lanes must retain the observed 12px bottom margin');
+});

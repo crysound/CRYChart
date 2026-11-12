@@ -7,6 +7,8 @@ export interface Axis3DTickRequest {
   preferred: {x: number; y: number};
   tangent: {x: number; y: number};
   outward: {x: number; y: number};
+  font?: string;
+  fill?: string;
 }
 export interface Axis3DTickPlacement extends Axis3DTickRequest {
   x: number;
@@ -31,7 +33,7 @@ export interface Axis3DTickLayout {
  * inputs to this helper. All requested strings are retained, including when a
  * very small canvas cannot accommodate them. */
 export function layoutAxis3DTicks(
-  context: Pick<CanvasRenderingContext2D, 'measureText'>,
+  context: Pick<CanvasRenderingContext2D, 'measureText'> & Partial<Pick<CanvasRenderingContext2D, 'font'>>,
   requests: readonly Axis3DTickRequest[],
   bounds: Rect,
   options: {gap?: number; maximumDisplacement?: number} = {},
@@ -40,14 +42,18 @@ export function layoutAxis3DTicks(
   const pad = 2, left = bounds.left + pad, right = bounds.left + bounds.width - pad;
   const top = bounds.top + pad, bottom = bounds.top + bounds.height - pad;
   const metrics = new Map<string, {left: number; right: number; ascent: number; descent: number}>();
-  const measurements = (text: string) => {
-    let measured = metrics.get(text);
+  const measurements = (text: string, font?:string) => {
+    const key=(font??context.font??'')+'\0'+text;
+    let measured = metrics.get(key);
     if (!measured) {
+      const previous=context.font;
+      if(font!==undefined)context.font=font;
       const value = context.measureText(text);
+      if(previous!==undefined)context.font=previous;
       const finite = (number: number, fallback: number) => Number.isFinite(number) ? number : fallback;
       measured = {left: finite(value.actualBoundingBoxLeft, value.width / 2), right: finite(value.actualBoundingBoxRight, value.width / 2),
         ascent: finite(value.actualBoundingBoxAscent, 11), descent: finite(value.actualBoundingBoxDescent, 3)};
-      metrics.set(text, measured);
+      metrics.set(key, measured);
     }
     return measured;
   };
@@ -55,7 +61,7 @@ export function layoutAxis3DTicks(
   const previous = new Map<number, {order: number; projected: number}>();
   const ordered = requests.map((request, index) => ({request, index})).sort((a, b) => a.request.axis - b.request.axis || a.request.order - b.request.order || a.index - b.index);
   for (const {request, index} of ordered) {
-    const text = measurements(request.text), length = Math.hypot(request.tangent.x, request.tangent.y);
+    const text = measurements(request.text,request.font), length = Math.hypot(request.tangent.x, request.tangent.y);
     const tx = length > 1e-9 ? request.tangent.x / length : 1, ty = length > 1e-9 ? request.tangent.y / length : 0;
     let nx = -ty, ny = tx;
     if (nx * request.outward.x + ny * request.outward.y < 0) {nx = -nx; ny = -ny;}

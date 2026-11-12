@@ -262,19 +262,36 @@ try {
     const a=new lib.DataSetXY(),b=new lib.DataSetXY();a.appendSamples({x:[1,9],y:[5,5]});b.appendSamples({x:[1,9],y:[8,8]});const s=c.addLineSeries({dataSet:a}).setStrokeStyle(new lib.SolidLine({thickness:5,fillStyle:new lib.SolidFill({color:lib.ColorRGBA(255,0,0)})}));c.renderNow();const before=c.getRenderStats().uploads;s.setDataSet(b);c.renderNow();const after=c.getRenderStats().uploads;
     const bitmap=await createImageBitmap(await c.exportToImage()),canvas=document.createElement('canvas');canvas.width=bitmap.width;canvas.height=bitmap.height;const ctx=canvas.getContext('2d');ctx.drawImage(bitmap,0,0);bitmap.close();const r=c.plot,pixel=[...ctx.getImageData(Math.round((r.left+r.width*.22)*c.dpr),Math.round((r.top+r.height*.2)*c.dpr)+1,1,1).data];c.dispose();return{pixel,before,after};
   });assert.ok(layered.after>layered.before);assert.ok(layered.pixel[0]>200&&layered.pixel[2]<80,JSON.stringify(layered));evidence.checks.push('equal-revision data replacement uploads fresh pixels and opaque rectangles stay behind curves');
+  // This spatial pixel oracle describes rows; the public default is columns.
   const heatmap=await page.evaluate(()=>{
     const lib=window.lib,c=lib.cryChart().ChartXY({container:document.getElementById('chart')});c.getDefaultAxisX().setInterval({start:0,end:2});c.getDefaultAxisY().setInterval({start:0,end:2});
-    const h=c.addHeatmapGridSeries({columns:2,rows:2}).setFillStyle(new lib.PalettedFill({lut:new lib.LUT({steps:[{value:0,color:lib.ColorRGBA(255,0,0)},{value:1,color:lib.ColorRGBA(0,0,255)}]})}));h.invalidateIntensityValues([[0,1],[NaN,.5]]);c.addLineSeries().add([{x:0,y:.8},{x:2,y:.8}]);c.renderNow();const gl=c.renderer.gl,r=c.plot;
+    const h=c.addHeatmapGridSeries({columns:2,rows:2,dataOrder:'rows'}).setFillStyle(new lib.PalettedFill({lut:new lib.LUT({steps:[{value:0,color:lib.ColorRGBA(255,0,0)},{value:1,color:lib.ColorRGBA(0,0,255)}]})}));h.invalidateIntensityValues([[0,1],[NaN,.5]]);c.addLineSeries().add([{x:0,y:.8},{x:2,y:.8}]);c.renderNow();const gl=c.renderer.gl,r=c.plot;
     const pixel=(x,y)=>{const p=new Uint8Array(4);gl.readPixels(Math.round((r.left+r.width*x)*c.dpr),Math.round(c.canvas.height-(r.top+r.height*(1-y))*c.dpr),1,1,gl.RGBA,gl.UNSIGNED_BYTE,p);return [...p]};
     const colors={red:pixel(.25,.25),blue:pixel(.75,.25),missing:pixel(.25,.75),mixed:pixel(.75,.75)},before=c.getRenderStats().heatmapStats;c.getDefaultAxisX().setInterval({start:0,end:4});c.renderNow();const afterPan=c.getRenderStats().heatmapStats;h.setFillStyle(new lib.PalettedFill({lut:new lib.LUT({steps:[{value:0,color:lib.ColorRGBA(0,0,0)},{value:1,color:lib.ColorRGBA(255,255,255)}]})}));c.renderNow();const afterPalette=c.getRenderStats().heatmapStats,result={colors,before,afterPan,afterPalette,glError:gl.getError(),backend:c.getRenderStats().heatmapBackend};c.dispose();return result;
   });assert.equal(heatmap.backend,'webgl2');assert.equal(heatmap.glError,0);assert.ok(heatmap.colors.red[0]>250&&heatmap.colors.blue[2]>250);assert.equal(heatmap.colors.missing[3],0,JSON.stringify(heatmap));assert.ok(Math.abs(heatmap.colors.mixed[0]-128)<3&&Math.abs(heatmap.colors.mixed[2]-128)<3);assert.equal(heatmap.afterPan.uploads,heatmap.before.uploads);assert.equal(heatmap.afterPalette.uploads,heatmap.before.uploads);assert.ok(heatmap.afterPalette.paletteUploads>heatmap.before.paletteUploads);evidence.checks.push('bit-preserving GPU heatmap colors, transparent gaps, curve composition and independent texture caches');evidence.environment.heatmap=heatmap;
   const alpha=await page.evaluate(()=>{const lib=window.lib,c=lib.cryChart().ChartXY({container:document.getElementById('chart')});c.getDefaultAxisX().setInterval({start:0,end:10});c.getDefaultAxisY().setInterval({start:0,end:10});c.addPointSeries().setPointSize(20).setPointFillStyle(new lib.SolidFill({color:lib.ColorRGBA(255,0,0,128)})).add({x:5,y:5});c.renderNow();const gl=c.renderer.gl,r=c.plot,p=new Uint8Array(4);gl.readPixels(Math.round((r.left+r.width/2)*c.dpr),Math.round(c.canvas.height-(r.top+r.height/2)*c.dpr),1,1,gl.RGBA,gl.UNSIGNED_BYTE,p);const result={pixel:[...p],premultiplied:gl.getContextAttributes().premultipliedAlpha};c.dispose();return result});assert.equal(alpha.premultiplied,true);assert.ok(Math.abs(alpha.pixel[0]-128)<=1&&Math.abs(alpha.pixel[3]-128)<=1,JSON.stringify(alpha));evidence.checks.push('transparent GPU colors retain correct premultiplied RGB and alpha');
+  // Probe fill silhouettes in CSS pixels, away from an equilateral triangle's
+  // centroid-based boundary. Theme outlines have a separate stroke contract.
   const shapes=await page.evaluate(()=>{
     const lib=window.lib,c=lib.cryChart().ChartXY({container:document.getElementById('chart')});c.getDefaultAxisX().setInterval({start:0,end:10});c.getDefaultAxisY().setInterval({start:0,end:10});
-    [[2,lib.PointShape.Square,0,24],[4,lib.PointShape.Circle,0,24],[6,lib.PointShape.Triangle,0,32],[8,lib.PointShape.Triangle,180,32],[5,lib.PointShape.Star,0,32]].forEach(([x,shape,angle,size])=>c.addPointSeries().setPointShape(shape).setPointRotation(angle).setPointSize(size).add({x,y:x===5?8:5}));c.renderNow();const gl=c.renderer.gl,r=c.plot;
-    const alpha=(x,dx,dy)=>{const p=new Uint8Array(4);gl.readPixels(Math.round((r.left+x/10*r.width)*c.dpr)+dx,Math.round(c.canvas.height-(r.top+r.height*.5)*c.dpr)-dy,1,1,gl.RGBA,gl.UNSIGNED_BYTE,p);return p[3]};
-    const result={squareCorner:alpha(2,9,9),circleCorner:alpha(4,9,9),upTop:alpha(6,6,-9),upBottom:alpha(6,6,9),downTop:alpha(8,6,-9),downBottom:alpha(8,6,9),glError:gl.getError()};c.dispose();return result;
+    [[2,lib.PointShape.Square,0,24],[4,lib.PointShape.Circle,0,24],[6,lib.PointShape.Triangle,180,32],[8,lib.PointShape.Triangle,0,32],[5,lib.PointShape.Star,0,32]].forEach(([x,shape,angle,size])=>c.addPointSeries().setPointShape(shape).setPointRotation(angle).setPointSize(size).setPointStrokeStyle(lib.emptyLine).add({x,y:x===5?8:5}));c.renderNow();const gl=c.renderer.gl,r=c.plot;
+    const alpha=(x,dx,dy)=>{const p=new Uint8Array(4);gl.readPixels(Math.round((r.left+x/10*r.width)*c.dpr)+Math.round(dx*c.dpr),Math.round(c.canvas.height-(r.top+r.height*.5)*c.dpr)-Math.round(dy*c.dpr),1,1,gl.RGBA,gl.UNSIGNED_BYTE,p);return p[3]};
+    const result={squareCorner:alpha(2,9,9),circleCorner:alpha(4,9,9),upTop:alpha(6,9,-9),upBottom:alpha(6,9,9),downTop:alpha(8,9,-9),downBottom:alpha(8,9,9),glError:gl.getError()};c.dispose();return result;
   });assert.ok(shapes.squareCorner>100);assert.equal(shapes.circleCorner,0);assert.equal(shapes.upTop,0,JSON.stringify(shapes));assert.ok(shapes.upBottom>100,JSON.stringify(shapes));assert.ok(shapes.downTop>100);assert.equal(shapes.downBottom,0);assert.equal(shapes.glError,0);evidence.checks.push('distinct GPU point shapes and rotated triangles match actual pixel silhouettes');evidence.environment.pointShapes=shapes;
+  const legacyResize = await page.evaluate(() => {
+    const engine=window.lib.cryChart(),chart=engine.Chart3D({container:document.getElementById('chart'),experimental3DCameraModel:'legacy',legend:{visible:false}});
+    try{
+      chart.setCameraLocation({azimuth:.6,elevation:.4,zoom:1});
+      const size=chart.getSizePixels(),point={x:.2,y:.3,z:.4};
+      const before=chart.translateCoordinate(point,chart.coordsAxis,chart.coordsPixel);
+      chart.resize(size.x,size.y);
+      const after=chart.translateCoordinate(point,chart.coordsAxis,chart.coordsPixel);
+      return{before,after,delta:Math.hypot(before.x-after.x,before.y-after.y)};
+    }finally{chart.dispose();engine.dispose();}
+  });
+  evidence.environment.legacyResize=legacyResize;
+  assert.ok(legacyResize.delta<1e-9,JSON.stringify(legacyResize));
+  evidence.checks.push('Same-size resize preserves the initial legacy 3D projection');
   const threeD = await page.evaluate(() => {
     const lib = window.lib,
       c = lib

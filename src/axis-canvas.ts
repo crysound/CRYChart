@@ -6,6 +6,7 @@ import {formatNumeric} from './formatting-functions.js';
 export interface AxisCanvasMetrics {
   measured:boolean;
   labelFont:FontSettings;
+  titleFont:FontSettings;
   lane:number;
   laneOffset:number;
   laneSize:number;
@@ -19,8 +20,10 @@ export interface AxisCanvasMetrics {
   titleAscent:number;
   titleDescent:number;
   rotation:number;
+  lineBoxTitleBaseline?:number;
 }
 export interface AxisCanvasLayout {
+  contentMargins?:{left:number;right:number;top:number;bottom:number};
   extraMargins:{left:number;right:number;top:number;bottom:number};
   axes:Map<Axis,AxisCanvasMetrics>;
 }
@@ -33,11 +36,14 @@ export interface AxisCanvasOptions {
   height?:number;
   layout?:AxisCanvasLayout;
   theme?:AxisCanvasTheme;
+  resolveFont?:(font:FontSettings)=>FontSettings;
+  paintFrame?:()=>void;
 }
 export interface AxisCanvasTheme {
   font?:FontSettings;
   tickLabelFillStyle?:FillStyle;
   tickGridStrokeStyle?:LineStyle;
+  minorTickGridStrokeStyle?:LineStyle;
   axisTitleFillStyle?:FillStyle;
   xAxisTitleFillStyle?:FillStyle;
   yAxisTitleFillStyle?:FillStyle;
@@ -46,13 +52,20 @@ export interface AxisCanvasTheme {
 const color=(fill:any,fallback:Color)=>fill?.kind==='empty'?ColorRGBA(0,0,0,0):fill?.getColor?.()??fallback;
 const validFont=(font:FontSettings)=>font.toCSS?.()??`${font.getSize()}px sans-serif`;
 const isDefaultFont=(font:FontSettings)=>font.getSize()===12&&font.family==='sans-serif'&&font.weight==='normal'&&font.style==='normal'&&font.variant==='normal';
-type MeasuredText={width:number;ascent:number;descent:number};
+type MeasuredText={width:number;ascent:number;descent:number;baseline:number};
+// The HTML text mode uses a compact line box. Its typographic baseline is
+// relative to the font's box, not the particular glyphs in each label.
+const lineBoxHeight=(font:FontSettings)=>font.getSize()*.8;
+function lineBoxBaseline(metrics:TextMetrics|undefined,font:FontSettings){
+  const size=font.getSize();
+  return ((metrics?.fontBoundingBoxAscent??size*.8)-(metrics?.fontBoundingBoxDescent??size*.2))/2;
+}
 function textMetrics(ctx:CanvasRenderingContext2D|undefined,text:string,font:FontSettings,cache?:Map<string,MeasuredText>){
   const key=validFont(font)+'\0'+text,cached=cache?.get(key);if(cached)return cached;
   const previous=ctx?.font,previousBaseline=ctx?.textBaseline;if(ctx){ctx.font=validFont(font);ctx.textBaseline='alphabetic';}
   let measured:TextMetrics|undefined;
   try{measured=ctx?.measureText(text);}finally{if(ctx){if(previous!==undefined)ctx.font=previous;if(previousBaseline!==undefined)ctx.textBaseline=previousBaseline;}}
-  const result={width:measured?.width??text.length*font.getSize()*.6,ascent:measured?.actualBoundingBoxAscent??font.getSize()*.75,descent:measured?.actualBoundingBoxDescent??font.getSize()*.25};cache?.set(key,result);return result;
+  const result={width:measured?.width??text.length*font.getSize()*.6,ascent:measured?.actualBoundingBoxAscent??font.getSize()*.75,descent:measured?.actualBoundingBoxDescent??font.getSize()*.25,baseline:lineBoxBaseline(measured,font)};cache?.set(key,result);return result;
 }
 /** Content occupied by a one-line title, measured independently of axis labels.
  * Canvas glyph bounds include the baseline row in a positive descent; count it
@@ -73,30 +86,30 @@ type TickLevel='great'|'major'|'minor';
 function tickStyle(strategy:NumericTickStrategy,level:TickLevel):TickStyle|undefined{
   return level==='great'?(strategy as NumericTickStrategy&{getGreatTickStyle?():TickStyle}).getGreatTickStyle?.():level==='major'?strategy.getMajorTickStyle():strategy.getMinorTickStyle();
 }
-function resolvedTickFont(axis:Axis,level:TickLevel,style:TickStyle,theme?:AxisCanvasTheme){
-  if(style.hasLabelFontOverride())return style.getLabelFont();
+function resolvedTickFont(axis:Axis,level:TickLevel,style:TickStyle,theme?:AxisCanvasTheme,resolveFont?:(font:FontSettings)=>FontSettings){
   const current=theme?.font??style.getLabelFont();
-  return level==='minor'&&axis.tickStrategy.kind==='time'?(axis.tickStrategy as TimeTickStrategy).resolveDefaultMinorFont?.(theme?.font)??current:current;
+  const font=style.hasLabelFontOverride()?style.getLabelFont():level==='minor'&&axis.tickStrategy.kind==='time'?(axis.tickStrategy as TimeTickStrategy).resolveDefaultMinorFont?.(theme?.font)??current:current;
+  return resolveFont?.(font)??font;
 }
-function resolvedTickFill(axis:Axis,level:TickLevel,style:TickStyle,theme?:AxisCanvasTheme,forDrawing=false){
+export function resolvedTickFill(axis:Axis,level:TickLevel,style:TickStyle,theme?:AxisCanvasTheme,forDrawing=false){
   if(style.hasLabelFillStyleOverride())return style.getLabelFillStyle();
   if(level==='major')return theme?.tickLabelFillStyle??(forDrawing?undefined:style.getLabelFillStyle());
   if(level==='minor'&&axis.tickStrategy.kind==='time'&&(axis.tickStrategy as TimeTickStrategy).usesBoundedMinor?.())return theme?.tickLabelFillStyle??style.getLabelFillStyle();
   return style.getLabelFillStyle();
 }
-function measuredTickLayout(axis:Axis,ctx:CanvasRenderingContext2D|undefined,axisSizePixels=axis.getPixelLength(),cache?:Map<string,MeasuredText>,theme?:AxisCanvasTheme){
+function measuredTickLayout(axis:Axis,ctx:CanvasRenderingContext2D|undefined,axisSizePixels=axis.getPixelLength(),cache?:Map<string,MeasuredText>,theme?:AxisCanvasTheme,resolveFont?:(font:FontSettings)=>FontSettings){
   const strategy=axis.tickStrategy;
   // Numeric axes retain their measurement-free placement path. Time and calendar axes
   // choose their stride using the same configured font that Canvas will paint.
   if(strategy.kind!=='datetime'&&strategy.kind!=='time')return axis.tickLayout(axisSizePixels);
   return axis.tickLayout(axisSizePixels,undefined,(label,level)=>{
     const style=tickStyle(strategy,level)??strategy.major;
-    const font=resolvedTickFont(axis,level,style,theme);
+    const font=resolvedTickFont(axis,level,style,theme,resolveFont);
     const measured=textMetrics(ctx,label,font,cache);
     return axis.direction==='x'?measured.width:measured.ascent+measured.descent;
   });
 }
-function metrics(axis:Axis,ctx:CanvasRenderingContext2D|undefined,cache?:Map<string,MeasuredText>,theme?:AxisCanvasTheme):AxisCanvasMetrics{
+function metrics(axis:Axis,ctx:CanvasRenderingContext2D|undefined,cache?:Map<string,MeasuredText>,theme?:AxisCanvasTheme,resolveFont?:(font:FontSettings)=>FontSettings,contentLayout=false):AxisCanvasMetrics{
   const horizontal=axis.direction==='x',strategy=axis.tickStrategy,tick=strategy.getMajorTickStyle();
   const titleText=axis.getDisplayTitle(),titleVisible=titleText.length>0&&color(axis.titleFill,ColorRGBA(190,200,215)).a>0;
   // Empty automatic ticks contribute no labels or tick marks. A title-only
@@ -104,10 +117,11 @@ function metrics(axis:Axis,ctx:CanvasRenderingContext2D|undefined,cache?:Map<str
   const titleOnly=!strategy.visible&&titleVisible&&!axis.annotations.some(annotation=>annotation.kind==='tick'&&annotation.visible&&!annotation.disposed);
   // An explicit FontSettings object wins even when its size is the default 12.
   // Retain the resolved object in the layout so drawing uses what was measured.
-  const labelFont=tick.hasLabelFontOverride()?tick.getLabelFont():theme?.font??tick.getLabelFont();
+  const baseFont=tick.hasLabelFontOverride()?tick.getLabelFont():theme?.font??tick.getLabelFont();
+  const labelFont=resolveFont?.(baseFont)??baseFont,titleFont=resolveFont?.(axis.titleFont)??axis.titleFont;
   const visibleLevels=(['major','minor','great'] as const).flatMap(level=>{
     const style=tickStyle(strategy,level);if(!style)return[];
-    const font=resolvedTickFont(axis,level,style,theme);
+    const font=resolvedTickFont(axis,level,style,theme,resolveFont);
     const fill=resolvedTickFill(axis,level,style,theme);
     return [{level,style,font,visible:color(fill,ColorRGBA(0,0,0,0)).a>0}];
   });
@@ -118,28 +132,36 @@ function metrics(axis:Axis,ctx:CanvasRenderingContext2D|undefined,cache?:Map<str
   // are checked without enumerating ticks or calling Canvas.measureText.
   const interval=axis.getInterval(),longDefault=!horizontal&&strategy.kind==='numeric'&&!customLabels&&
     [interval.start,interval.end].some(value=>formatNumeric(value,interval).length*labelFont.getSize()*.6+17>54);
-  const changedLayout=titleOnly||margin>0||visibleLevels.some(({font,visible})=>visible&&!isDefaultFont(font))||!isDefaultFont(axis.titleFont)||axis.titleRotation!==undefined||tickLength>7||customLabels||longDefault||strategy.kind==='datetime';
+  const changedLayout=contentLayout||titleOnly||margin>0||visibleLevels.some(({font,visible})=>visible&&!isDefaultFont(font))||!isDefaultFont(titleFont)||axis.titleRotation!==undefined||tickLength>7||customLabels||longDefault||strategy.kind==='datetime';
   // Default lanes require no text measurement or tick enumeration. This matters
   // for the 128-pane waveform case: draw performs the sole tick enumeration.
-  if(!changedLayout)return {measured:false,labelFont,lane:0,laneOffset:0,laneSize:horizontal?44:54,labelOffset:horizontal?(axis.opposite?10:20):9,titleOffset:horizontal?(axis.opposite?32:43):48,tickLength,labelWidth:0,labelAscent:9,labelDescent:3,titleWidth:0,titleAscent:9,titleDescent:3,rotation};
-  const layout=measuredTickLayout(axis,ctx,undefined,cache,theme),labels=visibleLevels.flatMap(({level,font,visible})=>visible?(layout[level]??[]).filter(t=>t.label.length).map(t=>textMetrics(ctx,t.label,font,cache)):[]);
+  if(!changedLayout)return {measured:false,labelFont,titleFont,lane:0,laneOffset:0,laneSize:horizontal?44:54,labelOffset:horizontal?(axis.opposite?10:20):9,titleOffset:horizontal?(axis.opposite?32:43):48,tickLength,labelWidth:0,labelAscent:9,labelDescent:3,titleWidth:0,titleAscent:9,titleDescent:3,rotation};
+  const layout=measuredTickLayout(axis,ctx,undefined,cache,theme,resolveFont),labels=visibleLevels.flatMap(({level,font,visible})=>visible?(layout[level]??[]).filter(t=>t.label.length).map(t=>textMetrics(ctx,t.label,font,cache)):[]);
   const labelWidth=Math.max(0,...labels.map(m=>m.width)),labelAscent=Math.max(labelFont.getSize()*.75,...labels.map(m=>m.ascent)),labelDescent=Math.max(labelFont.getSize()*.25,...labels.map(m=>m.descent));
-  const title=textMetrics(ctx,titleText,axis.titleFont,cache);
+  const title=textMetrics(ctx,titleText,titleFont,cache);
+  if(contentLayout&&axis.titleRotation===undefined){
+    const gutter=7,labelOffset=tickLength+gutter;
+    const labelBand=horizontal?Math.max(0,...visibleLevels.filter(level=>level.visible).map(level=>lineBoxHeight(level.font))):labelWidth;
+    const labelOuter=labels.length>0?labelOffset+labelBand:tickLength;
+    const titleHalf=lineBoxHeight(titleFont)/2,titleOffset=labelOuter+(labels.length>0?margin:0)+titleHalf;
+    const extent=Math.max(labelOuter,titleVisible?titleOffset+titleHalf:0);
+    return {measured:true,labelFont,titleFont,lane:0,laneOffset:0,laneSize:extent>0?extent+gutter:0,labelOffset,titleOffset,tickLength,labelWidth,labelAscent,labelDescent,titleWidth:title.width,titleAscent:title.ascent,titleDescent:title.descent,rotation,lineBoxTitleBaseline:title.baseline};
+  }
   const titleBox=rotatedBounds(title.width,title.ascent,title.descent,rotation);
-  const labelOffset=titleOnly?0:horizontal?(axis.opposite?Math.max(10,tickLength+labelDescent+3):Math.max(20,tickLength+labelAscent+3)):Math.max(9,tickLength+2);
+  const labelOffset=titleOnly?0:horizontal?(axis.opposite?Math.max(10,tickLength+labelDescent+3):Math.max(20,tickLength+labelAscent+3)):Math.max(9,tickLength+(contentLayout?5:2));
   const labelOuter=titleOnly?0:horizontal?labelOffset+(axis.opposite?labelAscent:labelDescent):labelOffset+labelWidth;
   const titleInner=horizontal?(axis.opposite?titleBox.bottom:-titleBox.top):(axis.opposite?-titleBox.left:titleBox.right);
   const titleOuter=horizontal?(axis.opposite?-titleBox.top:titleBox.bottom):(axis.opposite?titleBox.right:-titleBox.left);
   const defaultTitleOffset=horizontal?(axis.opposite?32:43):48;
-  const titleOffset=changedLayout?Math.max(defaultTitleOffset+margin,labelOuter+margin+titleInner+5):defaultTitleOffset;
+  const titleOffset=contentLayout?labelOuter+margin+titleInner+2:changedLayout?Math.max(defaultTitleOffset+margin,labelOuter+margin+titleInner+5):defaultTitleOffset;
   const extent=Math.max(labelOuter,titleVisible?titleOffset+titleOuter:0,tickLength);
-  const baseline=horizontal?44:54,laneSize=changedLayout?Math.max(baseline,Math.ceil(extent+8)):baseline;
-  return {measured:true,labelFont,lane:0,laneOffset:0,laneSize,labelOffset,titleOffset,tickLength,labelWidth,labelAscent,labelDescent,titleWidth:title.width,titleAscent:title.ascent,titleDescent:title.descent,rotation};
+  const baseline=horizontal?44:54,laneSize=contentLayout?Math.ceil(extent+(horizontal?2:0)):changedLayout?Math.max(baseline,Math.ceil(extent+8)):baseline;
+  return {measured:true,labelFont,titleFont,lane:0,laneOffset:0,laneSize,labelOffset,titleOffset,tickLength,labelWidth,labelAscent,labelDescent,titleWidth:title.width,titleAscent:title.ascent,titleDescent:title.descent,rotation};
 }
 
 /** Additional space only; callers retain their existing default 44/54px lanes. */
-export function measureAxisCanvasLayout(ctx:CanvasRenderingContext2D|undefined,axesX:readonly Axis[],axesY:readonly Axis[],theme?:AxisCanvasTheme):AxisCanvasLayout{
-  const result:AxisCanvasLayout={extraMargins:{left:0,right:0,top:0,bottom:0},axes:new Map()};
+export function measureAxisCanvasLayout(ctx:CanvasRenderingContext2D|undefined,axesX:readonly Axis[],axesY:readonly Axis[],theme?:AxisCanvasTheme,resolveFont?:(font:FontSettings)=>FontSettings,contentLayout=false):AxisCanvasLayout{
+  const result:AxisCanvasLayout={extraMargins:{left:0,right:0,top:0,bottom:0},axes:new Map(),...(contentLayout?{contentMargins:{left:0,right:0,top:0,bottom:0}}:{})};
   // Reuse repeated channel labels within this layout pass, without retaining
   // user formatter output or font metrics across later frames/font changes.
   const textCache=new Map<string,MeasuredText>();
@@ -148,12 +170,13 @@ export function measureAxisCanvasLayout(ctx:CanvasRenderingContext2D|undefined,a
     for(const axis of list)if(axis.visible&&!axis.disposed&&axis.opposite===opposite){const group=groups.get(axis.iParallel)??[];group.push(axis);groups.set(axis.iParallel,group);}
     let offset=0,lane=0;
     for(const [,axes]of[...groups].sort((a,b)=>a[0]-b[0])){
-      const values=axes.map(axis=>[axis,metrics(axis,ctx,textCache,theme)] as const),size=Math.max(horizontal?44:54,...values.map(([,m])=>m.laneSize));
+      const values=axes.map(axis=>[axis,metrics(axis,ctx,textCache,theme,resolveFont,contentLayout)] as const),size=Math.max(contentLayout?0:horizontal?44:54,...values.map(([,m])=>m.laneSize));
       for(const [axis,value]of values)result.axes.set(axis,{...value,lane,laneOffset:offset,laneSize:size});
       offset+=size;lane++;
     }
     const side=horizontal?(opposite?'top':'bottom'):(opposite?'right':'left');
     result.extraMargins[side]=Math.max(0,offset-lane*(horizontal?44:54));
+    if(result.contentMargins)result.contentMargins[side]=offset;
   }
   return result;
 }
@@ -211,11 +234,12 @@ function paintAxisLabels(ctx:CanvasRenderingContext2D,labels:AxisLabel[],axisLen
 
 /** Original XY axis renderer; keeps axis painting separate from chart lifetime. */
 export function drawAxisCanvas(ctx:CanvasRenderingContext2D,options:AxisCanvasOptions){
-  const {plot:r,axesX,axesY,light=false,theme}=options,layout=options.layout??measureAxisCanvasLayout(ctx,axesX,axesY,theme);
+  const {plot:r,axesX,axesY,light=false,theme,resolveFont}=options,layout=options.layout??measureAxisCanvasLayout(ctx,axesX,axesY,theme,resolveFont);
+  const baselines:{stroke:LineStyle;from:{x:number;y:number};to:{x:number;y:number}}[]=[];
   ctx.save();try{ctx.textBaseline='alphabetic';
   for(const axis of[...axesX,...axesY]){
     if(!axis.visible||axis.disposed)continue;
-    const m=layout.axes.get(axis)??metrics(axis,ctx,undefined,theme),horizontal=axis.direction==='x',outward=axis.opposite?(horizontal?-1:1):(horizontal?1:-1);
+    const m=layout.axes.get(axis)??metrics(axis,ctx,undefined,theme,resolveFont),horizontal=axis.direction==='x',outward=axis.opposite?(horizontal?-1:1):(horizontal?1:-1);
     const linePosition=horizontal?(axis.opposite?r.top-m.laneOffset:r.top+r.height+m.laneOffset):(axis.opposite?r.left+r.width+m.laneOffset:r.left-m.laneOffset);
     const range=axis.getScreenRange(),axisLength=Math.abs(range.end-range.start)*(horizontal?r.width:r.height),strategy=axis.tickStrategy;
     const lineFrom=horizontal?{x:r.left+range.start*r.width,y:linePosition}:{x:linePosition,y:r.top+(1-range.start)*r.height};
@@ -229,12 +253,13 @@ export function drawAxisCanvas(ctx:CanvasRenderingContext2D,options:AxisCanvasOp
       if(horizontal)ctx.fillRect(Math.min(lineFrom.x,lineTo.x),linePosition+(outward<0?-m.laneSize:0),axisLength,m.laneSize);
       else ctx.fillRect(linePosition+(outward<0?-m.laneSize:0),Math.min(lineFrom.y,lineTo.y),m.laneSize,axisLength);
     }
-    paintStroke(ctx,axis.stroke,lineFrom,lineTo);
-    const ticks=measuredTickLayout(axis,ctx,axisLength,strategy.kind==='datetime'||strategy.kind==='time'?new Map():undefined,theme),labels:AxisLabel[]=[],interval=axis.getInterval();
+    if(options.paintFrame){if(axis.stroke?.getThickness?.()>0)baselines.push({stroke:axis.stroke,from:lineFrom,to:lineTo});}
+    else paintStroke(ctx,axis.stroke,lineFrom,lineTo);
+    const ticks=measuredTickLayout(axis,ctx,axisLength,strategy.kind==='datetime'||strategy.kind==='time'?new Map():undefined,theme,resolveFont),labels:AxisLabel[]=[],interval=axis.getInterval();
     for(const level of ['minor','major','great'] as const){
       const style=tickStyle(strategy,level);if(!style)continue;
       const gridSegments:StrokeSegment[]=[],tickSegments:StrokeSegment[]=[];
-      const labelFont=level==='major'?(style.hasLabelFontOverride()?style.getLabelFont():m.labelFont):resolvedTickFont(axis,level,style,theme);
+      const labelFont=level==='major'?(style.hasLabelFontOverride()?(resolveFont?.(style.getLabelFont())??style.getLabelFont()):m.labelFont):resolvedTickFont(axis,level,style,theme,resolveFont);
       const length=Math.max(0,Math.min(1,style.getGridStrokeLength())),tickLength=Math.max(0,style.getTickLength());
       for(const tick of ticks[level]??[]){
       const fraction=axis.valueToScreenFraction(tick.value),x=horizontal?r.left+fraction*r.width:linePosition,y=horizontal?linePosition:r.top+r.height-fraction*r.height;
@@ -252,7 +277,17 @@ export function drawAxisCanvas(ctx:CanvasRenderingContext2D,options:AxisCanvasOp
         const anchorX=horizontal?r.left+anchor*r.width+(level==='great'?2:0):x;
         const anchorY=horizontal?y:r.top+r.height-anchor*r.height;
         const labelX=horizontal?boundAxisLabelX(ctx,tick.label,anchorX,lineFrom.x,lineTo.x,measured):x+outward*m.labelOffset;
-        const labelY=anchorY+(horizontal?outward*m.labelOffset:4);
+        let labelY=anchorY+(horizontal?outward*m.labelOffset:4);
+        if(m.lineBoxTitleBaseline!==undefined){
+          const baseline=lineBoxBaseline(measured,labelFont),halfLine=lineBoxHeight(labelFont)/2;
+          labelY=anchorY+baseline+(horizontal?outward*(m.labelOffset+halfLine):0);
+          if(!horizontal){
+            // End labels keep their complete ink inside the physical axis.
+            const first=Math.min(lineFrom.y,lineTo.y)+Math.max(halfLine+baseline,measured.actualBoundingBoxAscent??labelFont.getSize()*.75);
+            const last=Math.max(lineFrom.y,lineTo.y)+Math.min(baseline-halfLine,-(measured.actualBoundingBoxDescent??labelFont.getSize()*.25));
+            if(first<=last)labelY=Math.max(first,Math.min(last,labelY));
+          }
+        }
         const halfLeft=level==='great'?0:width/2,halfRight=level==='great'?width:width/2;
         const low=horizontal?labelX-(Number.isFinite(measured.actualBoundingBoxLeft)?Math.max(halfLeft,measured.actualBoundingBoxLeft):halfLeft):labelY-(measured.actualBoundingBoxAscent??labelFont.getSize()*.75);
         const high=horizontal?labelX+(Number.isFinite(measured.actualBoundingBoxRight)?Math.max(halfRight,measured.actualBoundingBoxRight):halfRight):labelY+(measured.actualBoundingBoxDescent??labelFont.getSize()*.25);
@@ -261,7 +296,8 @@ export function drawAxisCanvas(ctx:CanvasRenderingContext2D,options:AxisCanvasOp
       }
       // One Canvas path per style/axis, including all minor ticks; no per-tick
       // state churn, and no change to data renderer or per-pane clipping.
-      const grid=style.hasGridStrokeStyleOverride()?style.getGridStrokeStyle():theme?.tickGridStrokeStyle??style.getGridStrokeStyle();
+      const themedGrid=level==='minor'?theme?.minorTickGridStrokeStyle??theme?.tickGridStrokeStyle:theme?.tickGridStrokeStyle;
+      const grid=style.hasGridStrokeStyleOverride()?style.getGridStrokeStyle():themedGrid??style.getGridStrokeStyle();
       paintStrokes(ctx,grid,gridSegments);paintStrokes(ctx,style.getTickStyle(),tickSegments);
     }
     // Retain the observed default Time grid policy. Explicit fonts or custom
@@ -271,13 +307,17 @@ export function drawAxisCanvas(ctx:CanvasRenderingContext2D,options:AxisCanvasOp
     paintAxisLabels(ctx,labels,axisLength,selectedTimeMinor);
     const themedTitle=theme?.[`${axis.direction}AxisTitleFillStyle`]??theme?.axisTitleFillStyle;
     const title=axis.getDisplayTitle(),titleColor=light&&!axis.hasTitleFillStyleOverride()&&!themedTitle?ColorRGBA(52,65,86):color(axis.titleFill,ColorRGBA(190,200,215));
-    if(!title||titleColor.a<=0||(!horizontal&&axisLength<axis.titleFont.getSize()+2))continue;
+    if(!title||titleColor.a<=0||(!horizontal&&axisLength<m.titleFont.getSize()+2))continue;
     const position=axis.getTitlePosition(),fraction=position==='start'?range.start:position==='end'?range.end:(range.start+range.end)/2;
     const along=position==='center-chart'?(horizontal?(options.width??r.left*2+r.width)/2:(options.height??r.top*2+r.height)/2):horizontal?r.left+fraction*r.width:r.top+(1-fraction)*r.height;
     const natural=Math.abs(m.rotation-(horizontal?0:-Math.PI/2))<1e-10;
     const alignment:CanvasTextAlign=natural?(position==='start'?'left':position==='end'?'right':'center'):'center';
-    ctx.save();try{ctx.font=validFont(axis.titleFont);ctx.fillStyle=titleColor.toCSS();ctx.textAlign=alignment;
-    ctx.translate(horizontal?along:linePosition+outward*m.titleOffset,horizontal?linePosition+outward*m.titleOffset:along);ctx.rotate(m.rotation);ctx.fillText(title,0,0);}finally{ctx.restore();}
+    ctx.save();try{ctx.font=validFont(m.titleFont);ctx.fillStyle=titleColor.toCSS();ctx.textAlign=alignment;
+    ctx.translate(horizontal?along:linePosition+outward*m.titleOffset,horizontal?linePosition+outward*m.titleOffset:along);ctx.rotate(m.rotation);ctx.fillText(title,0,m.lineBoxTitleBaseline??0);}finally{ctx.restore();}
   }
+  // Grid strokes can coincide exactly with any of the four plot edges.
+  // Paint the frame above them, while preserving explicit axis strokes.
+  options.paintFrame?.();
+  for(const {stroke,from,to}of baselines)paintStroke(ctx,stroke,from,to);
   return layout;}finally{ctx.restore();}
 }

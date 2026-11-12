@@ -64,7 +64,16 @@ test('a canvas clamp beyond the displacement budget is reported rather than cert
 test('Chart3D keeps all signed endpoint ticks and titles legible at the default camera', () => {
   class Probe extends Chart3D {paint(context: CanvasRenderingContext2D) {this.drawSpecial(context);}}
   const labels: Array<{text: string; left: number; right: number; top: number; bottom: number}> = [];
-  const canvas = new Proxy({measureText: measure, fillText: (text: string, x: number, y: number) => {const m = measure(text); labels.push({text, left: x - m.actualBoundingBoxLeft, right: x + m.actualBoundingBoxRight, top: y - m.actualBoundingBoxAscent, bottom: y + m.actualBoundingBoxDescent});}}, {
+  let transform={x:0,y:0,angle:0};const stack:typeof transform[]=[];
+  const canvas = new Proxy({measureText: measure,
+    save(){stack.push({...transform});},restore(){transform=stack.pop()??{x:0,y:0,angle:0};},
+    translate(x:number,y:number){const c=Math.cos(transform.angle),s=Math.sin(transform.angle);transform.x+=c*x-s*y;transform.y+=s*x+c*y;},
+    rotate(angle:number){transform.angle+=angle;},
+    fillText(text:string,x:number,y:number){
+      const m=measure(text),c=Math.cos(transform.angle),s=Math.sin(transform.angle);
+      const points=[[-m.actualBoundingBoxLeft,-m.actualBoundingBoxAscent],[m.actualBoundingBoxRight,-m.actualBoundingBoxAscent],[-m.actualBoundingBoxLeft,m.actualBoundingBoxDescent],[m.actualBoundingBoxRight,m.actualBoundingBoxDescent]].map(([dx,dy])=>({x:transform.x+c*(x+dx!)-s*(y+dy!),y:transform.y+s*(x+dx!)+c*(y+dy!)}));
+      labels.push({text,left:Math.min(...points.map(p=>p.x)),right:Math.max(...points.map(p=>p.x)),top:Math.min(...points.map(p=>p.y)),bottom:Math.max(...points.map(p=>p.y))});
+    }}, {
     get: (target, key) => key in target ? (target as any)[key] : () => {},
     set: (target, key, value) => {(target as any)[key] = value; return true;},
   }) as unknown as CanvasRenderingContext2D;

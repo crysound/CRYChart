@@ -85,3 +85,15 @@ test('automatic dense view excludes transparent strokes, areas and unbounded ret
   series.drawStreamingLinePackets(rect);assert.equal(series.getLineDisplayStats(),undefined);
   chart.dispose();data.dispose();
 });
+
+test('explicit display view preserves ordinary translucent raster and complete source geometry',()=>{
+ const{chart,data,series}=setup();
+ try{
+  const before=data.readBack();series.drawLineDisplayPackets(rect);assert.ok(series.getLineDisplayStats());
+  series.setStrokeStyle(new SolidLine({thickness:2,fillStyle:new SolidFill({color:ColorRGBA(30,200,170,128)})}));
+  const packets=series.drawLineDisplayPackets(rect);
+  assert.equal(series.getLineDisplayStats(),undefined);assert.equal(series.getLineBlockStats(),undefined);
+  assert.equal(packets.length,1);assert.equal(packets[0].count,data.getSampleCount());
+  assert.deepEqual(data.readBack(),before);
+ }finally{chart.dispose();data.dispose();}
+});

@@ -79,7 +79,7 @@ function projectedRatios(corners:readonly Vec3[],eye:Vec3,basis:Basis,projection
   for(const p of corners){const q=sub(p,eye),depth=dot(q,basis.forward),divisor=projection==='perspective'?depth:1,x=dot(q,basis.right)/divisor,y=dot(q,basis.up)/divisor;xMin=Math.min(xMin,x);xMax=Math.max(xMax,x);yMin=Math.min(yMin,y);yMax=Math.max(yMax,y);depthMin=Math.min(depthMin,depth);}
   return{xMin,xMax,yMin,yMax,depthMin};
 }
-/** Eight-corner geometric fit. Only control geometry affects this computation. */
+/** Geometric fit based only on control dimensions and camera direction. */
 function fitEye(box:Vec3,orbit:Vec3,viewport:Rect,safe:Rect,projection:Projection3D){
   const corners=boxCorners3D(box),direction=unit3(orbit),focal=viewport.height/(2*Math.tan(Math.PI/8));let iterations=0;
   const evaluate=(radius:number)=>{
@@ -96,6 +96,29 @@ function fitEye(box:Vec3,orbit:Vec3,viewport:Rect,safe:Rect,projection:Projectio
   let lo=.50001,hi=1,result=evaluate(hi);while(!result.fits&&hi<4096){hi*=2;result=evaluate(hi);}
   if(!result.fits)throw new RangeError('3D fit area cannot contain the bounding volume');
   for(let i=0;i<40;i++){const mid=(lo+hi)/2,value=evaluate(mid);if(value.fits){hi=mid;result=value;}else lo=mid;}
+  if(projection==='perspective'){
+    // A 16-sided elliptical cylinder encloses all four XZ box corners. Fit its
+    // projected span before centering the actual box: fitting a centered box
+    // alone makes orbiting shrink the camera radius and unexpectedly zoom in.
+    // This geometry follows independent public-coordinate observations, with
+    // no sampled radius table or pose-dependent scale correction.
+    const scale=worldScale3D(box),envelope:Vec3[]=[],basis=lookAtBasis3D(mul(direction,-1));
+    for(let j=0;j<16;j++)for(const y of [-1,1])envelope.push({
+      x:Math.SQRT2*scale.x*Math.cos(j*Math.PI/8),y:y*scale.y,z:Math.SQRT2*scale.z*Math.sin(j*Math.PI/8)
+    });
+    const fitsSpan=(radius:number)=>{
+      iterations++;
+      const b=projectedRatios(envelope,mul(direction,radius),basis,projection);
+      return b.depthMin>.005&&(b.xMax-b.xMin)*focal<=safe.width&&(b.yMax-b.yMin)*focal<=safe.height;
+    };
+    let low=.50001,high=Math.max(1,hi);
+    while(!fitsSpan(high)&&high<4096)high*=2;
+    if(!fitsSpan(high))throw new RangeError('3D fit area cannot contain the fitting envelope');
+    for(let i=0;i<40;i++){const mid=(low+high)/2;if(fitsSpan(mid))high=mid;else low=mid;}
+    // Retain the verified eight-corner lower bound as well: centering must not
+    // push any actual control corner beyond the safe rectangle.
+    hi=Math.max(hi,high);
+  }
   // Retain a numerical margin, not a screenshot-derived scale factor.
   result=evaluate(hi*(1+2e-12));return{...result,iterations,fallback:false};
 }
@@ -104,9 +127,10 @@ function clipMatrix(frame:Omit<WorldCameraFrame,'matrix'|'rotation'>):Float32Arr
   const perspective=frame.projection==='perspective',kx=perspective?2*frame.focal/v.width:2/radius,ky=perspective?2*frame.focal/v.height:2*v.width/(radius*v.height),a=perspective?(z+n)/(z-n):2/(z-n),b=perspective?-2*z*n/(z-n):-(z+n)/(z-n);
   return new Float32Array([kx*r.x*s.x,ky*u.x*s.x,a*f.x*s.x,perspective?f.x*s.x:0,kx*r.y*s.y,ky*u.y*s.y,a*f.y*s.y,perspective?f.y*s.y:0,kx*r.z*s.z,ky*u.z*s.z,a*f.z*s.z,perspective?f.z*s.z:0,-kx*dot(r,p),-ky*dot(u,p),b-a*dot(f,p),perspective?-dot(f,p):1]);
 }
-export function createWorldCameraFrame(options:{position:Vec3;forward?:Vec3;projection:Projection3D;autoFit:boolean;box:Vec3;viewport:Rect;clip:Rect}):WorldCameraFrame{
+export function createWorldCameraFrame(options:{position:Vec3;forward?:Vec3;projection:Projection3D;autoFit:boolean;box:Vec3;viewport:Rect;clip:Rect;fitArea?:Rect}):WorldCameraFrame{
   const {projection,autoFit}=options;if(projection!=='perspective'&&projection!=='orthographic')throw new TypeError('Unknown 3D projection');
-  validateRect(options.viewport);validateRect(options.clip);const box=validateBox3D(options.box),viewport={...options.viewport},clip={...options.clip},safe=symmetricFitRect3D(viewport,clip);
+  validateRect(options.viewport);validateRect(options.clip);if(options.fitArea)validateRect(options.fitArea);
+  const box=validateBox3D(options.box),viewport={...options.viewport},clip={...options.clip},safe=symmetricFitRect3D(viewport,options.fitArea??clip);
   const solved=autoFit?fitEye(box,options.position,viewport,safe,projection):{position:clampManualCamera3D(options.position),...lookAtBasis3D(options.forward??mul(unit3(options.position),-1)),iterations:0,fits:true,fallback:false};
   const radius=Math.hypot(solved.position.x,solved.position.y,solved.position.z),near=.005,far=Math.max(8,radius+2),frame={position:solved.position,forward:solved.forward,right:solved.right,up:solved.up,viewport,clip,safe,box,projection,scale:worldScale3D(box),radius,near,far,focal:viewport.height/(2*Math.tan(Math.PI/8)),fit:{enabled:autoFit,iterations:solved.iterations,verified:solved.fits,fallback:solved.fallback}};
   const {right:r,up:u,forward:f}=frame;

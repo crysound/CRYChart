@@ -2,7 +2,7 @@
   "schemaVersion": 2,
   "identity": {
     "name": "CRYChart",
-    "packageVersion": "1.0.0",
+    "packageVersion": "1.0.1-opentest.29",
     "entry": "examples/official/index.html"
   },
   "count": 167,

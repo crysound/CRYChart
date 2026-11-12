@@ -70,6 +70,7 @@ class RecordingGL {
   viewport(...values: number[]) {this.viewportValues = values;} scissor() {} depthFunc() {} blendFuncSeparate(...values: number[]) {this.blendFactors = values;} useProgram() {} isContextLost() {return false;}
   uniformMatrix3fv(_location: string, _transpose: boolean, value: Float32Array) {this.rotations.push([...value]);}
   uniform2f(location: string, ...values: number[]) {this.uniforms.set(location, values);}
+  uniform3f(location: string, ...values: number[]) {this.uniforms.set(location, values);}
   uniform4f(location: string, ...values: number[]) {this.uniforms.set(location, values);}
   uniform1f(location: string, value: number) {this.uniforms.set(location, value);}
   uniform1i(location: string, value: number) {this.uniforms.set(location, value);}
@@ -176,4 +177,17 @@ test('invalid packets fail with explicit bounds before uploading unsafe memory',
   assert.equal(scene.gl.uploads.length, 0);
   assert.throws(() => scene.renderer.render([packet({colors: new Float32Array(1)})], viewport, 1, camera), /colors/);
   assert.equal(scene.gl.depthWrite, true);
+});
+
+
+test('constant-plane uniforms update without geometry upload and reset before an ordinary packet',()=>{
+ const scene=renderer(),data=packet({mode:'line'});
+ try{
+  scene.renderer.render([{...data,constantCoordinates:{z:.25}}],viewport,1,camera);
+  assert.equal(scene.gl.uniforms.get('u_constantMask'),4);assert.deepEqual(scene.gl.uniforms.get('u_constantCoordinates'),[0,0,.25]);
+  const uploaded=scene.renderer.stats.uploadedBytes;
+  scene.renderer.render([{...data,constantCoordinates:{z:-.5}}],viewport,1,camera);assert.equal(scene.renderer.stats.uploadedBytes,uploaded);
+  scene.renderer.render([data],viewport,1,camera);assert.equal(scene.gl.uniforms.get('u_constantMask'),0);assert.deepEqual(scene.gl.uniforms.get('u_constantCoordinates'),[0,0,0]);
+  assert.throws(()=>scene.renderer.render([{...data,constantCoordinates:{z:Infinity}}],viewport,1,camera),/constant coordinates/);
+ }finally{scene.renderer.dispose();}
 });

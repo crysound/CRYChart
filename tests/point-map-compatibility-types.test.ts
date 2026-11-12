@@ -40,7 +40,10 @@ test('real 3D camera projections expose whole-chart bottom-left relative pixels 
     assert.ok(Number.isFinite(pixel.x+pixel.y));assert.deepEqual(relative,{x:pixel.x,y:chart.getSizePixels().y-pixel.y});
     assert.deepEqual(client,{clientX:pixel.x+31,clientY:pixel.y+47});
     assert.deepEqual(chart.translateCoordinate(point,chart.coordsRelative),relative);
-    assert.deepEqual(chart.translateCoordinate(relative,chart.coordsRelative,chart.coordsPixel),pixel);
+    const restored=chart.translateCoordinate(relative,chart.coordsRelative,chart.coordsPixel);
+    // Two Y-origin flips perform height-(height-y), which can round by one
+    // floating-point unit even though the visible coordinate is unchanged.
+    assert.ok(Math.abs(restored.x-pixel.x)<1e-10&&Math.abs(restored.y-pixel.y)<1e-10);
    };
    check();chart.resize(1000,700);check();
   }finally{chart.dispose();}
