@@ -97,3 +97,41 @@ test('explicit display view preserves ordinary translucent raster and complete s
   assert.deepEqual(data.readBack(),before);
  }finally{chart.dispose();data.dispose();}
 });
+
+// Real Monitor retention and sample spacing. The first projection origin stays
+// behind the rolling window until the tail crosses Float32's 2^16-ms boundary.
+test('192kHz 60-second rolling waveform keeps display reduction across Float32 origin drift', () => {
+  const count = 192000 * 60, batch = 192000 * 6, step = 1000 / 192000;
+  const chart = new ChartXY({experimentalLineDisplayPixels: 1, experimentalLineDisplayPackets: true, experimentalLineCoverage: true});
+  const data = new DataSetXY({schema: {x: {storage: Float64Array, auto: true, pattern: 'progressive'}, y: {storage: Float64Array}}});
+  data.setMaxSampleCount(count);
+  // Isolated peaks retain adjacent samples, including those that collide in
+  // Float32. Constant data would omit the close neighbors and miss this bug.
+  const values = (length: number, first = 0) => Float64Array.from({length}, (_, i) => (i + first) % 997 === 0 ? 1 : 0);
+  data.appendSamples({y: values(count)}, {start: 1811059, step});
+  const series = chart.addLineSeries({schema: data.schema}).setDataSet(data).setDataMapping({x: 'x', y: 'y'});
+  series.setStrokeStyle(new SolidLine({thickness: 1, fillStyle: new SolidFill({color: ColorRGBA(30, 200, 170, 255)})}));
+  chart.getDefaultAxisY().setInterval({start: -0.2, end: 1.2});
+  try {
+    let previousOrigin: number | undefined, originChanges = 0;
+    for (let pass = 0; pass <= 7; pass++) {
+      if (pass) data.appendSamples({y: values(batch, data.getNextSampleIndex())});
+      chart.getDefaultAxisX().setInterval({start: data.getValue('x', 0)!, end: data.getValue('x', count - 1)!});
+      const packets = series.drawLineDisplayPackets(rect, rect, 1.5, 1, true);
+      const stats = series.getLineDisplayStats();
+      assert.ok(stats, `pass ${pass}: display cache must not fall back to all ${count} raw samples`);
+      assert.equal(series.getLineBlockStats(), undefined);
+      assert.equal(data.getSampleCount(), count);
+      assert.ok(stats.submittedDisplaySamples < 100000);
+      if (pass) assert.ok(stats.sourceSamplesScannedThisUpdate <= batch + 32, 'old summary pages must survive a projection rebase');
+      const origin = packets[0]!.origin.x;
+      if (previousOrigin !== undefined && previousOrigin !== origin) originChanges++;
+      previousOrigin = origin;
+      for (const packet of packets) {
+        assert.ok(packet.strictlyMonotonicX);
+        for (let i = 1; i < packet.count; i++) assert.ok(packet.positions[i * 2]! > packet.positions[(i - 1) * 2]!);
+      }
+    }
+    assert.ok(originChanges >= 2, 'exercise repeated origin recovery, not just initial projection');
+  } finally {chart.dispose(); data.dispose();}
+});

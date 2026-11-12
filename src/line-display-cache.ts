@@ -77,6 +77,7 @@ export interface LineDisplayStats {
   reusedTerminalGroups: number;
   reusedProjectionSamplesThisUpdate: number;
   projectedSamplesThisUpdate: number;
+  projectionRebasesThisUpdate: number;
   selectionDelta?: LedgerWork;
 }
 export type LineDisplayResult =
@@ -213,6 +214,10 @@ export class LineDisplayCache {
   }
 
   update(request: LineDisplayRequest): LineDisplayResult {
+    return this.updateProjection(request, true);
+  }
+
+  private updateProjection(request: LineDisplayRequest, allowRebase: boolean): LineDisplayResult {
     if (this.disposed) throw new Error('Line display cache is disposed');
     const source = request.source, retained = source.nextSampleIndex - source.firstSampleIndex;
     const extremaPair = acceptsExtremaPair(request.extremaPairProof,source);
@@ -223,7 +228,7 @@ export class LineDisplayCache {
     const stats: LineDisplayStats = {retainedSourceSamples: retained, requestedSourceSamples: 0, selectedDisplaySamples: 0, submittedDisplaySamples: 0, omittedDisplaySamples: 0,
       summaryPages: 0, summaryBytes: 0, selectionBytes: 0, projectionBytes: 0, cachedSelectionBytes: 0, cachedProjectionBytes: 0, cachedTopologyBytes: 0, reusedSelectionPages: 0, sourceSamplesScannedThisUpdate: 0, boundarySamplesScannedThisUpdate: 0,
       visitedSummaryNodes: 0, reusedPages: 0, evictedPages: 0, largestSimplifiedPixelSpan: 0, maximumProjectionXError: 0, maximumProjectionYError: 0, sourceReduction: false, displayReduction: false, extremaNeighborsRetained: request.preserveExtremaNeighbors !== false,
-      reusedTerminalGroups: 0, reusedProjectionSamplesThisUpdate: 0, projectedSamplesThisUpdate: 0};
+      reusedTerminalGroups: 0, reusedProjectionSamplesThisUpdate: 0, projectedSamplesThisUpdate: 0, projectionRebasesThisUpdate: 0};
     const fallback = (reason: Extract<LineDisplayResult, {kind: 'fallback'}>['reason']): LineDisplayResult => {stats.evictedPages += this.pages.size; this.clear(); return {kind: 'fallback', reason, stats};};
     if (request.coordinateMode !== 'linear') return fallback('unsupported-transform');
     if (retained > 1 && request.monotonicX !== 'verified-strict') return fallback('unverified-x-order');
@@ -604,8 +609,29 @@ export class LineDisplayCache {
     else {for (const page of this.pages.values()) {stats.cachedSelectionBytes += page.selected?.indices.byteLength ?? 0; stats.cachedProjectionBytes += page.selected?.positions.byteLength ?? 0; stats.cachedTopologyBytes += (page.selected?.groups.byteLength ?? 0) + (page.selected?.groupLookup?.byteLength ?? 0);}}
     this.state = {identity: source.identity, epoch: source.contentEpoch, binding: request.bindingRevision, projection: selectionPolicyKey, next: source.nextSampleIndex};
     if (pageMode) {
-      // Coverage requires strict projected X. If Float32 relative coordinates
-      // collapse distinct source X values, atomically use the usual fallback.
+      // A rolling window can outlive its original projection origin. Recover
+      // Float32 spacing around the current window before falling back to raw
+      // geometry. Keep min/max summaries: only display selections/coordinates
+      // and their GPU/ledger certificates depend on this origin. Re-reading all
+      // retained source samples here causes periodic stalls at high rates.
+      if (!strict && allowRebase) {
+        const center = x(first) / 2 + x(last) / 2;
+        if (Number.isFinite(center) && center !== origin.x) {
+          this.origin = {...origin, x: center};
+          for (const page of this.pages.values()) page.selected = undefined;
+          this.pagePackets?.clear(); this.arena?.clear(); this.deltaLedger?.clear();
+          const retry = this.updateProjection(request, false);
+          retry.stats.projectionRebasesThisUpdate++;
+          // Preserve actual work counters from both attempts, but publish only
+          // the accepted projection's errors, allocations and geometry counts.
+          for (const key of ['sourceSamplesScannedThisUpdate', 'boundarySamplesScannedThisUpdate',
+            'visitedSummaryNodes', 'projectedSamplesThisUpdate', 'reusedProjectionSamplesThisUpdate',
+            'reusedTerminalGroups', 'evictedPages'] as const) retry.stats[key] += stats[key];
+          return retry;
+        }
+      }
+      // Even a centered origin cannot represent every possible source spacing.
+      // Keep the strict-order safety gate and bound recovery to one attempt.
       if (!strict) return fallback('unverified-x-order');
       if (arenaMode) {
         const template = {strokeGroup: request.strokeGroup ?? this.id, origin: this.origin!, domain: request.domain, clipRect: request.clipRect, thickness: request.style.thickness, color: [...request.style.color] as typeof request.style.color};
