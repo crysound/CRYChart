@@ -206,3 +206,55 @@ test('independent centerline oracle bounds both directions inside each accepted 
     }
   }
 });
+
+for (const mode of ['pages', 'arena'] as const) test(`${mode} projection recovery retains summaries, peaks and gaps and resumes incremental updates`, () => {
+  const capacity = 192000 * 60, batch = 192000 * 6, step = 1000 / 192000;
+  const values = (n: number, first: number) => Float64Array.from({length: n}, (_, i) => (first + i) % 8191 === 0 ? NaN : (first + i) % 997 === 0 ? 1 : 0);
+  const data = new DataSetXY({schema: {x: {storage: Float64Array, auto: true, pattern: 'progressive'}, y: {storage: Float64Array}}});
+  data.setMaxSampleCount(capacity);
+  data.appendSamples({y: values(capacity, 0)}, {start: 1811059, step});
+  const cache = new LineDisplayCache();
+  const draw = () => display(cache.update({...request(data, {width: 910, audit: false}), strokeGroup: 42,
+    packetMode: mode, reuseCertifiedPages: true, reuseUnchangedGroups: true, collectSourceIndices: false}));
+  try {
+    draw();
+    data.appendSamples({y: values(batch, capacity)});
+    const recovered = draw();
+    assert.equal(recovered.stats.projectionRebasesThisUpdate, 1);
+    assert.ok(recovered.stats.sourceSamplesScannedThisUpdate <= batch + 32);
+    assert.ok(recovered.stats.reusedPages > 2500);
+    assert.ok(recovered.stats.submittedDisplaySamples < 100000);
+    let sawPeak = false, sawGap = false;
+    for (const packet of recovered.packets!) for (let i = 0; i < packet.count; i++) {
+      const rawX = packet.positions[i * 2]! + packet.origin.x;
+      const absolute = Math.round((rawX - 1811059) / step);
+      const rawY = data.getValue('y', absolute - batch)!;
+      const displayedY = packet.positions[i * 2 + 1]! + packet.origin.y;
+      if (Number.isNaN(rawY)) {assert.ok(Number.isNaN(displayedY)); sawGap = true;}
+      else {assert.equal(displayedY, rawY); if (rawY === 1) sawPeak = true;}
+      if (i) assert.ok(packet.positions[i * 2]! > packet.positions[(i - 1) * 2]!);
+    }
+    assert.ok(sawPeak && sawGap);
+    data.appendSamples({y: values(9600, capacity + batch)});
+    const next = draw();
+    assert.equal(next.stats.projectionRebasesThisUpdate, 0);
+    assert.ok(next.stats.sourceSamplesScannedThisUpdate <= 9616);
+    assert.ok(next.stats.projectedSamplesThisUpdate < 1000);
+    if (mode === 'arena') {
+      assert.equal(next.stats.arena!.fullRebuild, false);
+      assert.ok(next.stats.selectionDelta!.reusedCompletePages > 2500);
+    }
+  } finally {cache.dispose(); data.dispose();}
+});
+
+test('irreducible Float32 spacing still falls back after one bounded projection recovery', () => {
+  const data = make(1, {start: 0});
+  data.appendSamples({y: Float64Array.from({length: 4999}, (_, i) => i % 2)}, {start: 1e12, step: .001});
+  const cache = new LineDisplayCache();
+  const result = cache.update({...request(data), strokeGroup: 1, packetMode: 'arena'});
+  assert.equal(result.kind, 'fallback');
+  if (result.kind === 'fallback') assert.equal(result.reason, 'unverified-x-order');
+  assert.equal(result.stats.projectionRebasesThisUpdate, 1);
+  assert.equal(data.getSampleCount(), 5000);
+  cache.dispose(); data.dispose();
+});
