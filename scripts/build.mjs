@@ -31,7 +31,7 @@ for (const [format, outfile, globalName] of [
     format,
     outfile,
     globalName,
-    sourcemap: true,
+    sourcemap: false,
     target: "es2022",
   });
 }

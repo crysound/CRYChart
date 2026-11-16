@@ -6,7 +6,15 @@ CRYChart 是 **CRYSOUND 为 OpenTest 定制的前端渲染库**，基于 TypeScr
 
 CRYChart 面向 OpenTest 的数据可视化场景，提供流式数据绘制、交互坐标轴、游标、二维和三维图表。绘图使用 WebGL2，并提供 Canvas 回退。
 
-包名为 `crychart`，当前版本为 **1.0.0**。
+首个 npm 公开版本为 `@crysound/crychart@1.0.1`。当前源码准备发布 `1.0.2`，包含 `1.0.1` 发行包构建后合入的高精度波形视口修复。
+
+## 在应用中安装
+
+```powershell
+pnpm add --save-exact @crysound/crychart@1.0.1 --registry=https://registry.npmjs.org/
+```
+
+提交应用的锁文件，后续执行 `pnpm install --frozen-lockfile`。包入口和旧 `crychart` 包名的迁移方式见 [npm 使用说明](docs/npm-usage.md)。
 
 ## 安装与构建
 
@@ -21,8 +29,8 @@ npm run dev
 ## 使用
 
 ```ts
-import { cryChart, ColorRGBA, SolidFill, SolidLine } from 'crychart'
-import type { CRYChart, CRYChartOptions } from 'crychart'
+import { cryChart, ColorRGBA, SolidFill, SolidLine } from '@crysound/crychart'
+import type { CRYChart, CRYChartOptions } from '@crysound/crychart'
 
 const options: CRYChartOptions = {}
 const context: CRYChart = cryChart(options)
@@ -39,7 +47,7 @@ line.appendSamples({ y: new Float32Array([1, 2, 3]) }, { start: 0, step: 0.001 }
 context.dispose()
 ```
 
-包提供 ES 模块、CommonJS、浏览器脚本和 TypeScript 类型声明。浏览器脚本的全局对象为 `CRYChart`。主题入口为 `crychart/themes`。
+包提供 ES 模块、CommonJS、浏览器脚本和 TypeScript 类型声明。浏览器脚本的全局对象为 `CRYChart`。主题入口为 `@crysound/crychart/themes`。
 
 ## 验证
 
@@ -62,10 +70,10 @@ CRYChart 采用 [CRYChart 社区许可协议 1.0](LICENSE.zh-CN.md)，并提供 
 
 ## 文档
 
-- [使用手册](docs/使用手册.md)
-- [性能说明](docs/性能说明.md)
-- [高精度历史波形与 Scope 延迟复测](docs/performance-scope-high-precision-20261109.md)
-- [架构说明](docs/architecture.md)
-- [产品规格](SPEC.md)
+- [npm 使用说明](docs/npm-usage.md)
+- [使用手册](https://github.com/crysound/CRYChart/blob/main/docs/使用手册.md)
+- [性能说明](https://github.com/crysound/CRYChart/blob/main/docs/性能说明.md)
+- [架构说明](https://github.com/crysound/CRYChart/blob/main/docs/architecture.md)
+- [产品规格](https://github.com/crysound/CRYChart/blob/main/SPEC.md)
 
 示例中的合成数据仅用于演示和测试。继续使用的外部数据、模型和素材保留各自的来源及授权说明。

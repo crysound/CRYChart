@@ -79,7 +79,7 @@ export function cryChart(_options: Record<string, unknown> = {}) {
     getChartCount: () => owned.size,
   };
 }
-export const version = "1.0.1-opentest.31";
+export const version = "1.0.2";
 export class Dashboard {
   readonly root: HTMLDivElement;
   private cells = new Map<any, HTMLDivElement>();
