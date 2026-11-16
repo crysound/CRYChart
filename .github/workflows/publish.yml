@@ -1,0 +1,161 @@
+name: Publish CRYChart to npm
+
+on:
+  release:
+    types: [published]
+
+permissions: {}
+
+concurrency:
+  group: publish-crysound-crychart
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  NPM_CONFIG_REGISTRY: https://registry.npmjs.org/
+
+jobs:
+  prepare:
+    name: 验收发行包
+    if: github.repository == 'crysound/CRYChart' && github.event.release.prerelease == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+      integrity: ${{ steps.pack.outputs.integrity }}
+    steps:
+      - name: 检出发布提交
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: 安装 Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: 核对标签与该提交的 CI
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(node -p 'require("./package.json").version')
+          if [[ ! "$version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ||
+                "$GITHUB_REF" != "refs/tags/v$version" ||
+                "$(git rev-parse HEAD)" != "$GITHUB_SHA" ]]; then
+            echo "::error::The release tag must match the stable package version v$version and the checked-out commit."
+            exit 1
+          fi
+
+          passed=$(gh api --method GET "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs" \
+            -f branch=main -f event=push -f head_sha="$GITHUB_SHA" -f status=success \
+            --jq '.total_count')
+          if [[ "$passed" -lt 1 ]]; then
+            echo "::error::CRYChart CI must pass on main for $GITHUB_SHA. Re-run after CI succeeds."
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: 安装锁定版本的依赖
+        run: npm ci
+      - name: 运行 npm 发布前检查
+        run: npm run prepublishOnly
+      - name: 打包并试装实际归档
+        id: pack
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          release_dir="$RUNNER_TEMP/npm-release"
+          mkdir -p "$release_dir"
+          npm pack --pack-destination "$release_dir"
+          archive="$release_dir/crychart.tgz"
+          mv "$release_dir/crysound-crychart-$VERSION.tgz" "$archive"
+          integrity="sha512-$(openssl dgst -sha512 -binary "$archive" | openssl base64 -A)"
+
+          cd "$(mktemp -d)"
+          npm install --ignore-scripts --no-audit --no-fund --no-package-lock --no-save "$archive"
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import { existsSync } from 'node:fs';
+          import { createRequire } from 'node:module';
+          import * as esm from '@crysound/crychart';
+          import * as themes from '@crysound/crychart/themes';
+          const cjs = createRequire(import.meta.url)('@crysound/crychart');
+          for (const entry of [esm, cjs]) {
+            assert.equal(entry.version, process.env.VERSION);
+            assert.equal(typeof entry.cryChart, 'function');
+          }
+          assert.ok(Object.keys(themes).length > 0);
+          for (const file of ['types/index.d.ts', 'types/themes.d.ts', 'crychart.global.js']) {
+            assert.ok(existsSync("node_modules/@crysound/crychart/dist/" + file), file);
+          }
+          NODE
+          echo "integrity=$integrity" >> "$GITHUB_OUTPUT"
+      - name: 保存待发布归档
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: crychart-npm-package
+          path: ${{ runner.temp }}/npm-release/crychart.tgz
+          if-no-files-found: error
+          overwrite: true
+
+  publish:
+    name: 发布并核验 npm 包
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      id-token: write
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}
+      EXPECTED_INTEGRITY: ${{ needs.prepare.outputs.integrity }}
+    steps:
+      - name: 安装支持 Trusted Publishing 的 Node.js 和 npm
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          registry-url: https://registry.npmjs.org/
+          package-manager-cache: false
+      - name: 下载已验收归档
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: crychart-npm-package
+          path: ${{ runner.temp }}/npm-release
+      - name: 使用 Trusted Publishing 上传归档
+        run: |
+          archive="$RUNNER_TEMP/npm-release/crychart.tgz"
+          actual_integrity="sha512-$(openssl dgst -sha512 -binary "$archive" | openssl base64 -A)"
+          if [[ "$actual_integrity" != "$EXPECTED_INTEGRITY" ]]; then
+            echo "::error::The downloaded archive does not match the archive verified by the prepare job."
+            exit 1
+          fi
+
+          exists=$(npm view @crysound/crychart versions --json --prefer-online |
+            node -p 'JSON.parse(require("node:fs").readFileSync(0, "utf8")).includes(process.env.VERSION)')
+          if [[ "$exists" == true ]]; then
+            echo "@crysound/crychart@$VERSION already exists; checking the archive and latest tag without publishing again."
+          else
+            npm publish "$archive" --access public --tag latest
+          fi
+      - name: 核对 registry 版本、标签和归档
+        run: |
+          spec="@crysound/crychart@$VERSION"
+          for attempt in 1 2 3 4 5 6; do
+            if integrity=$(npm view "$spec" dist.integrity --prefer-online) &&
+               latest=$(npm view @crysound/crychart@latest version --prefer-online) &&
+               [[ "$integrity" == "$EXPECTED_INTEGRITY" && "$latest" == "$VERSION" ]]; then
+              registry_dir=$(mktemp -d)
+              npm pack "$spec" --ignore-scripts --prefer-online --pack-destination "$registry_dir"
+              cmp "$RUNNER_TEMP/npm-release/crychart.tgz" "$registry_dir/crysound-crychart-$VERSION.tgz"
+              echo "Verified $spec at npm latest ($integrity)."
+              exit 0
+            fi
+            if [[ "$attempt" -lt 6 ]]; then sleep 5; fi
+          done
+          echo "::error::npm did not return the expected archive and latest tag for $spec."
+          exit 1
