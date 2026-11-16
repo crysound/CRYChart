@@ -21,7 +21,27 @@ npm run test:gallery
 
 npm 包仅包含运行库、类型、中英文许可证、README 和 `docs/npm-usage.md`。完整使用手册、历史性能数据、功能报告、OpenTest 合同和修复记录保留在仓库。历史包位于 `version/v1.0/`，其旧版本号与验收结果不代表新发行版。
 
-## 公开发布
+## 通过 GitHub Actions 发布
+
+首次发布前，先把 `.github/workflows/publish.yml` 合入 `main`。使用有包管理权限的 npm 账号，打开 `@crysound/crychart` 的 **Settings → Trusted publishing**，选择 **GitHub Actions**，填入：
+
+| 字段 | 值 |
+| --- | --- |
+| Organization or user | `crysound` |
+| Repository | `CRYChart` |
+| Workflow filename | `publish.yml` |
+| Environment name | 留空 |
+| Allowed actions | 启用 `npm publish` |
+
+保存后在两天内完成首次成功发布。无需添加 npm token 到 GitHub Secrets。参见 [npm Trusted Publishing](https://docs.npmjs.com/trusted-publishers/)。
+
+1. 合入发版改动，确认 `package.json` 的版本与安装说明一致。等发版提交在 `main` 上的 **CRYChart CI** 通过。
+2. 在 [GitHub Releases](https://github.com/crysound/CRYChart/releases) 创建正式 Release。将版本标签（例如 `v1.0.2`）指向该提交，填写发版说明，点击 **Publish release**。
+3. 在 [GitHub Actions](https://github.com/crysound/CRYChart/actions/workflows/publish.yml) 查看结果。流程会验收实际归档、发布到 npm 的 `latest`，再从 registry 下载归档并核对内容。
+
+若任务失败，先查 npm 上的目标版本，再修正配置并重跑失败任务。若版本已经存在，流程只核对归档和 `latest`，不会覆盖内容。若要修正已发布的包，使用新版本号。
+
+## 手动发布
 
 使用具备 `crysound` 组织发布权限的账号在本机登录。以下示例使用当前源码版本 `1.0.2`。先验收该版本的归档，再发布：
 
