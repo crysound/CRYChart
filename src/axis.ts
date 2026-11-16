@@ -660,7 +660,7 @@ export class Axis {
   /** Only the finite positive constant object maximum used by Preview is enforced.
    * Other restriction fields and callback enforcement retain their existing behavior. */
   private supportedIntervalMax(): number | undefined {
-    if(this.type!=='linear'||this.chart.supportsAxisIntervalMaxRestrictions?.()!==true)return undefined;
+    if((this.type!=='linear'&&this.type!=='linear-highPrecision')||this.chart.supportsAxisIntervalMaxRestrictions?.()!==true)return undefined;
     const value=this.intervalRestriction;
     if(!value||typeof value!=='object'||Array.isArray(value))return undefined;
     const maximum=value.intervalMax;
