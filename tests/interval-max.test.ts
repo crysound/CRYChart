@@ -3,6 +3,20 @@ import assert from 'node:assert/strict';
 import {ChartXY,Chart3D,Polar} from '../src/chart.js';
 
 const fixture=()=>{const chart=new ChartXY(),axis=chart.getDefaultAxisX();axis.setScrollStrategy(undefined);return{chart,axis};};
+test('high precision waveform axes cap manual, fit and wheel ranges with preview enabled',()=>{
+ const chart=new ChartXY({defaultAxisX:{type:'linear-highPrecision'}}),axis=chart.getDefaultAxisX();
+ try{
+  axis.setScrollStrategy(undefined).setIntervalRestrictions({intervalMax:15000});
+  axis.setInterval({start:0,end:120000});
+  assert.deepEqual(axis.getInterval(),{start:52500,end:67500});
+  axis.setInterval({start:35000,end:45000});
+  assert.equal(axis.limitIntervalZoomFactor(2),1.5);
+  const series=chart.addLineSeries();series.appendSamples({x:[0,120000],y:[1,2]});
+  axis.fit();assert.ok(axis.getInterval().end-axis.getInterval().start<=15000);
+  axis.setIntervalRestrictions(undefined).setInterval({start:0,end:120000});
+  assert.deepEqual(axis.getInterval(),{start:0,end:120000});
+ }finally{chart.dispose();}
+});
 test('restriction setter is deferred; manual interval caps around the requested midpoint',()=>{
  const {chart,axis}=fixture();try{
   axis.setInterval({start:0,end:10000,stopAxisAfter:true});let changes=0;axis.on('intervalchange',()=>changes++);
