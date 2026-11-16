@@ -1,0 +1,4 @@
+# Preserve bytes verified by the example provenance manifests.
+examples/data/brain-drummyfish.obj -text
+examples/data/synthetic-air-quality.json -text
+examples/data/stereo-spectrum-demo.json -text

@@ -6,7 +6,15 @@ CRYChart is a **frontend rendering library built by CRYSOUND for OpenTest**, wri
 
 Designed for OpenTest's data visualization needs, CRYChart provides streaming data rendering, interactive axes, cursors, and 2D and 3D charts. It uses WebGL2 for rendering, with a Canvas fallback.
 
-The package name is `crychart`. The current version is **1.0.0**.
+The first public npm release is `@crysound/crychart@1.0.1`. This source tree targets `1.0.2`, which includes the high precision waveform viewport fix merged after the `1.0.1` release build.
+
+## Install in an application
+
+```powershell
+pnpm add --save-exact @crysound/crychart@1.0.1 --registry=https://registry.npmjs.org/
+```
+
+Commit the application's lockfile and use `pnpm install --frozen-lockfile` for repeatable installs. See the [npm usage guide](docs/npm-usage.md) for package entry points and migration from the old `crychart` name.
 
 ## Install and build
 
@@ -23,8 +31,8 @@ Open the local examples at <http://127.0.0.1:4178/>. Chart containers must have 
 ## Usage
 
 ```ts
-import { cryChart, ColorRGBA, SolidFill, SolidLine } from 'crychart'
-import type { CRYChart, CRYChartOptions } from 'crychart'
+import { cryChart, ColorRGBA, SolidFill, SolidLine } from '@crysound/crychart'
+import type { CRYChart, CRYChartOptions } from '@crysound/crychart'
 
 const options: CRYChartOptions = {}
 const context: CRYChart = cryChart(options)
@@ -41,7 +49,7 @@ line.appendSamples({ y: new Float32Array([1, 2, 3]) }, { start: 0, step: 0.001 }
 context.dispose()
 ```
 
-The package provides ES modules, CommonJS, a browser script, and TypeScript declarations. The browser script exposes the `CRYChart` global. Themes are available through `crychart/themes`.
+The package provides ES modules, CommonJS, a browser script, and TypeScript declarations. The browser script exposes the `CRYChart` global. Themes are available through `@crysound/crychart/themes`.
 
 ## Validation
 
@@ -64,11 +72,11 @@ The free license imposes no limits on the number of channels, data series, curve
 
 ## Documentation
 
-- [User guide](docs/使用手册.md)
-- [Performance notes](docs/性能说明.md)
-- [High-precision historical waveforms and Scope latency retest](docs/performance-scope-high-precision-20261109.md)
-- [Architecture](docs/architecture.md)
-- [Product specification](SPEC.md)
+- [npm usage guide](docs/npm-usage.md)
+- [User guide](https://github.com/crysound/CRYChart/blob/main/docs/使用手册.md)
+- [Performance notes](https://github.com/crysound/CRYChart/blob/main/docs/性能说明.md)
+- [Architecture](https://github.com/crysound/CRYChart/blob/main/docs/architecture.md)
+- [Product specification](https://github.com/crysound/CRYChart/blob/main/SPEC.md)
 
 Some documentation is currently available only in Chinese.
 

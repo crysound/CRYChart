@@ -1,6 +1,6 @@
 {
-  "name": "crychart",
-  "version": "1.0.1-opentest.31",
+  "name": "@crysound/crychart",
+  "version": "1.0.2",
   "description": "CRYChart chart engine with streaming data, interactive axes and WebGL rendering",
   "type": "module",
   "main": "./dist/crychart.cjs",
@@ -27,12 +27,11 @@
     "dist/types",
     "README.md",
     "README.zh-CN.md",
-    "docs/*.md",
-    "docs/*.json",
-    "docs/*.html",
-    "SPEC.md"
+    "docs/npm-usage.md"
   ],
   "scripts": {
+    "prepack": "npm run build && node scripts/check-package.mjs",
+    "prepublishOnly": "npm run typecheck && npm test && npm run test:opentest-contract",
     "build": "node scripts/build.mjs",
     "typecheck": "tsc --noEmit",
     "test": "node scripts/test.mjs",
@@ -53,5 +52,17 @@
   "engines": {
     "node": ">=20"
   },
-  "license": "SEE LICENSE IN LICENSE.md"
+  "license": "SEE LICENSE IN LICENSE.md",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/crysound/CRYChart.git"
+  },
+  "homepage": "https://github.com/crysound/CRYChart#readme",
+  "bugs": {
+    "url": "https://github.com/crysound/CRYChart/issues"
+  }
 }
