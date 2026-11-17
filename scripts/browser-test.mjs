@@ -76,8 +76,11 @@ try {
     c.renderNow();
   });
   const rendered = await page.evaluate(() => {
-    const c = window.chart,
-      gl = c.renderer.gl,
+    const c = window.chart;
+    // Read the default framebuffer in the task that renders it, before a
+    // browser compositor frame can intervene on the CI graphics backend.
+    c.renderNow();
+    const gl = c.renderer.gl,
       r = c.plot;
     if (!gl) return { backend: c.renderer.backend };
     const pixel = (x, y) => {
@@ -102,6 +105,12 @@ try {
       gpu: extension
         ? gl.getParameter(extension.UNMASKED_RENDERER_WEBGL)
         : gl.getParameter(gl.RENDERER),
+      contextLost: gl.isContextLost(),
+      contextAttributes: gl.getContextAttributes(),
+      canvasSize: [c.canvas.width,c.canvas.height],
+      drawingBufferSize: [gl.drawingBufferWidth,gl.drawingBufferHeight],
+      viewport: [...gl.getParameter(gl.VIEWPORT)],
+      plot: {...r},
     };
   });
   evidence.environment.render = rendered;

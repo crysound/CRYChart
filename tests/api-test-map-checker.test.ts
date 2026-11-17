@@ -7,6 +7,7 @@ import { join } from "node:path";
 import {
   analyzeApiTests,
   serializeAnalysis,
+  canonicalApiSignature,
 } from "../scripts/api-test-map.mjs";
 import {
   makeManifest,
@@ -522,4 +523,54 @@ test("asserted public values lose their passing mapping when field assertions or
   } finally {
     writeFileSync(file, "// fixture removed");
   }
+});
+
+test("API signatures survive relocating a checkout instead of hashing absolute TypeScript import paths", () => {
+  const roots = [
+    mkdtempSync(join(tmpdir(), "crychart-api-original-")),
+    mkdtempSync(join(tmpdir(), "crychart-api-relocated-")),
+  ];
+  const signatures = roots.map((root) => {
+    mkdirSync(join(root, "src"));
+    mkdirSync(join(root, "tests"));
+    writeFileSync(
+      join(root, "tsconfig.json"),
+      readFileSync(join(fixture, "tsconfig.json")),
+    );
+    writeFileSync(join(root, "src/themes.ts"), "export const theme={};");
+    writeFileSync(
+      join(root, "src/component.ts"),
+      "export class Widget { value=1; } export function create(){return new Widget();}",
+    );
+    writeFileSync(
+      join(root, "src/index.ts"),
+      `export {Widget} from './component.js';import {create} from './component.js';export function factory(){return{make:()=>create()};}`,
+    );
+    return serializeAnalysis(analyzeApiTests(root)).entries.find(
+      (entry) => entry.id === "factory().make",
+    )!.signature;
+  });
+  assert.deepEqual(signatures[0], signatures[1]);
+  assert.ok(!signatures[0].includes(roots[0]));
+});
+
+test("canonical API import paths preserve public module identities on Windows and POSIX", () => {
+  const posix =
+    '() => import("/home/runner/work/CRYChart/src/custom-icon").Icon';
+  const windows = '() => import("D:/a/CRYChart/src/custom-icon").Icon';
+  assert.equal(
+    canonicalApiSignature(posix, "/home/runner/work/CRYChart"),
+    canonicalApiSignature(windows, "D:\\a\\CRYChart"),
+  );
+  assert.equal(
+    canonicalApiSignature('() => import("external-module").Icon', "/repo"),
+    '() => import("external-module").Icon',
+  );
+  assert.notEqual(
+    canonicalApiSignature(posix, "/home/runner/work/CRYChart"),
+    canonicalApiSignature(
+      posix.replace("custom-icon", "other-component"),
+      "/home/runner/work/CRYChart",
+    ),
+  );
 });

@@ -6674,7 +6674,7 @@
         "ChartXY.engine.addCustomIcon",
         "Polar.engine.addCustomIcon"
       ],
-      "signature": "7955dc5f831b37a51f7040d01234073b99924103f1663502153388494d7012c5",
+      "signature": "689dd89b9a4b0cd42c668aaae27b3a81ba1ded65ebc3e3ad219dee7d41494f9b",
       "status": "mapped",
       "scenarios": [
         "tests/engine-public-api.test.ts::engine object methods delegate to the owning chart and dispose all engine owned icons"
@@ -7061,7 +7061,7 @@
         "Chart3D.getCursorFormatting",
         "ChartXY.getCursorFormatting"
       ],
-      "signature": "de194dd3642e9a722678a258896f9be0e984501ff5070132e22afc5883735756",
+      "signature": "735dd7e11b42f9e07de76bbfe72fc31e3a40179cb6aee0016facf0a3838cd3f7",
       "status": "mapped",
       "scenarios": [
         "tests/cursor-empty-axis-title.test.ts::共享单调X仍使用原生X标题行和保留空中列的组件行",
@@ -20830,7 +20830,7 @@
         "PolarSeries.getColorShadingStyle",
         "SplineSeries.getColorShadingStyle"
       ],
-      "signature": "29877dc2ec1a730c33c62f19cb4befe9420ba90783e2d9b18524d920d9c0f79d",
+      "signature": "9f11f06898de99021cd6fbd8004dc38f9cb5bdf488b3ab5034ecd0dfc04d5a8d",
       "status": "mapped",
       "scenarios": [
         "tests/point-map-compatibility-types.test.ts::Simple shading reaches real 3D line, point and auxiliary marker packets without changing old defaults"
@@ -21192,7 +21192,7 @@
         "PolarSeries.getLineDisplayStats",
         "SplineSeries.getLineDisplayStats"
       ],
-      "signature": "82cc870c38b66751c6f7dbe5ca7766bb69beef85dc8bc4450d914671216ba415",
+      "signature": "42f5a7f6bd37b50d1ce7a31732b4c2a7137ef50bc08fc73e64f1f436058a61e9",
       "status": "mapped",
       "scenarios": [
         "tests/line-display-integration.test.ts::192kHz 60-second rolling waveform keeps display reduction across Float32 origin drift",
@@ -27111,7 +27111,7 @@
         "SunBurstChart.dispose",
         "TreeMapChart.dispose"
       ],
-      "signature": "347136e41a86c19d4fea1adeaf64f80ee42565c0c654ce065a6e5fecbf6d4568",
+      "signature": "5148f68cf1823bb8898bb175c1b3d8a2f4de271dafc36897a3bf402b309ffeaf",
       "status": "mapped",
       "scenarios": [
         "tests/bar-pointer-visual.test.ts::Color inputs use immutable channel offsets while data and unrelated opacity remain intact",
@@ -27470,7 +27470,7 @@
         "SunBurstChart.layout",
         "TreeMapChart.layout"
       ],
-      "signature": "347136e41a86c19d4fea1adeaf64f80ee42565c0c654ce065a6e5fecbf6d4568",
+      "signature": "5148f68cf1823bb8898bb175c1b3d8a2f4de271dafc36897a3bf402b309ffeaf",
       "status": "mapped",
       "scenarios": [
         "tests/specialty-public-api.test.ts::specialty panels render title and background settings and schedule one frame per invalidation batch"
@@ -27555,7 +27555,7 @@
         "SunBurstChart.onDispose",
         "TreeMapChart.onDispose"
       ],
-      "signature": "27d066c9f108d85abe0b590409d1a13cfb87a2887f2e6f7ddebfe8cd3dad0469",
+      "signature": "f1a8c7bb25cd8b5472da6b9d49b45d6d1b33b6d04c56ebc9aa5cc18de8404989",
       "status": "mapped",
       "scenarios": [
         "tests/chart-ownership.test.ts::one throwing disposal callback does not prevent releasing the remaining charts",
@@ -27680,7 +27680,7 @@
         "SunBurstChart.setBackgroundFillStyle",
         "TreeMapChart.setBackgroundFillStyle"
       ],
-      "signature": "b649adc1b31f853e157fa8635a14df2cec17ad4d0653206e172ac331c99d98d7",
+      "signature": "9c6b1a760243f228a630970a5b5e8ff3637cb3608555efa901e6fca14dec437a",
       "status": "mapped",
       "scenarios": [
         "tests/specialty-public-api.test.ts::specialty panels render title and background settings and schedule one frame per invalidation batch",
@@ -27708,7 +27708,7 @@
         "SunBurstChart.setPadding",
         "TreeMapChart.setPadding"
       ],
-      "signature": "02d7818f243eb7631a580777952a2e73053d8f217d88fc33a3b52ab25e2e38bd",
+      "signature": "f65a62387fc2167f622e22c22a4c01024d2b33dbe473481ccc4505d805d7f550",
       "status": "mapped",
       "scenarios": [
         "tests/business-examples.test.ts::narrow dashboard gauges reserve horizontal room for endpoint tick text outside a thick arc"
@@ -27735,7 +27735,7 @@
         "SunBurstChart.setTitle",
         "TreeMapChart.setTitle"
       ],
-      "signature": "2be86ed6794fbeec769291f957bc61ae27ffc819e540327e94c60bd7eac3174f",
+      "signature": "3b6c04bf4d109b6d81181053c5be77277852d9e15847bf940a78d925b5fd93bb",
       "status": "mapped",
       "scenarios": [
         "tests/hierarchy.test.ts::focused sunburst retains the parent annulus, radial labels and an operable header return",
@@ -27766,7 +27766,7 @@
         "SunBurstChart.setTitleAlignment",
         "TreeMapChart.setTitleAlignment"
       ],
-      "signature": "651bff2f6690f31d9aebb5372bbf34f2fca0bd699b9250a16d923b3a44e9083d",
+      "signature": "d19987a58cd27875947620c32a0c8961518705aa6cb54f046c28584e1d5b3298",
       "status": "mapped",
       "scenarios": [
         "tests/specialty-public-api.test.ts::specialty panels render title and background settings and schedule one frame per invalidation batch",
@@ -27794,7 +27794,7 @@
         "SunBurstChart.setTitleFont",
         "TreeMapChart.setTitleFont"
       ],
-      "signature": "4ca9140eea18dd07abee513653e189a1178eb9092136be1f9f44af554ea5356b",
+      "signature": "fcb782ef4b5613a12a9e56911559e38343de55958a7fad922f01d0630a48b1b7",
       "status": "mapped",
       "scenarios": [
         "tests/specialty-public-api.test.ts::specialty panels render title and background settings and schedule one frame per invalidation batch",
@@ -27822,7 +27822,7 @@
         "SunBurstChart.setVisible",
         "TreeMapChart.setVisible"
       ],
-      "signature": "536f7b46659dcfe0dc5f1d8c4f5fb6479896ab9a0de95fae5455fcee1bde7716",
+      "signature": "ece8eb8b7d181f824e6fb167289caa5e69df6440fe6096d684f04f8233622ed3",
       "status": "mapped",
       "scenarios": [
         "tests/bar-pointer-visual.test.ts::hidden chart emits no bar paint and visible restore keeps the original data",

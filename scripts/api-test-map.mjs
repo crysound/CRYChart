@@ -7,6 +7,20 @@ import { fileURLToPath } from "node:url";
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const slash = (value) => value.replaceAll("\\", "/");
 const normalize = (text) => text.replace(/\s+/g, " ").trim();
+export function canonicalApiSignature(signature, projectRoot) {
+  const prefix = slash(projectRoot).replace(/\/$/, "") + "/";
+  return normalize(
+    signature.replace(
+      /import\((["'])([^"']+)\1\)/g,
+      (original, quote, module) => {
+        const path = slash(module);
+        return path.startsWith(prefix)
+          ? `import(${quote}./${path.slice(prefix.length)}${quote})`
+          : original;
+      },
+    ),
+  );
+}
 const hash = (text) => createHash("sha256").update(text).digest("hex");
 const privateMember = (node) =>
   node.modifiers?.some((m) =>
@@ -78,7 +92,7 @@ export function analyzeApiTests(projectRoot = root) {
       id,
       kind,
       ...location(node),
-      signature: normalize(signature),
+      signature: canonicalApiSignature(signature, projectRoot),
       paths: new Set([path]),
       placeholder: !!noOp,
       scenarios: new Set(),
