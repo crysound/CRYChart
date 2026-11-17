@@ -37,12 +37,34 @@ jobs:
         run: npm ci
       - name: 检查类型
         run: npm run typecheck
-      - name: 运行单元测试
-        run: npm test
-      - name: 检查 OpenTest 接口兼容性
-        run: npm run test:opentest-contract
+      - name: 运行单元测试和 OpenTest 合同并检查覆盖率
+        run: npm run test:coverage
+      - name: 检查公开 API、字段和常量的功能场景及断言映射
+        run: npm run test:api
       - name: 构建库和示例
         run: npm run build
+      - name: 保存代码覆盖率报告
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-coverage
+          path: |
+            codex_artifact/coverage/
+            !codex_artifact/coverage/tmp/**
+          if-no-files-found: warn
+          retention-days: 14
+      - name: 保存 API 测试映射和执行报告
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-test-map
+          path: |
+            docs/api-test-map.json
+            docs/api-test-map.md
+            docs/api-test-policy.json
+            codex_artifact/api-tests/
+          if-no-files-found: warn
+          retention-days: 14
 
   browser:
     name: CRYChart browser tests

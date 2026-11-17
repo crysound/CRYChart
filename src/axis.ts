@@ -824,11 +824,11 @@ export class Axis {
     return this.stopped;
   }
   setAutoFit(value: boolean) {
-    if(value&&this.scrollStrategy==null)this.scrollStrategy="fitting";
+    if(value&&(this.scrollStrategy==null||this.scrollStrategy===false))this.scrollStrategy="fitting";
     return this.setStopped(!value);
   }
   getAutoFit() {
-    return !this.stopped&&this.scrollStrategy!=null;
+    return !this.stopped&&this.scrollStrategy!=null&&this.scrollStrategy!==false;
   }
   setScrollStrategy(value: any) {
     this.cancelScrollAnimation();
