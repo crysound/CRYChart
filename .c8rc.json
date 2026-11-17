@@ -1,0 +1,14 @@
+{
+  "all": true,
+  "src": ["src"],
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.d.ts"],
+  "exclude-after-remap": true,
+  "reporter": ["text", "html", "lcov", "json", "json-summary"],
+  "reports-dir": "codex_artifact/coverage",
+  "check-coverage": true,
+  "lines": 96,
+  "branches": 87,
+  "functions": 98,
+  "statements": 96
+}

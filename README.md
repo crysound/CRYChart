@@ -57,10 +57,20 @@ The package provides ES modules, CommonJS, a browser script, and TypeScript decl
 npm run typecheck
 npm test
 npm run test:opentest-contract
+npm run test:coverage
+npm run test:api
 npm run build
 npm run test:browser
 npm run test:gallery
 ```
+
+`npm run test:coverage` runs both unit tests and OpenTest API contracts. c8/V8 measures all `src/**/*.ts` except `.d.ts` files. Coverage runs execute source modules through tsx without bundling or tree shaking, so uncalled functions remain measurable. Examples, test infrastructure and UI automation are outside this coverage scope.
+
+CI and `npm run verify` enforce at least 96% line and statement coverage, 87% branch coverage and 98% function coverage, configured in `.c8rc.json`. Thresholds use CI's Node 22/V8 baseline; coverage may differ across Node major versions. Reports are written to `codex_artifact/coverage/`: `index.html`, `lcov.info`, `coverage-final.json` and `coverage-summary.json`. CI uploads the `code-coverage` artifact for 14 days, including generated reports when tests or coverage thresholds fail.
+
+The [public API test inventory](docs/api-test-map.md) and `docs/api-test-map.json` link entrypoints to functional scenarios and assertion expressions. Entries distinguish `mapped`, `missing`, `placeholder` and `type-only`; a mapping does not establish every parameter combination or certify browser behavior.
+
+Run `npm run test:coverage` followed by `npm run test:api`. The API gate checks passing, current-source test results, declarations, scenario references and retained assertions. All non-placeholder callable APIs, public fields and constants require asserted scenarios, including inherited members, factories and constructor-assigned `engine` objects. `publicValues`, `mappedValues` and `unassertedValues` report total, mapped and missing public values; CI requires `unassertedValues` to be zero. New fields, constants and APIs need scenarios before the map can be updated, and updating cannot erase existing value coverage. After intentional API or test changes, run `npm run api:map:update` and review the diff. Placeholder explanations and partial implementation limits are in `docs/api-test-policy.json`. CI uploads the `api-test-map` artifact for 14 days.
 
 Browser tests use an installed, visible Chrome browser. Data and API tests do not replace visual, interaction, or performance tests. Performance results apply only to the recorded data volume, plot area, device pixel ratio, and machine configuration.
 

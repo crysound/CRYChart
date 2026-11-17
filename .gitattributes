@@ -2,3 +2,5 @@
 examples/data/brain-drummyfish.obj -text
 examples/data/synthetic-air-quality.json -text
 examples/data/stereo-spectrum-demo.json -text
+docs/api-test-map.json linguist-generated=true
+docs/api-test-map.md linguist-generated=true

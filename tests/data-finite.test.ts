@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {DataSetXY} from '../src/core/data.js';
 import {getColumnFinite, getColumnOrder} from '../src/data-order.js';
-import {proveExtremaPair} from '../src/line-extrema-pair-proof.js';
+import {proveExtremaPair, getExtremaPairProofWork, acceptsExtremaPair} from '../src/line-extrema-pair-proof.js';
 import {readSourceCertificate} from '../src/core/line-delta-certificate.js';
 
 function oracle(data:DataSetXY,key:string){
@@ -120,4 +120,60 @@ test('extrema admission uses real finite-only Y evidence while retaining X order
     data.appendSamples({y:Float64Array.of(NaN)},{start:16,step:.25});assert.equal(proveExtremaPair(data,'x','y').enabled,false);
     data.clear();data.appendSamples({y:new Float64Array(64).fill(1)},{start:0,step:.25});assert.equal(proveExtremaPair(data,'x','y').enabled,true);
   }finally{data.dispose();}
+});
+
+test('extrema proof reuses unchanged evidence and checks only appended affine runs through retention wrap', () => {
+  const data = make().setMaxSampleCount(8);
+  try {
+    data.appendSamples({y: Float64Array.of(3, 1, 4, 2)}, {start: 0, step: .25});
+    assert.equal(proveExtremaPair(data, 'x', 'y').enabled, true);
+    const raw = data.readBack().data.y!.slice();
+    proveExtremaPair(data, 'x', 'y');
+    assert.equal(getExtremaPairProofWork(data)!.unchangedChecks, 1);
+    assert.equal(getExtremaPairProofWork(data)!.lastRunVisits, 0);
+    for (const start of [1, 2, 3]) {
+      data.appendSamples({y: Float64Array.of(8, 6, 9, 7)}, {start, step: .25});
+      assert.equal(proveExtremaPair(data, 'x', 'y').enabled, true);
+      const work = getExtremaPairProofWork(data)!;
+      assert.equal(work.fullChecks, 1); assert.equal(work.lastRunVisits, 1);
+      assert.equal(work.ownedSourceArrays, 0); assert.equal(work.sourceViewsRetained, false);
+    }
+    assert.equal(getExtremaPairProofWork(data)!.incrementalChecks, 3);
+    assert.equal(data.getSampleCount(), 8); assert.deepEqual([...raw], [3, 1, 4, 2]);
+  } finally { data.dispose(); }
+  assert.equal(getExtremaPairProofWork(data), undefined);
+});
+
+test('changed affine steps and gaps revoke extrema admission until a fresh uniform source is established', () => {
+  for (const [start, step] of [[1, .5], [2, .25]]) {
+    const data = make();
+    try {
+      data.appendSamples({y: Float64Array.of(1, 2, 3, 4)}, {start: 0, step: .25});
+      proveExtremaPair(data, 'x', 'y');
+      data.appendSamples({y: Float64Array.of(5, 6)}, {start, step});
+      assert.equal(proveExtremaPair(data, 'x', 'y').enabled, false);
+      assert.equal(getExtremaPairProofWork(data), undefined);
+      data.clear();
+      data.appendSamples({y: Float64Array.of(1, 2)}, {start: 10, step: .25});
+      assert.equal(proveExtremaPair(data, 'x', 'y').enabled, true);
+      assert.equal(getExtremaPairProofWork(data)!.fullChecks, 1);
+    } finally { data.dispose(); }
+  }
+});
+
+test('extrema proofs are bound to issued identity, revision, epoch and the exact retained window', () => {
+  const data = make();
+  try {
+    data.appendSamples({y: Float64Array.of(1, 2, 3)}, {start: 0, step: .25});
+    const proof = proveExtremaPair(data, 'x', 'y');
+    const source = {identity: data, revision: data.revision, contentEpoch: data.getContentEpoch(), firstSampleIndex: 0, nextSampleIndex: 3, x: data.getColumnRuns('x'), y: data.getColumnRuns('y')};
+    assert.equal(acceptsExtremaPair(proof, source), true);
+    assert.equal(acceptsExtremaPair({...proof}, source), false, 'copying fields must not forge an issued proof');
+    for (const changes of [{identity: {}}, {revision: source.revision + 1}, {contentEpoch: 1}, {firstSampleIndex: 1}, {nextSampleIndex: 4}, {x: source.y}, {y: source.x}]) {
+      assert.equal(acceptsExtremaPair(proof, {...source, ...changes}), false);
+    }
+    data.appendSamples({y: Float64Array.of(NaN)});
+    assert.equal(proveExtremaPair(data, 'x', 'y').enabled, false);
+    assert.equal(getExtremaPairProofWork(data), undefined);
+  } finally { data.dispose(); }
 });

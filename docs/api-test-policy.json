@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "requireAllCallable": true,
+  "requireAllValues": true,
+  "requiredOwners": [
+    "Axis",
+    "TickStyle",
+    "NumericTickStrategy",
+    "TimeTickStrategy",
+    "DateTimeTickStrategy",
+    "Annotation",
+    "PolarAxisRadial",
+    "cryChart()",
+    "Dashboard"
+  ],
+  "requiredApis": ["mutate"],
+  "placeholders": {
+    "Annotation.setEffect": "兼容占位：不绘制注释阴影或其他效果。",
+    "Annotation.setTextFillStyle": "兼容占位：不改变注释文字填充。",
+    "Annotation.setTextFont": "兼容占位：不改变注释文字字体。",
+    "Annotation.setTextRotation": "兼容占位：不改变注释文字旋转。",
+    "Axis.setAnimationDuration": "兼容占位：不设置动画时长；已有滚动动画使用自身策略。",
+    "Axis.setPadding": "兼容占位：不改变轴布局留白。",
+    "Axis.setThickness": "兼容占位：不改变轴描边粗细。",
+    "HeatmapSeries.setMouseInteractions": "兼容占位：该调用不改变热力图交互策略。",
+    "LegendEntryClickBehaviors.doNothing": "有意为空的公开回调：选择无点击动作，不属于待实现功能。",
+    "SpecialtyChart.doubleClickAt": "基类扩展钩子：默认不处理双击，具体图表可覆盖。",
+    "TickStyle.setLabelAlignment": "兼容占位：不改变刻度标签对齐。",
+    "TickStyle.setLabelRotation": "兼容占位：不改变刻度标签旋转。",
+    "TickStyle.setTickPadding": "兼容占位：不改变刻度标签间距。"
+  },
+  "limitations": {
+    "Axis.setInterval": "支持有限且不相等的端点、部分端点、数字重载和反向区间。animated 字段不实现区间插值。",
+    "Axis.setIntervalRestrictions": "二维 linear 和 linear-highPrecision 轴的有限正数常量 intervalMax 会约束区间；回调和其他字段可读回，但不代表对应约束已实现。",
+    "Axis.fit": "支持范围适配和 stopAxisAfter；animate 参数不提供动画插值。",
+    "Axis.setAnimationZoom": "仅支持 undefined/false 的即时更新；动画 easing 显式报错。",
+    "Annotation.setAnimationHighlight": "仅支持静态高亮；true 显式报不支持。",
+    "RangeSeries.setLowFillStyle": "连续段的首个 high >= low 时使用主填充；首个 high < low 时使用 lowFill。分别验证正向段和反向段，不代表段内交叉会自动拆分。",
+    "value:UIElement.effect": "支持设置和读取标志；当前 UIElement 文本绘制不实现该标志对应的阴影等视觉效果。",
+    "UIElement.setEffect": "支持设置和读取 effect 标志；不代表实现文本阴影等视觉效果。",
+    "value:DataSetXY.includesNaN": "NaN 元数据声明，不提供过滤；显式提交的 NaN 样本仍原样保留。"
+  }
+}
