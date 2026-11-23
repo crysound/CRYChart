@@ -43,13 +43,13 @@ npm 包仅包含运行库、类型、中英文许可证、README 和 `docs/npm-u
 
 ## 手动发布
 
-使用具备 `crysound` 组织发布权限的账号在本机登录。以下示例使用当前源码版本 `1.0.2`。先验收该版本的归档，再发布：
+使用具备 `crysound` 组织发布权限的账号在本机登录。以下示例使用当前源码版本 `1.0.3`。先验收该版本的归档，再发布：
 
 ```powershell
 npm login --registry=https://registry.npmjs.org/
 npm whoami --registry=https://registry.npmjs.org/
-npm publish .cache/npm-release/crysound-crychart-1.0.2.tgz --access public --tag latest --registry=https://registry.npmjs.org/
-npm view @crysound/crychart@1.0.2 version dist.integrity --registry=https://registry.npmjs.org/
+npm publish .cache/npm-release/crysound-crychart-1.0.3.tgz --access public --tag latest --registry=https://registry.npmjs.org/
+npm view @crysound/crychart@1.0.3 version dist.integrity --registry=https://registry.npmjs.org/
 ```
 
 按 npm 提示完成本次发布所需的网页认证。发布成功后，对比 registry 的完整性摘要与已验收归档，再从 registry 安装验证。包名与版本一经发布不能复用，内容修正使用新的版本号。

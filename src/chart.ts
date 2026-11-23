@@ -281,7 +281,11 @@ export class ChartXY {
       this.resize();
       this.attachInteractions();
       if (typeof ResizeObserver !== "undefined") {
-        this.observer = new ResizeObserver(() => this.resize());
+        this.observer = new ResizeObserver(() => {
+          this.resize();
+          // Resizing clears the canvases. Restore their pixels before the browser paints.
+          this.renderNow();
+        });
         this.observer.observe(container);
       }
     }

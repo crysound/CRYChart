@@ -122,6 +122,38 @@ try {
   );
   assert.equal(rendered.gapPixel[3], 0, "NaN must create a visible gap");
   evidence.checks.push("real WebGL2 pixels and NaN gap");
+  const resizedPixels = await page.evaluate(async () => {
+    const chart = window.chart, host = document.getElementById("chart");
+    const initialHeight = host.clientHeight, pixels = [];
+    const gl = chart.canvas.getContext("webgl2");
+    // Sample after the chart observes each resize, before the browser paints.
+    const observer = new ResizeObserver(() => {
+      if (host.clientHeight === initialHeight) return;
+      const plot = chart.plot, pixel = new Uint8Array(4);
+      gl.readPixels(
+        Math.round((plot.left + plot.width * 0.2) * chart.dpr),
+        Math.round(chart.canvas.height - (plot.top + plot.height * 0.5) * chart.dpr),
+        1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel,
+      );
+      pixels.push(pixel[0]);
+    });
+    observer.observe(host);
+    try {
+      for (let step = 1; step <= 20; step++) {
+        await new Promise(requestAnimationFrame);
+        window.series.add({ x: 9 + step / 20, y: 5 });
+        host.style.height = `${initialHeight - 3 * step}px`;
+      }
+      await new Promise(requestAnimationFrame);
+      return pixels;
+    } finally {
+      observer.disconnect();
+      host.style.removeProperty("height");
+    }
+  });
+  assert.equal(resizedPixels.length, 20);
+  assert.ok(resizedPixels.every(red => red > 180), `Signal pixels during resize: ${resizedPixels}`);
+  evidence.checks.push("live signal stays visible throughout a continuous resize");
   const cache = await page.evaluate(() => {
     const c = window.chart,
       before = c.getRenderStats().uploads;
