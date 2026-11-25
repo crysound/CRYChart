@@ -40540,7 +40540,7 @@
       "paths": [
         "crychart:version"
       ],
-      "signature": "b9217d5f1e103a3c54585b300c77690737fc88391f67fbe928865c3ad7ce42d6",
+      "signature": "3d657c1e8fbc9bf3f5db477406388f69eae1d872385b9cf251c25c3b8fd48732",
       "status": "mapped",
       "scenarios": [
         "tests/gallery-catalog.test.ts::gallery identity follows the native package and points to its local entry"

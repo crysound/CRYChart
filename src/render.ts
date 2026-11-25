@@ -151,6 +151,8 @@ type BufferEntry = {
   dashBuffer?: WebGLBuffer;
   dashKey?: string;
 };
+const canvasStrokePointLimit = 8192;
+
 export class DataRenderer {
   readonly backend: "webgl2" | "canvas2d";
   readonly gl: WebGL2RenderingContext | null;
@@ -718,6 +720,10 @@ export class DataRenderer {
       ctx.setLineDash(p.mode === "line" ? [...(p.dashPattern ?? [])] : []);
       // Keep the original fill batching; only move the outside stroke pass below all fills.
       const first=p.drawFirst??0,end=first+(p.drawCount??p.count);
+      // Large native Canvas2D paths can fail to rasterize. Separate opaque solid
+      // strokes from dashed and translucent ones, which depend on one stroke.
+      const batchSolidLine = p.mode === "line" && !p.colors && !p.dashPattern?.length &&
+        a === 1 && Number.isFinite(p.thickness) && p.thickness > 0 && end - first > canvasStrokePointLimit;
           if(pointOutline)for(let i=first;i<end;i++){
             const x=rect.left+((p.positions[2*i]!+p.origin.x-p.domain.x.start)/(p.domain.x.end-p.domain.x.start))*rect.width;
             const y=rect.top+rect.height-((p.positions[2*i+1]!+p.origin.y-p.domain.y.start)/(p.domain.y.end-p.domain.y.start))*rect.height;
@@ -730,6 +736,7 @@ export class DataRenderer {
           }
       ctx.beginPath();
       let pen = false;
+      let pathPoints = 0;
       let previousX = 0,
         previousY = 0,
         arcLength = 0;
@@ -787,10 +794,29 @@ export class DataRenderer {
           previousX = x;
           previousY = y;
           pen = true;
-        } else if (pen) ctx.lineTo(x, y);
-        else {
-          ctx.moveTo(x, y);
-          pen = true;
+        } else {
+          if (batchSolidLine && pathPoints === canvasStrokePointLimit - 1) {
+            // Split within a segment so both adjacent vertices keep their joins.
+            // With the pen up, flush without bridging the gap.
+            const midX = previousX / 2 + x / 2;
+            const midY = previousY / 2 + y / 2;
+            if (pen) ctx.lineTo(midX, midY);
+            ctx.stroke();
+            this.stats.drawCalls++;
+            ctx.beginPath();
+            if (pen) ctx.moveTo(midX, midY);
+            pathPoints = pen ? 1 : 0;
+          }
+          if (pen) ctx.lineTo(x, y);
+          else {
+            ctx.moveTo(x, y);
+            pen = true;
+          }
+          if (batchSolidLine) {
+            previousX = x;
+            previousY = y;
+            pathPoints++;
+          }
         }
       }
       if(!p.colors){if(p.mode === "points")ctx.fill();else ctx.stroke();}
