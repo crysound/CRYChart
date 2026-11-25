@@ -154,6 +154,61 @@ try {
   assert.equal(resizedPixels.length, 20);
   assert.ok(resizedPixels.every(red => red > 180), `Signal pixels during resize: ${resizedPixels}`);
   evidence.checks.push("live signal stays visible throughout a continuous resize");
+  const denseCanvasStats = await page.evaluate(() => {
+    const { ChartXY, SolidLine, SolidFill, ColorRGBA } = window.lib;
+    const container = document.createElement("div");
+    container.id = "dense-canvas-line";
+    container.style.cssText = "position:fixed;top:10px;left:10px;width:330px;height:160px;z-index:100";
+    document.body.append(container);
+    const chart = new ChartXY({ container, renderer: "canvas2d", legend: { visible: false } });
+    window.denseCanvasChart = chart;
+    chart.getDefaultAxisX().setInterval({ start: 0, end: 10_000, stopAxisAfter: true });
+    chart.getDefaultAxisY().setInterval({ start: -0.16, end: 0.16, stopAxisAfter: true });
+    const series = chart.addLineSeries().setStrokeStyle(new SolidLine({
+      thickness: 1,
+      fillStyle: new SolidFill({ color: ColorRGBA(255, 0, 220) }),
+    }));
+    const count = 1_920_000;
+    series.appendSamples({
+      x: Float64Array.from({ length: count }, (_, index) => index / 192),
+      y: Float32Array.from({ length: count }, (_, index) => 0.13 * Math.sin(index * Math.PI / 96)),
+    });
+    chart.renderNow();
+    return chart.getRenderStats();
+  });
+  try {
+    const screenshot = await page.locator("#dense-canvas-line").screenshot();
+    const bands = await page.evaluate(async (base64) => {
+      const blob = await (await fetch("data:image/png;base64," + base64)).blob();
+      const bitmap = await createImageBitmap(blob);
+      const { width, height } = bitmap;
+      const ctx = new OffscreenCanvas(width, height).getContext("2d");
+      ctx.drawImage(bitmap, 0, 0);
+      bitmap.close();
+      const { data } = ctx.getImageData(0, 0, width, height);
+      return [0, 0, 0].map((_, band) => {
+        const left = Math.round(width * (0.28 + band * 0.2));
+        const right = Math.round(width * (0.38 + band * 0.2));
+        let ink = 0;
+        for (let y = 0; y < height; y++) for (let x = left; x < right; x++) {
+          const i = (y * width + x) * 4;
+          if (data[i] > 180 && data[i + 1] < 80 && data[i + 2] > 140) ink++;
+        }
+        return ink;
+      });
+    }, screenshot.toString("base64"));
+    assert.equal(denseCanvasStats.samples, 1_920_000);
+    assert.equal(denseCanvasStats.vertices, 1_920_000);
+    assert.ok(bands.every(ink => ink > 50), `Dense Canvas2D signal pixels: ${bands}`);
+    assert.ok(denseCanvasStats.drawCalls > 1, "Dense Canvas2D lines must bound native path sizes");
+    evidence.checks.push("a 1.92-million-sample Canvas2D waveform paints across its viewport");
+  } finally {
+    await page.evaluate(() => {
+      window.denseCanvasChart.dispose();
+      delete window.denseCanvasChart;
+      document.getElementById("dense-canvas-line").remove();
+    });
+  }
   const cache = await page.evaluate(() => {
     const c = window.chart,
       before = c.getRenderStats().uploads;
