@@ -843,7 +843,9 @@ export class ChartXY {
     // Empty/title-less top axis solely as an application coordinate surface.
     const layoutAxesX=axesX.filter(axis=>this.hasAxisLaneContent(axis));
     const layoutAxesY=axesY.filter(axis=>this.hasAxisLaneContent(axis));
-    this.axisCanvasLayout=this.kind==='xy'?measureAxisCanvasLayout(this.overlayContext??undefined,layoutAxesX,layoutAxesY,this.theme,this.resolveTextFont,!!this.cssTextFonts):undefined;
+    // Compact content-measured axis lanes apply to all XY charts;
+    // htmlTextRenderer (CssTextFonts) only controls CSS font resolution.
+    this.axisCanvasLayout=this.kind==='xy'?measureAxisCanvasLayout(this.overlayContext??undefined,layoutAxesX,layoutAxesY,this.theme,this.resolveTextFont):undefined;
     const axisExtra=this.axisCanvasLayout?.extraMargins??{left:0,right:0,top:0,bottom:0};
     const legendMargin=this.overlayContext?this.legend.getLayout(this.overlayContext,this.legendArea()).margin:{left:0,right:0,top:0,bottom:0};
     if(this.kind==='polar'){
@@ -2594,6 +2596,7 @@ export class Chart3D extends ChartXY {
     this.coordsAxis.z=this.axesZ[0];
     if (this.renderer?.gl && this.canvas)
       this.gpu3d = new DataRenderer3D(this.renderer.gl, this.canvas);
+    this.layout();
     this.invalidate();
   }
   /** Project full XYZ axis coordinates with the existing original GPU camera

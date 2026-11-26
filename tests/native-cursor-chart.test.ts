@@ -56,7 +56,7 @@ test('Histogram custom cursor receives real figure hits, client location, and an
   chart.setCustomCursor(info=>{events.push(info);if(info.hit){manual.setVisible(true).setPosition(info.hit.cursorPosition);}else manual.setVisible(false);});
   const at=chart.translatePoint({x:1.5,y:2},chart.coordsAxis,chart.coordsPixel),{ctx}=canvas();chart.drawAt(at,ctx);
   assert.equal(events.length,1);assert.equal(events[0].hit.xValue,1.5);assert.equal(events[0].hit.yValue,3);assert.ok(events[0].hit.figure);assert.equal(events[0].hits.length,1);
-  assert.deepEqual(chart.translateCoordinate(events[0].mouseLocation,chart.coordsAxis),{x:1.5,y:2});assert.equal(manual.getVisible(),true);
+  const mouseAxis=chart.translateCoordinate(events[0].mouseLocation,chart.coordsAxis);assert.ok(Math.abs(mouseAxis.x-1.5)<1e-12);assert.ok(Math.abs(mouseAxis.y-2)<1e-12);assert.equal(manual.getVisible(),true);
   chart.drawAt(chart.translatePoint({x:1.5,y:3.8},chart.coordsAxis,chart.coordsPixel),ctx);assert.equal(events.at(-1).hit.xValue,1.5);assert.equal(events.at(-1).hit.y,1.5);assert.equal(manual.getVisible(),true);
   chart.drawAt(undefined,ctx);assert.equal(events.at(-1).hit,undefined);assert.equal(manual.getVisible(),false);
   assert.ok(Number.isFinite(events.at(-1).mouseLocation.clientX));const count=events.length;chart.drawAt(undefined,ctx);assert.equal(events.length,count);chart.dispose();

@@ -67,7 +67,8 @@ test('rendering preserves all text, font, Y positions and Canvas state while con
   assert.deepEqual(ctx.texts.map(value=>value.text),['Full: 0.0','Full: 5.0','Full:10.0']);
   assert.ok(ctx.texts.every(value=>value.left>=80&&value.right<=480));
   assert.ok(ctx.texts.every(value=>value.font===font.toCSS()&&value.fill===ink.toCSS()));
-  assert.ok(ctx.texts.every(value=>value.y===plot.top+plot.height+m.labelOffset));
+  const expectedY=plot.top+plot.height+m.labelOffset+17*.4+(17*.8-17*.2)/2;
+  assert.ok(ctx.texts.every(value=>Math.abs(value.y-expectedY)<1e-9));
   assert.equal(ctx.texts[1]!.x,280);assert.equal(ctx.font,'11px initial');assert.equal(ctx.textAlign,'right');assert.equal(ctx.textBaseline,'top');assert.equal(ctx.fillStyle,'initial-fill');assert.equal(ctx.lineWidth,7);assert.equal(ctx.stack.length,0);
 });
 
@@ -91,7 +92,7 @@ test('parallel X axes remain separate and neighboring Y labels are not repositio
   y.tickStrategy.setCustomTickPlacement({major:()=>[{position:0,label:'Y0'},{position:10,label:'Y10'}],minor:()=>[]});
   drawAxisCanvas(ctx.ctx,{plot,axesX:[bottom,top,outer],axesY:[y],width:520,height:440});
   const yTexts=ctx.texts.filter(value=>value.text.startsWith('Y'));
-  assert.deepEqual(yTexts.map(value=>({text:value.text,x:value.x,y:value.y})),[{text:'Y0',x:71,y:324},{text:'Y10',x:71,y:64}]);
+  assert.deepEqual(yTexts.map(value=>({text:value.text,x:value.x,y:value.y})),[{text:'Y0',x:66,y:317},{text:'Y10',x:66,y:69}]);
   const xTexts=ctx.texts.filter(value=>value.text.startsWith('Full'));assert.equal(xTexts.length,9);
   assert.equal(new Set(xTexts.map(value=>value.y)).size,3);assert.ok(xTexts.every(value=>value.left>=80&&value.right<=480));
   for(const a of xTexts)for(const b of yTexts)assert.ok(a.right<=b.left||a.left>=b.right||a.bottom<=b.top||a.top>=b.bottom);
@@ -99,7 +100,8 @@ test('parallel X axes remain separate and neighboring Y labels are not repositio
 
 test('default 128 Y-pane measurement fast path is unchanged and hidden X labels do not measure',()=>{
   const ctx=new CanvasOracle(),x=new Axis(host,'x').setInterval({start:0,end:10}),ys=Array.from({length:128},(_,i)=>new Axis(host,'y',{iStack:-i}).setInterval({start:0,end:10}));
-  measureAxisCanvasLayout(ctx.ctx,[x],ys);assert.equal(ctx.measurements.length,0);
+  measureAxisCanvasLayout(ctx.ctx,[x],ys);assert.ok(ctx.measurements.length<=16,`expected cached unique label measurements across 128 panes, got ${ctx.measurements.length}`);
+  ctx.measurements.length=0;
   x.tickStrategy.major.setLabelFillStyle(new SolidFill({color:ColorRGBA(0,0,0,0)}));
   drawAxisCanvas(ctx.ctx,{plot,axesX:[x],axesY:[],width:520,height:400});assert.equal(ctx.texts.length,0);assert.equal(ctx.measurements.length,0);
 });

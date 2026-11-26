@@ -209,6 +209,33 @@ try {
       document.getElementById("dense-canvas-line").remove();
     });
   }
+  const axisSpacingParity = await page.evaluate(() => {
+    const { ChartXY, FontSettings, htmlTextRenderer } = window.lib;
+    const mount = (id, textRenderer) => {
+      const container = document.createElement("div");
+      container.id = id;
+      container.style.cssText = "position:fixed;top:10px;left:10px;width:480px;height:280px;z-index:100;font-family:sans-serif;font-size:12px";
+      document.body.append(container);
+      const chart = new ChartXY({ container, renderer: "canvas2d", legend: { visible: false }, textRenderer })
+        .setTitle("")
+        .setPadding({ left: 0, right: 4, top: 4, bottom: 0 });
+      chart.getDefaultAxisX().setInterval({ start: 0, end: 10, stopAxisAfter: true }).setTitle("Time(s)").setTitleFont(new FontSettings({ size: 14 })).setMarginAfterTicks(7);
+      chart.getDefaultAxisY().setInterval({ start: 0, end: 10, stopAxisAfter: true }).setTitle("Acquired Background Waveform(FS)").setTitleFont(new FontSettings({ size: 14 })).setMarginAfterTicks(7);
+      chart.renderNow();
+      const plot = { ...chart.plot };
+      chart.dispose();
+      container.remove();
+      return plot;
+    };
+    return {
+      plain: mount("axis-spacing-plain", null),
+      html: mount("axis-spacing-html", htmlTextRenderer),
+    };
+  });
+  assert.ok(axisSpacingParity.plain.left < 68, `Non-HTML Canvas2D left margin should stay compact (< 68px vs legacy 81px), got ${axisSpacingParity.plain.left}`);
+  assert.ok(Math.abs(axisSpacingParity.plain.left - axisSpacingParity.html.left) <= 2, `Non-HTML and HTML left margins diverged: ${JSON.stringify(axisSpacingParity)}`);
+  assert.ok(Math.abs(axisSpacingParity.plain.height - axisSpacingParity.html.height) <= 2, `Non-HTML and HTML plot heights diverged: ${JSON.stringify(axisSpacingParity)}`);
+  evidence.checks.push("non-HTML and HTML Canvas2D XY charts share compact axis margins");
   const cache = await page.evaluate(() => {
     const c = window.chart,
       before = c.getRenderStats().uploads;

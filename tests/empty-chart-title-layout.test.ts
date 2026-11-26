@@ -27,11 +27,11 @@ test('empty chart title and empty opposite coordinate-only X preserve source axe
 test('visible chart titles and numeric/top-axis titles keep their independent occupied lanes and restore after clearing',()=>{
  const c=chart();
  try{
-  assert.equal(top(c),4);c.setTitle('Actual title');assert.equal(top(c),81,'52px title slot+25px margin+4px source padding');
+  assert.equal(top(c),4);c.setTitle('Actual title');assert.equal(top(c),63,'34px compact title slot (18+16)+25px margin+4px source padding');
   c.setTitleFillStyle(emptyFill);assert.equal(top(c),4,'Invisible title ink reserves no slot');
   c.setTitle('');const xTop=c.addAxisX({opposite:true}).setTickStrategy(AxisTickStrategies.Empty).setTitle('Top axis');
-  assert.ok(top(c)>=48,'Empty ticks do not hide an actual axis title');
-  xTop.setTitle('');assert.equal(top(c),4);xTop.setTickStrategy(AxisTickStrategies.Numeric);assert.ok(top(c)>=48);
+  assert.ok(top(c)>=24,'Empty ticks do not hide an actual axis title');
+  xTop.setTitle('');assert.equal(top(c),4);xTop.setTickStrategy(AxisTickStrategies.Numeric);assert.ok(top(c)>=30);
   xTop.setTickStrategy(AxisTickStrategies.Empty);assert.equal(top(c),4);
  }finally{c.dispose();}
 });
@@ -41,8 +41,8 @@ test('Empty opposite axes with live CustomTicks keep the needed lane until the a
  try{
   const xTop=c.addAxisX({opposite:true}).setTickStrategy(AxisTickStrategies.Empty).setTitle('');
   const tick=xTop.addCustomTick().setValue(5).setTextFormatter(()=> 'Month');
-  assert.ok(top(c)>=48,'Explicit CustomTicks remain a painted axis decoration even with Empty automatic ticks');
-  tick.setVisible(false);assert.equal(top(c),4);tick.setVisible(true);assert.ok(top(c)>=48);
+  assert.ok(top(c)>=30,'Explicit CustomTicks remain a painted axis decoration even with Empty automatic ticks');
+  tick.setVisible(false);assert.equal(top(c),4);tick.setVisible(true);assert.ok(top(c)>=30);
   tick.dispose();assert.equal(top(c),4);
  }finally{c.dispose();}
 });

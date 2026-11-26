@@ -3,7 +3,7 @@
 在应用目录安装固定版本：
 
 ```powershell
-pnpm add --save-exact @crysound/crychart@1.0.4 --registry=https://registry.npmjs.org/
+pnpm add --save-exact @crysound/crychart@1.0.5 --registry=https://registry.npmjs.org/
 ```
 
 ES 模块和 TypeScript 使用相同入口：

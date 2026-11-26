@@ -45,18 +45,22 @@ test('temporary export disable removes hover ink and restoring settings restores
 });
 
 test('hover fill follows each physical side, parallel lane and stacked span without entering the plot',()=>{
-  const left=axis('y'),parallel=axis('y'),right=axis('y',{opposite:true}),bottom=axis('x'),top=axis('x',{opposite:true});
+  const left=axis('y').setTitle('L'),parallel=axis('y').setTitle('P'),right=axis('y',{opposite:true}).setTitle('R'),bottom=axis('x').setTitle('B'),top=axis('x',{opposite:true}).setTitle('T');
   parallel.setScreenRange({start:.25,end:.75},1);parallel.iParallel=1;
   right.setScreenRange({start:0,end:.5});top.setScreenRange({start:.5,end:1});
   for(const a of [left,parallel,right,bottom,top])a.setPointerHover(true);
-  const canvas=draw([left,parallel,right,bottom,top]);
+  const canvas=new Canvas(),axes=[left,parallel,right,bottom,top];
+  const layout=measureAxisCanvasLayout(canvas.context,[bottom,top],[left,parallel,right]);
+  drawAxisCanvas(canvas.context,{plot,axesX:[bottom,top],axesY:[left,parallel,right],layout});
   const rects=canvas.paints.map(({x,y,width,height})=>({x,y,width,height}));
+  const lm=layout.axes.get(left)!,pm=layout.axes.get(parallel)!,rm=layout.axes.get(right)!,bm=layout.axes.get(bottom)!,tm=layout.axes.get(top)!;
+  assert.ok(lm.laneSize>0&&pm.laneSize>0&&rm.laneSize>0&&bm.laneSize>0&&tm.laneSize>0);
   for(const r of [
-    {x:126,y:120,width:54,height:300},
-    {x:72,y:195,width:54,height:150},
-    {x:580,y:270,width:54,height:150},
-    {x:180,y:420,width:400,height:44},
-    {x:380,y:76,width:200,height:44}
+    {x:plot.left-lm.laneSize,y:120,width:lm.laneSize,height:300},
+    {x:plot.left-pm.laneOffset-pm.laneSize,y:195,width:pm.laneSize,height:150},
+    {x:plot.left+plot.width,y:270,width:rm.laneSize,height:150},
+    {x:180,y:420,width:400,height:bm.laneSize},
+    {x:380,y:plot.top-tm.laneSize,width:200,height:tm.laneSize}
   ])assert.ok(rects.some(actual=>JSON.stringify(actual)===JSON.stringify(r)),JSON.stringify(r));
   assert.equal(rects.length,5);
   for(const r of rects)assert.ok(r.x+r.width<=plot.left||r.x>=plot.left+plot.width||r.y+r.height<=plot.top||r.y>=plot.top+plot.height);
