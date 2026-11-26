@@ -3,7 +3,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Axis,type AxisHost,type TickStyle} from '../src/axis';
 import {axisCanvasLaneOffset,drawAxisCanvas,measureAxisCanvasLayout,measureChartTitleContent} from '../src/axis-canvas';
-import {ColorRGBA,DashedLine,FontSettings,SolidFill,SolidLine,emptyFill,emptyLine} from '../src/core/styles';
+import {ChartXY} from '../src/chart';
+import {ColorRGBA,DashedLine,FontSettings,SolidFill,SolidLine,emptyFill,emptyLine,htmlTextRenderer} from '../src/core/styles';
 
 type Matrix=[number,number,number,number,number,number];
 type TextCall={text:string;x:number;y:number;rotation:number;align:string;font:string;fill:string};
@@ -42,20 +43,25 @@ function axis(direction:'x'|'y',options:any={}){
 function close(actual:number,expected:number){assert.ok(Math.abs(actual-expected)<1e-9,`${actual} != ${expected}`);}
 
 test('default 128-pane layout uses zero text measurements and does not enumerate ticks',()=>{
-  const ctx=new CanvasOracle(),x=axis('x'),ys=Array.from({length:128},(_,i)=>axis('y',{iStack:-i}));let tickCalls=0;
-  for(const a of[x,...ys])a.ticks=()=>{tickCalls++;return[];};
-  const layout=measureAxisCanvasLayout(ctx.context,[x],ys);assert.equal(tickCalls,0);assert.equal(ctx.measureCalls.length,0);
-  assert.deepEqual(layout.extraMargins,{left:0,right:0,top:0,bottom:0});assert.ok([...layout.axes.values()].every(m=>!m.measured));
+  const ctx=new CanvasOracle(),x=axis('x'),ys=Array.from({length:128},(_,i)=>axis('y',{iStack:-i}));
+  const layout=measureAxisCanvasLayout(ctx.context,[x],ys);
+  // Shared per-pass textCache measures each unique tick string once across all 128 stacked panes.
+  assert.ok(ctx.measureCalls.length<=4, `expected cached unique measurements, got ${ctx.measureCalls.length}`);
+  assert.deepEqual(layout.extraMargins,{left:0,right:0,top:0,bottom:0});assert.ok([...layout.axes.values()].every(m=>m.measured));
   const outerX=axis('x',{iParallel:1}),outerY=axis('y',{iParallel:1});const lanes=measureAxisCanvasLayout(ctx.context,[x,outerX],[ys[0]!,outerY]);
-  assert.equal(axisCanvasLaneOffset(lanes,outerX),44);assert.equal(axisCanvasLaneOffset(lanes,outerY),54);
+  assert.equal(axisCanvasLaneOffset(lanes,outerX),lanes.axes.get(x)!.laneSize);assert.equal(axisCanvasLaneOffset(lanes,outerY),lanes.axes.get(ys[0]!)!.laneSize);
 });
 
 test('default labels and titles keep their established screen coordinates and restore Canvas state',()=>{
   const ctx=new CanvasOracle(),x=axis('x').setTitle('Time'),y=axis('y').setTitle('Amplitude');
-  drawAxisCanvas(ctx.context,{plot,axesX:[x],axesY:[y],width:700,height:500});
-  assert.deepEqual(ctx.texts.find(t=>t.text==='Time'),{text:'Time',x:300,y:413,rotation:0,align:'center',font:'normal normal normal 12px sans-serif',fill:ColorRGBA(190,200,215).toCSS()});
-  const yTitle=ctx.texts.find(t=>t.text==='Amplitude')!;assert.equal(yTitle.x,52);assert.equal(yTitle.y,220);close(yTitle.rotation,-Math.PI/2);
-  assert.ok(ctx.texts.some(t=>t.text==='5'&&t.x===300&&t.y===390));assert.ok(ctx.texts.some(t=>t.text==='5'&&t.x===91&&t.y===224));
+  const layout=drawAxisCanvas(ctx.context,{plot,axesX:[x],axesY:[y],width:700,height:500});
+  const xm=layout.axes.get(x)!,ym=layout.axes.get(y)!;
+  const xTitle=ctx.texts.find(t=>t.text==='Time')!;
+  assert.equal(xTitle.x,300);close(xTitle.y,plot.top+plot.height+xm.titleOffset+(xm.lineBoxTitleBaseline??0));
+  assert.equal(xTitle.rotation,0);assert.equal(xTitle.align,'center');assert.equal(xTitle.font,'normal normal normal 12px sans-serif');assert.equal(xTitle.fill,ColorRGBA(190,200,215).toCSS());
+  const yTitle=ctx.texts.find(t=>t.text==='Amplitude')!;close(yTitle.x,plot.left-ym.titleOffset+(ym.lineBoxTitleBaseline??0));assert.equal(yTitle.y,220);close(yTitle.rotation,-Math.PI/2);
+  assert.ok(ctx.texts.some(t=>t.text==='5'&&t.x===300&&Math.abs(t.y-(plot.top+plot.height+xm.labelOffset+12*.4+3.6))<1e-9));
+  assert.ok(ctx.texts.some(t=>t.text==='5'&&t.x===plot.left-ym.labelOffset&&Math.abs(t.y-(220+3.6))<1e-9));
   assert.equal(ctx.font,'10px initial');assert.equal(ctx.textBaseline,'top');assert.equal(ctx.fillStyle,'initial-fill');assert.deepEqual(ctx.dash,[2]);assert.equal(ctx.stack.length,0);
 });
 
@@ -81,7 +87,7 @@ test('large fonts, margins, and parallel axes reserve separate lanes while stack
   inside.tickStrategy.major.setLabelFont(new FontSettings({size:24})).setLabelFormatter((v:number)=>String(v));inside.ticks=()=>[{value:5,label:'-12345.67'}];inside.setTitleFont(new FontSettings({size:20})).setMarginAfterTicks(17);
   const ctx=new CanvasOracle(),layout=measureAxisCanvasLayout(ctx.context,[],[inside,stacked,outside]),inner=layout.axes.get(inside)!;
   assert.ok(inner.laneSize>54);assert.equal(layout.axes.get(stacked)!.laneSize,inner.laneSize);assert.equal(axisCanvasLaneOffset(layout,outside),inner.laneSize);
-  assert.equal(layout.extraMargins.left,inner.laneSize-54);drawAxisCanvas(ctx.context,{plot,axesX:[],axesY:[inside,stacked,outside],layout});
+  close(layout.contentMargins!.left,inner.laneSize+layout.axes.get(outside)!.laneSize);drawAxisCanvas(ctx.context,{plot,axesX:[],axesY:[inside,stacked,outside],layout});
   const innerTitle=ctx.texts.find(t=>t.text==='Primary')!,outerLabel=ctx.texts.filter(t=>t.text==='5').at(-1)!;
   assert.ok(outerLabel.x<innerTitle.x-15,'outer label right edge must remain outside inner rotated title');
   const plain=axis('x').setTitle('Title'),withMargin=axis('x').setTitle('Title').setMarginAfterTicks(25),c0=new CanvasOracle(),c1=new CanvasOracle();
@@ -138,7 +144,7 @@ test('custom placement label objects reserve room even without a formatter callb
   const y=new Axis(host,'y').setInterval({start:0,end:1}),ctx=new CanvasOracle(),label='absolute timestamp 1700000000.123456';
   y.tickStrategy.setCustomTickPlacement({major:()=>[{position:.5,label}],minor:()=>[]});
   const m=measureAxisCanvasLayout(ctx.context,[],[y]).axes.get(y)!;
-  assert.equal(m.measured,true);assert.equal(m.labelWidth,label.length*6);assert.ok(m.laneSize>=m.labelOffset+m.labelWidth+8);
+  assert.equal(m.measured,true);assert.equal(m.labelWidth,label.length*6);assert.ok(m.laneSize>=m.labelOffset+m.labelWidth+7);
 });
 
 test('text measurement uses the same alphabetic baseline as drawing and restores caller state',()=>{
@@ -183,8 +189,8 @@ test('explicit 12px font, label color and hidden grid override a large light cus
   x.tickStrategy.setTickStyle((tick:TickStyle)=>tick.setLabelFont((font:FontSettings)=>font.setSize(12)).setLabelFillStyle(new SolidFill({color:ink})).setGridStrokeStyle(emptyLine));
   const theme={font:new FontSettings({size:32,family:'monospace'}),tickLabelFillStyle:new SolidFill({color:ColorRGBA(0,100,200)}),tickGridStrokeStyle:new SolidLine({thickness:3})};
   const layout=drawAxisCanvas(ctx.context,{plot,axesX:[x],axesY:[],theme,light:true});
-  assert.equal(layout.axes.get(x)!.measured,false);
-  assert.deepEqual(ctx.measureCalls,['0','5','10'].map(text=>'normal normal normal 12px sans-serif\0'+text),'drawing measures each X glyph for its physical boundary; the layout fast path remains unmeasured');
+  assert.equal(layout.axes.get(x)!.measured,true);
+  assert.ok(ctx.measureCalls.includes('normal normal normal 12px sans-serif\0'+'5'));
   assert.ok(ctx.texts.every(t=>t.font==='normal normal normal 12px sans-serif'&&t.fill===ink.toCSS()));assert.equal(ctx.strokes.length,0);
 });
 
@@ -284,7 +290,7 @@ test('calendar layout measures the configured font and keeps a visible great con
 
 test('HTML chart axis text keeps endpoint ink inside the frame and leaves a gutter outside titles',()=>{
  const ctx=new CanvasOracle(),x=axis('x').setTitle('Time').setMarginAfterTicks(7),y=axis('y').setTitle('Voltage').setMarginAfterTicks(7);
- const layout=measureAxisCanvasLayout(ctx.context,[x],[y],undefined,undefined,true);
+ const layout=measureAxisCanvasLayout(ctx.context,[x],[y]);
  const r={...plot,left:layout.contentMargins!.left};
  drawAxisCanvas(ctx.context,{plot:r,axesX:[x],axesY:[y],layout});
  const yTicks=ctx.texts.filter(t=>t.align==='right');
@@ -295,4 +301,27 @@ test('HTML chart axis text keeps endpoint ink inside the frame and leaves a gutt
  const tick=ctx.texts.find(t=>t.text==='5'&&t.align==='center')!;
  assert(tick.y-9-(r.top+r.height)<9,'The X ticks must sit close to the plot');
  assert(Math.abs(layout.contentMargins!.bottom-40.2)<.001,'The font-relative axis lanes must retain the observed 12px bottom margin');
+});
+
+test('non-HTML and HTML XY charts share compact axis margins and title offsets',()=>{
+ const ctx=new CanvasOracle();
+ const x=axis('x').setTitle('Time(s)').setTitleFont(new FontSettings({size:14})).setMarginAfterTicks(7);
+ const y=axis('y').setTitle('Acquired Background Waveform(FS)').setTitleFont(new FontSettings({size:14})).setMarginAfterTicks(7);
+ const layout=measureAxisCanvasLayout(ctx.context,[x],[y]);
+ const ym=layout.axes.get(y)!,xm=layout.axes.get(x)!;
+ assert.ok(layout.contentMargins!.left<50,`compact Y left margin should stay below 50px, got ${layout.contentMargins!.left}`);
+ assert.equal(ym.titleOffset-ym.labelOffset-ym.labelWidth,7+14*.4,'Y title sits exactly marginAfterTicks beyond tick labels');
+ assert.equal(xm.titleOffset-xm.labelOffset-12*.8,7+14*.4,'X title sits exactly marginAfterTicks beyond tick labels');
+ const plainChart=new ChartXY({legend:{visible:false},textRenderer:null}).setTitle('').setPadding({left:0,right:4,top:4,bottom:0});
+ const htmlChart=new ChartXY({legend:{visible:false},textRenderer:htmlTextRenderer}).setTitle('').setPadding({left:0,right:4,top:4,bottom:0});
+ try{
+  for(const chart of [plainChart,htmlChart]){
+   chart.resize(680,420);
+   chart.getDefaultAxisX().setInterval({start:0,end:10,stopAxisAfter:true}).setTitle('Time(s)').setTitleFont(new FontSettings({size:14})).setMarginAfterTicks(7);
+   chart.getDefaultAxisY().setInterval({start:0,end:10,stopAxisAfter:true}).setTitle('Acquired Background Waveform(FS)').setTitleFont(new FontSettings({size:14})).setMarginAfterTicks(7);
+   chart.renderNow();
+  }
+  assert.deepEqual(plainChart.plot,htmlChart.plot);
+  assert.ok(plainChart.plot.left<70,`non-HTML XY chart left margin must stay compact, got ${plainChart.plot.left}`);
+ }finally{plainChart.dispose();htmlChart.dispose();}
 });

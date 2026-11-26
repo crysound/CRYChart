@@ -1,7 +1,6 @@
 import type {Axis,NumericTickStrategy,TimeTickStrategy,TickStyle} from './axis';
 import type {Rect} from './contracts';
 import {ColorRGBA,type Color,type FillStyle,type FontSettings,type LineStyle} from './core/styles';
-import {formatNumeric} from './formatting-functions.js';
 
 export interface AxisCanvasMetrics {
   measured:boolean;
@@ -51,10 +50,9 @@ export interface AxisCanvasTheme {
 }
 const color=(fill:any,fallback:Color)=>fill?.kind==='empty'?ColorRGBA(0,0,0,0):fill?.getColor?.()??fallback;
 const validFont=(font:FontSettings)=>font.toCSS?.()??`${font.getSize()}px sans-serif`;
-const isDefaultFont=(font:FontSettings)=>font.getSize()===12&&font.family==='sans-serif'&&font.weight==='normal'&&font.style==='normal'&&font.variant==='normal';
 type MeasuredText={width:number;ascent:number;descent:number;baseline:number};
-// The HTML text mode uses a compact line box. Its typographic baseline is
-// relative to the font's box, not the particular glyphs in each label.
+// The compact axis layout uses a font-relative line box whose typographic
+// baseline depends on the font's box rather than individual glyphs.
 const lineBoxHeight=(font:FontSettings)=>font.getSize()*.8;
 function lineBoxBaseline(metrics:TextMetrics|undefined,font:FontSettings){
   const size=font.getSize();
@@ -64,7 +62,7 @@ function textMetrics(ctx:CanvasRenderingContext2D|undefined,text:string,font:Fon
   const key=validFont(font)+'\0'+text,cached=cache?.get(key);if(cached)return cached;
   const previous=ctx?.font,previousBaseline=ctx?.textBaseline;if(ctx){ctx.font=validFont(font);ctx.textBaseline='alphabetic';}
   let measured:TextMetrics|undefined;
-  try{measured=ctx?.measureText(text);}finally{if(ctx){if(previous!==undefined)ctx.font=previous;if(previousBaseline!==undefined)ctx.textBaseline=previousBaseline;}}
+  try{measured=ctx?.measureText?.(text);}finally{if(ctx){if(previous!==undefined)ctx.font=previous;if(previousBaseline!==undefined)ctx.textBaseline=previousBaseline;}}
   const result={width:measured?.width??text.length*font.getSize()*.6,ascent:measured?.actualBoundingBoxAscent??font.getSize()*.75,descent:measured?.actualBoundingBoxDescent??font.getSize()*.25,baseline:lineBoxBaseline(measured,font)};cache?.set(key,result);return result;
 }
 /** Content occupied by a one-line title, measured independently of axis labels.
@@ -109,12 +107,15 @@ function measuredTickLayout(axis:Axis,ctx:CanvasRenderingContext2D|undefined,axi
     return axis.direction==='x'?measured.width:measured.ascent+measured.descent;
   });
 }
-function metrics(axis:Axis,ctx:CanvasRenderingContext2D|undefined,cache?:Map<string,MeasuredText>,theme?:AxisCanvasTheme,resolveFont?:(font:FontSettings)=>FontSettings,contentLayout=false):AxisCanvasMetrics{
+function metrics(axis:Axis,ctx:CanvasRenderingContext2D|undefined,cache?:Map<string,MeasuredText>,theme?:AxisCanvasTheme,resolveFont?:(font:FontSettings)=>FontSettings):AxisCanvasMetrics{
   const horizontal=axis.direction==='x',strategy=axis.tickStrategy,tick=strategy.getMajorTickStyle();
   const titleText=axis.getDisplayTitle(),titleVisible=titleText.length>0&&color(axis.titleFill,ColorRGBA(190,200,215)).a>0;
+  const liveCustomTicks=axis.annotations.filter(annotation=>annotation.kind==='tick'&&annotation.visible&&!annotation.disposed);
+  const hasCustomTicks=liveCustomTicks.length>0;
+  const strokeThickness=(axis.stroke?.getThickness?.()??0)>0&&color(axis.stroke?.getFillStyle?.(),ColorRGBA(0,0,0,0)).a>0?axis.stroke!.getThickness():0;
   // Empty automatic ticks contribute no labels or tick marks. A title-only
   // coordinate axis still needs its real title measured, without phantom ink.
-  const titleOnly=!strategy.visible&&titleVisible&&!axis.annotations.some(annotation=>annotation.kind==='tick'&&annotation.visible&&!annotation.disposed);
+  const titleOnly=!strategy.visible&&titleVisible&&!hasCustomTicks;
   // An explicit FontSettings object wins even when its size is the default 12.
   // Retain the resolved object in the layout so drawing uses what was measured.
   const baseFont=tick.hasLabelFontOverride()?tick.getLabelFont():theme?.font??tick.getLabelFont();
@@ -125,43 +126,41 @@ function metrics(axis:Axis,ctx:CanvasRenderingContext2D|undefined,cache?:Map<str
     const fill=resolvedTickFill(axis,level,style,theme);
     return [{level,style,font,visible:color(fill,ColorRGBA(0,0,0,0)).a>0}];
   });
-  const margin=axis.getMarginAfterTicks(),tickLength=titleOnly?0:Math.max(0,...visibleLevels.map(({style})=>style.getTickStyle()?.getThickness?.()>0?style.getTickLength():0));
+  const margin=axis.getMarginAfterTicks(),tickLength=titleOnly||(!strategy.visible&&!hasCustomTicks)?0:Math.max(0,...visibleLevels.map(({style})=>style.getTickStyle()?.getThickness?.()>0?style.getTickLength():0));
   const rotation=(axis.titleRotation??(horizontal?0:-90))*Math.PI/180;
-  const customLabels=visibleLevels.some(({level,style,visible})=>visible&&(typeof style.formatter==='function'||typeof(level==='major'?strategy.getMajorFormattingFunction():strategy.getMinorFormattingFunction())==='function'))||strategy.getFormattingOffset()!==undefined||strategy.customMajor!==undefined||strategy.customMinor!==undefined||(strategy as any).hasDateTimeFormatting?.()===true;
-  // Long default numeric endpoints also need room, but the usual short labels
-  // are checked without enumerating ticks or calling Canvas.measureText.
-  const interval=axis.getInterval(),longDefault=!horizontal&&strategy.kind==='numeric'&&!customLabels&&
-    [interval.start,interval.end].some(value=>formatNumeric(value,interval).length*labelFont.getSize()*.6+17>54);
-  const changedLayout=contentLayout||titleOnly||margin>0||visibleLevels.some(({font,visible})=>visible&&!isDefaultFont(font))||!isDefaultFont(titleFont)||axis.titleRotation!==undefined||tickLength>7||customLabels||longDefault||strategy.kind==='datetime';
-  // Default lanes require no text measurement or tick enumeration. This matters
-  // for the 128-pane waveform case: draw performs the sole tick enumeration.
-  if(!changedLayout)return {measured:false,labelFont,titleFont,lane:0,laneOffset:0,laneSize:horizontal?44:54,labelOffset:horizontal?(axis.opposite?10:20):9,titleOffset:horizontal?(axis.opposite?32:43):48,tickLength,labelWidth:0,labelAscent:9,labelDescent:3,titleWidth:0,titleAscent:9,titleDescent:3,rotation};
   const layout=measuredTickLayout(axis,ctx,undefined,cache,theme,resolveFont),labels=visibleLevels.flatMap(({level,font,visible})=>visible?(layout[level]??[]).filter(t=>t.label.length).map(t=>textMetrics(ctx,t.label,font,cache)):[]);
-  const labelWidth=Math.max(0,...labels.map(m=>m.width)),labelAscent=Math.max(labelFont.getSize()*.75,...labels.map(m=>m.ascent)),labelDescent=Math.max(labelFont.getSize()*.25,...labels.map(m=>m.descent));
-  const title=textMetrics(ctx,titleText,titleFont,cache);
-  if(contentLayout&&axis.titleRotation===undefined){
-    const gutter=7,labelOffset=tickLength+gutter;
-    const labelBand=horizontal?Math.max(0,...visibleLevels.filter(level=>level.visible).map(level=>lineBoxHeight(level.font))):labelWidth;
-    const labelOuter=labels.length>0?labelOffset+labelBand:tickLength;
-    const titleHalf=lineBoxHeight(titleFont)/2,titleOffset=labelOuter+(labels.length>0?margin:0)+titleHalf;
+  const customTickLabels=liveCustomTicks.map(annotation=>{
+    const formatted=typeof (annotation as any).textFormatter==='function'?String((annotation as any).textFormatter(annotation.value)):String(annotation.text??'');
+    return formatted.length>0?textMetrics(ctx,formatted,labelFont,cache):undefined;
+  }).filter((m):m is MeasuredText=>!!m);
+  const allLabels=[...labels,...customTickLabels],hasLabels=allLabels.length>0;
+  const labelWidth=Math.max(0,...allLabels.map(m=>m.width)),labelAscent=Math.max(labelFont.getSize()*.75,...allLabels.map(m=>m.ascent)),labelDescent=Math.max(labelFont.getSize()*.25,...allLabels.map(m=>m.descent));
+  const title=titleVisible?textMetrics(ctx,titleText,titleFont,cache):{width:0,ascent:titleFont.getSize()*.75,descent:titleFont.getSize()*.25,baseline:lineBoxBaseline(undefined,titleFont)};
+  if(axis.titleRotation===undefined){
+    const gutter=7,labelOffset=hasLabels||hasCustomTicks?tickLength+gutter:0;
+    const labelBand=horizontal?Math.max(customTickLabels.length>0?lineBoxHeight(labelFont):0,...visibleLevels.filter(level=>level.visible).map(level=>lineBoxHeight(level.font))):labelWidth;
+    const labelOuter=hasLabels?labelOffset+labelBand:hasCustomTicks?labelOffset:tickLength;
+    const titleHalf=lineBoxHeight(titleFont)/2;
+    const titleBase=labelOuter>0?labelOuter+(hasLabels?margin:0):(strokeThickness>0?strokeThickness/2:0)+gutter;
+    const titleOffset=titleBase+titleHalf;
     const extent=Math.max(labelOuter,titleVisible?titleOffset+titleHalf:0);
-    return {measured:true,labelFont,titleFont,lane:0,laneOffset:0,laneSize:extent>0?extent+gutter:0,labelOffset,titleOffset,tickLength,labelWidth,labelAscent,labelDescent,titleWidth:title.width,titleAscent:title.ascent,titleDescent:title.descent,rotation,lineBoxTitleBaseline:title.baseline};
+    const laneSize=extent>0?extent+gutter:strokeThickness>0?Math.ceil(strokeThickness):0;
+    return {measured:true,labelFont,titleFont,lane:0,laneOffset:0,laneSize,labelOffset,titleOffset,tickLength,labelWidth,labelAscent,labelDescent,titleWidth:title.width,titleAscent:title.ascent,titleDescent:title.descent,rotation,lineBoxTitleBaseline:title.baseline};
   }
   const titleBox=rotatedBounds(title.width,title.ascent,title.descent,rotation);
-  const labelOffset=titleOnly?0:horizontal?(axis.opposite?Math.max(10,tickLength+labelDescent+3):Math.max(20,tickLength+labelAscent+3)):Math.max(9,tickLength+(contentLayout?5:2));
-  const labelOuter=titleOnly?0:horizontal?labelOffset+(axis.opposite?labelAscent:labelDescent):labelOffset+labelWidth;
+  const labelOffset=titleOnly||(!hasLabels&&!hasCustomTicks)?0:horizontal?(axis.opposite?Math.max(10,tickLength+labelDescent+3):Math.max(20,tickLength+labelAscent+3)):Math.max(9,tickLength+5);
+  const labelOuter=titleOnly||(!hasLabels&&!hasCustomTicks)?0:horizontal?labelOffset+(axis.opposite?labelAscent:labelDescent):labelOffset+labelWidth;
   const titleInner=horizontal?(axis.opposite?titleBox.bottom:-titleBox.top):(axis.opposite?-titleBox.left:titleBox.right);
   const titleOuter=horizontal?(axis.opposite?-titleBox.top:titleBox.bottom):(axis.opposite?titleBox.right:-titleBox.left);
-  const defaultTitleOffset=horizontal?(axis.opposite?32:43):48;
-  const titleOffset=contentLayout?labelOuter+margin+titleInner+2:changedLayout?Math.max(defaultTitleOffset+margin,labelOuter+margin+titleInner+5):defaultTitleOffset;
-  const extent=Math.max(labelOuter,titleVisible?titleOffset+titleOuter:0,tickLength);
-  const baseline=horizontal?44:54,laneSize=contentLayout?Math.ceil(extent+(horizontal?2:0)):changedLayout?Math.max(baseline,Math.ceil(extent+8)):baseline;
+  const titleOffset=labelOuter+(hasLabels?margin:0)+titleInner+(labelOuter>0?2:5);
+  const extent=Math.max(labelOuter,titleVisible?titleOffset+titleOuter:0,tickLength,strokeThickness);
+  const laneSize=extent>0?Math.ceil(extent+(horizontal?2:4)):0;
   return {measured:true,labelFont,titleFont,lane:0,laneOffset:0,laneSize,labelOffset,titleOffset,tickLength,labelWidth,labelAscent,labelDescent,titleWidth:title.width,titleAscent:title.ascent,titleDescent:title.descent,rotation};
 }
 
-/** Additional space only; callers retain their existing default 44/54px lanes. */
-export function measureAxisCanvasLayout(ctx:CanvasRenderingContext2D|undefined,axesX:readonly Axis[],axesY:readonly Axis[],theme?:AxisCanvasTheme,resolveFont?:(font:FontSettings)=>FontSettings,contentLayout=false):AxisCanvasLayout{
-  const result:AxisCanvasLayout={extraMargins:{left:0,right:0,top:0,bottom:0},axes:new Map(),...(contentLayout?{contentMargins:{left:0,right:0,top:0,bottom:0}}:{})};
+/** Measure compact content-based axis lanes for XY charts regardless of textRenderer. */
+export function measureAxisCanvasLayout(ctx:CanvasRenderingContext2D|undefined,axesX:readonly Axis[],axesY:readonly Axis[],theme?:AxisCanvasTheme,resolveFont?:(font:FontSettings)=>FontSettings):AxisCanvasLayout{
+  const result:AxisCanvasLayout={contentMargins:{left:0,right:0,top:0,bottom:0},extraMargins:{left:0,right:0,top:0,bottom:0},axes:new Map()};
   // Reuse repeated channel labels within this layout pass, without retaining
   // user formatter output or font metrics across later frames/font changes.
   const textCache=new Map<string,MeasuredText>();
@@ -170,13 +169,13 @@ export function measureAxisCanvasLayout(ctx:CanvasRenderingContext2D|undefined,a
     for(const axis of list)if(axis.visible&&!axis.disposed&&axis.opposite===opposite){const group=groups.get(axis.iParallel)??[];group.push(axis);groups.set(axis.iParallel,group);}
     let offset=0,lane=0;
     for(const [,axes]of[...groups].sort((a,b)=>a[0]-b[0])){
-      const values=axes.map(axis=>[axis,metrics(axis,ctx,textCache,theme,resolveFont,contentLayout)] as const),size=Math.max(contentLayout?0:horizontal?44:54,...values.map(([,m])=>m.laneSize));
+      const values=axes.map(axis=>[axis,metrics(axis,ctx,textCache,theme,resolveFont)] as const),size=Math.max(0,...values.map(([,m])=>m.laneSize));
       for(const [axis,value]of values)result.axes.set(axis,{...value,lane,laneOffset:offset,laneSize:size});
       offset+=size;lane++;
     }
     const side=horizontal?(opposite?'top':'bottom'):(opposite?'right':'left');
     result.extraMargins[side]=Math.max(0,offset-lane*(horizontal?44:54));
-    if(result.contentMargins)result.contentMargins[side]=offset;
+    result.contentMargins![side]=offset;
   }
   return result;
 }

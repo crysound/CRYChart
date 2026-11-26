@@ -6,12 +6,12 @@ CRYChart is a **frontend rendering library built by CRYSOUND for OpenTest**, wri
 
 Designed for OpenTest's data visualization needs, CRYChart provides streaming data rendering, interactive axes, cursors, and 2D and 3D charts. It uses WebGL2 for rendering, with a Canvas fallback.
 
-Version `1.0.4` keeps long Canvas2D waveform lines visible by drawing them in bounded batches.
+Version `1.0.5` applies compact content-measured XY axis layout consistently across HTML and non-HTML text modes.
 
 ## Install in an application
 
 ```powershell
-pnpm add --save-exact @crysound/crychart@1.0.4 --registry=https://registry.npmjs.org/
+pnpm add --save-exact @crysound/crychart@1.0.5 --registry=https://registry.npmjs.org/
 ```
 
 Commit the application's lockfile and use `pnpm install --frozen-lockfile` for repeatable installs. See the [npm usage guide](docs/npm-usage.md) for package entry points and migration from the old `crychart` name.

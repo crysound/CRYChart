@@ -1054,6 +1054,7 @@
         "tests/axis-canvas.test.ts::large fonts, margins, and parallel axes reserve separate lanes while stacked axes share a lane",
         "tests/axis-canvas.test.ts::long timestamp labels stay disjoint through resizes and precision changes while every grid tick remains",
         "tests/axis-canvas.test.ts::new tick strategies and changed theme fonts recompute layout without overwriting explicit FontSettings",
+        "tests/axis-canvas.test.ts::non-HTML and HTML XY charts share compact axis margins and title offsets",
         "tests/axis-canvas.test.ts::one layout pass shares repeated text measurements without caching later formatter output",
         "tests/axis-canvas.test.ts::text measurement uses the same alphabetic baseline as drawing and restores caller state",
         "tests/axis-canvas.test.ts::title start/end/center/center-chart anchors use physical axis positions even with inversion",
@@ -2226,6 +2227,7 @@
         "tests/axis-canvas.test.ts::large fonts, margins, and parallel axes reserve separate lanes while stacked axes share a lane",
         "tests/axis-canvas.test.ts::long timestamp labels stay disjoint through resizes and precision changes while every grid tick remains",
         "tests/axis-canvas.test.ts::new tick strategies and changed theme fonts recompute layout without overwriting explicit FontSettings",
+        "tests/axis-canvas.test.ts::non-HTML and HTML XY charts share compact axis margins and title offsets",
         "tests/axis-canvas.test.ts::one layout pass shares repeated text measurements without caching later formatter output",
         "tests/axis-canvas.test.ts::text measurement uses the same alphabetic baseline as drawing and restores caller state",
         "tests/axis-canvas.test.ts::title start/end/center/center-chart anchors use physical axis positions even with inversion",
@@ -2612,6 +2614,7 @@
       "scenarios": [
         "tests/axis-canvas.test.ts::HTML chart axis text keeps endpoint ink inside the frame and leaves a gutter outside titles",
         "tests/axis-canvas.test.ts::large fonts, margins, and parallel axes reserve separate lanes while stacked axes share a lane",
+        "tests/axis-canvas.test.ts::non-HTML and HTML XY charts share compact axis margins and title offsets",
         "tests/axis-opentest-styles.test.ts::title placement and tick margins preserve configuration and reject invalid updates atomically",
         "tests/empty-chart-title-layout.test.ts::empty chart title and empty opposite coordinate-only X preserve source axes without reserving title or top-axis lanes"
       ]
@@ -2989,6 +2992,7 @@
         "tests/axis-canvas.test.ts::default labels and titles keep their established screen coordinates and restore Canvas state",
         "tests/axis-canvas.test.ts::hidden/disposed axes and explicit empty title fill paint no text and consume no lanes",
         "tests/axis-canvas.test.ts::large fonts, margins, and parallel axes reserve separate lanes while stacked axes share a lane",
+        "tests/axis-canvas.test.ts::non-HTML and HTML XY charts share compact axis margins and title offsets",
         "tests/axis-canvas.test.ts::one layout pass shares repeated text measurements without caching later formatter output",
         "tests/axis-canvas.test.ts::title start/end/center/center-chart anchors use physical axis positions even with inversion",
         "tests/axis-empty-title-metrics.test.ts::Empty title-only axes measure real title content without automatic tick or label budgets",
@@ -2998,6 +3002,7 @@
         "tests/axis-empty-title-metrics.test.ts::live CustomTicks retain the existing branch and hide/dispose restores only the title-only budget",
         "tests/axis-empty-title-metrics.test.ts::two Empty titled stacks retain visible stroke, axis identity and unchanged physical stack allocation",
         "tests/axis-hover-highlight.test.ts::highlight paint preserves Canvas state on normal drawing and on fill/text failures",
+        "tests/axis-hover-highlight.test.ts::hover fill follows each physical side, parallel lane and stacked span without entering the plot",
         "tests/axis-hover-highlight.test.ts::hover has no effect on layout margins, tick output or axis data intervals",
         "tests/axis-public-values.test.ts::public axis fields reflect applied range policies layout units and hover state without altering source samples",
         "tests/axis-units.test.ts::axis units match observed 8.2 independent display flags and reset omitted options",
@@ -3066,6 +3071,7 @@
       "status": "mapped",
       "scenarios": [
         "tests/axis-canvas.test.ts::large fonts, margins, and parallel axes reserve separate lanes while stacked axes share a lane",
+        "tests/axis-canvas.test.ts::non-HTML and HTML XY charts share compact axis margins and title offsets",
         "tests/axis-empty-title-metrics.test.ts::Empty title-only axes measure real title content without automatic tick or label budgets",
         "tests/axis-empty-title-metrics.test.ts::Numeric metrics restore exactly after a temporary Empty title-only strategy",
         "tests/axis-empty-title-metrics.test.ts::live CustomTicks retain the existing branch and hide/dispose restores only the title-only budget",
@@ -3254,6 +3260,7 @@
         "tests/axis-canvas.test.ts::hidden/disposed axes and explicit empty title fill paint no text and consume no lanes",
         "tests/axis-canvas.test.ts::large fonts, margins, and parallel axes reserve separate lanes while stacked axes share a lane",
         "tests/axis-canvas.test.ts::new tick strategies and changed theme fonts recompute layout without overwriting explicit FontSettings",
+        "tests/axis-canvas.test.ts::non-HTML and HTML XY charts share compact axis margins and title offsets",
         "tests/axis-canvas.test.ts::one layout pass shares repeated text measurements without caching later formatter output",
         "tests/axis-canvas.test.ts::title start/end/center/center-chart anchors use physical axis positions even with inversion",
         "tests/axis-canvas.test.ts::visible tick length determines real tick geometry and keeps labels beyond its tip",
@@ -5819,6 +5826,7 @@
         "tests/annotation-native-contract.test.ts::pointer-disabled covers are penetrable; re-enabling cannot revive a cancelled drag",
         "tests/annotation-native-contract.test.ts::transparent bands paint their actual stroke, with manual/hover effects disabled exactly",
         "tests/annotation-native-contract.test.ts::unprotected Preview and Judgment calls execute and undefined interactions disable the existing slider",
+        "tests/axis-canvas.test.ts::non-HTML and HTML XY charts share compact axis margins and title offsets",
         "tests/axis-consumer.test.ts::TimeWaveform recovery reads Preview intervalMax and restores an explicit zero-origin window",
         "tests/axis-consumer.test.ts::animated/default flags are accepted without changing a stopped interval and invalid flags still fail",
         "tests/axis-consumer.test.ts::callback errors propagate without replacing stored restrictions or changing axis state",
@@ -6248,6 +6256,7 @@
         "tests/annotation-native-contract.test.ts::pointer-disabled covers are penetrable; re-enabling cannot revive a cancelled drag",
         "tests/annotation-native-contract.test.ts::transparent bands paint their actual stroke, with manual/hover effects disabled exactly",
         "tests/annotation-native-contract.test.ts::unprotected Preview and Judgment calls execute and undefined interactions disable the existing slider",
+        "tests/axis-canvas.test.ts::non-HTML and HTML XY charts share compact axis margins and title offsets",
         "tests/axis-consumer.test.ts::TimeWaveform recovery reads Preview intervalMax and restores an explicit zero-origin window",
         "tests/axis-consumer.test.ts::animated/default flags are accepted without changing a stopped interval and invalid flags still fail",
         "tests/axis-consumer.test.ts::callback errors propagate without replacing stored restrictions or changing axis state",
@@ -7100,6 +7109,7 @@
       "signature": "d30f1598846fe846a6c18063c136dcfe9e8c67abeaac042714761b2471556987",
       "status": "mapped",
       "scenarios": [
+        "tests/axis-canvas.test.ts::non-HTML and HTML XY charts share compact axis margins and title offsets",
         "tests/axis-consumer.test.ts::TimeWaveform recovery reads Preview intervalMax and restores an explicit zero-origin window",
         "tests/axis-consumer.test.ts::animated/default flags are accepted without changing a stopped interval and invalid flags still fail",
         "tests/axis-consumer.test.ts::callback errors propagate without replacing stored restrictions or changing axis state",
@@ -7213,6 +7223,7 @@
       "signature": "d30f1598846fe846a6c18063c136dcfe9e8c67abeaac042714761b2471556987",
       "status": "mapped",
       "scenarios": [
+        "tests/axis-canvas.test.ts::non-HTML and HTML XY charts share compact axis margins and title offsets",
         "tests/axis-default-geometry-margins.test.ts::Polar and world3D retain their independent coordinate policies without the XY geometry layer",
         "tests/axis-default-geometry-margins.test.ts::automatic raw XY fit retains actual point geometry in both public projection and render packet domain",
         "tests/axis-default-geometry-margins.test.ts::dynamic constant marker size, resize, hidden state and external clear refresh automatic geometry without stale data bounds",
@@ -7753,6 +7764,7 @@
         "tests/annotation-interaction.test.ts::difference bands move as one range and resize either boundary without crossing, including inverted axes",
         "tests/annotation-interaction.test.ts::logarithmic progress drag preserves the original grab offset multiplicatively",
         "tests/annotation-native-contract.test.ts::onTop=false is drawn on the underlay before area/data; top bands remain on the overlay afterwards",
+        "tests/axis-canvas.test.ts::non-HTML and HTML XY charts share compact axis margins and title offsets",
         "tests/axis-consumer.test.ts::TimeWaveform recovery reads Preview intervalMax and restores an explicit zero-origin window",
         "tests/axis-consumer.test.ts::cleared restriction permits manual restore and auto fit without stale intervalMax",
         "tests/axis-consumer.test.ts::consumer initialization disables zoom and scroll animation without changing auto-scroll target",
@@ -7925,6 +7937,7 @@
       "scenarios": [
         "tests/annotation-interaction.test.ts::playback progress drag updates the original constant line and emits the native value-change contract without zooming axes",
         "tests/annotation-native-contract.test.ts::native pointer routing cancels an active captured drag immediately when its configuration is disabled",
+        "tests/axis-canvas.test.ts::non-HTML and HTML XY charts share compact axis margins and title offsets",
         "tests/axis-contextmenu.test.ts::DOM contextmenu routes once to the actual bottom, top, left and right axis with the original event",
         "tests/axis-contextmenu.test.ts::DOM hover transfers to the uniquely hit axis and clears over the plot",
         "tests/axis-contextmenu.test.ts::a legend-consumed pointer move clears previous axis hover",
@@ -8229,6 +8242,7 @@
       "signature": "dc3cebee8f1eec0ba11fae4101a67242e966247cce9c016e9850490943ca1343",
       "status": "mapped",
       "scenarios": [
+        "tests/axis-canvas.test.ts::non-HTML and HTML XY charts share compact axis margins and title offsets",
         "tests/chart-contract.test.ts::polar decibels map to radius and north-clockwise orientation preserves cardinal angles",
         "tests/chart-layout-event.test.ts::padding/render and resize events plus Promise getLayout remain current independent snapshots",
         "tests/chart-layout-event.test.ts::userChangedLayout really applies a host size change inside the layout callback without recursive notification",
@@ -8277,6 +8291,7 @@
       "signature": "71a524c79e156b022d31b536e14728ff4883a38c3d9001ce32e00462f5cae42d",
       "status": "mapped",
       "scenarios": [
+        "tests/axis-canvas.test.ts::non-HTML and HTML XY charts share compact axis margins and title offsets",
         "tests/axis-contextmenu.test.ts::DOM contextmenu routes once to the actual bottom, top, left and right axis with the original event",
         "tests/axis-contextmenu.test.ts::DOM hover transfers to the uniquely hit axis and clears over the plot",
         "tests/axis-contextmenu.test.ts::a legend-consumed pointer move clears previous axis hover",
@@ -12781,6 +12796,7 @@
         "tests/axis-canvas.test.ts::explicit grid/label styles really paint or hide, including dash scale and light-theme label color",
         "tests/axis-canvas.test.ts::large fonts, margins, and parallel axes reserve separate lanes while stacked axes share a lane",
         "tests/axis-canvas.test.ts::new tick strategies and changed theme fonts recompute layout without overwriting explicit FontSettings",
+        "tests/axis-canvas.test.ts::non-HTML and HTML XY charts share compact axis margins and title offsets",
         "tests/axis-canvas.test.ts::one layout pass shares repeated text measurements without caching later formatter output",
         "tests/axis-canvas.test.ts::title content extent follows public glyph/font observations instead of a fixed title height",
         "tests/axis-empty-title-metrics.test.ts::Empty title-only axes measure real title content without automatic tick or label budgets",
@@ -18455,6 +18471,7 @@
         "tests/axis-canvas.test.ts::hidden/disposed axes and explicit empty title fill paint no text and consume no lanes",
         "tests/axis-canvas.test.ts::large fonts, margins, and parallel axes reserve separate lanes while stacked axes share a lane",
         "tests/axis-canvas.test.ts::new tick strategies and changed theme fonts recompute layout without overwriting explicit FontSettings",
+        "tests/axis-canvas.test.ts::non-HTML and HTML XY charts share compact axis margins and title offsets",
         "tests/axis-canvas.test.ts::one layout pass shares repeated text measurements without caching later formatter output",
         "tests/axis-canvas.test.ts::title start/end/center/center-chart anchors use physical axis positions even with inversion",
         "tests/axis-canvas.test.ts::visible tick length determines real tick geometry and keeps labels beyond its tip",
@@ -29433,6 +29450,7 @@
         "tests/axis-canvas.test.ts::hidden/disposed axes and explicit empty title fill paint no text and consume no lanes",
         "tests/axis-canvas.test.ts::large fonts, margins, and parallel axes reserve separate lanes while stacked axes share a lane",
         "tests/axis-canvas.test.ts::new tick strategies and changed theme fonts recompute layout without overwriting explicit FontSettings",
+        "tests/axis-canvas.test.ts::non-HTML and HTML XY charts share compact axis margins and title offsets",
         "tests/axis-canvas.test.ts::one layout pass shares repeated text measurements without caching later formatter output",
         "tests/axis-canvas.test.ts::title start/end/center/center-chart anchors use physical axis positions even with inversion",
         "tests/axis-canvas.test.ts::visible tick length determines real tick geometry and keeps labels beyond its tip",
@@ -33197,7 +33215,6 @@
         "tests/axis-empty-title-metrics.test.ts::live CustomTicks retain the existing branch and hide/dispose restores only the title-only budget",
         "tests/axis-empty-title-metrics.test.ts::two Empty titled stacks retain visible stroke, axis identity and unchanged physical stack allocation",
         "tests/axis-hover-highlight.test.ts::highlight paint preserves Canvas state on normal drawing and on fill/text failures",
-        "tests/axis-hover-highlight.test.ts::hover fill follows each physical side, parallel lane and stacked span without entering the plot",
         "tests/axis-hover-highlight.test.ts::hover uses the current light/dark theme and respects explicit per-axis color without changing styles",
         "tests/axis-hover-highlight.test.ts::temporary export disable removes hover ink and restoring settings restores the same hovered axis",
         "tests/axis-hover-highlight.test.ts::turning hover off and leaving removes ink; hidden or disposed axes never highlight"
@@ -33460,6 +33477,7 @@
         "tests/axis-canvas.test.ts::hidden/disposed axes and explicit empty title fill paint no text and consume no lanes",
         "tests/axis-canvas.test.ts::large fonts, margins, and parallel axes reserve separate lanes while stacked axes share a lane",
         "tests/axis-canvas.test.ts::new tick strategies and changed theme fonts recompute layout without overwriting explicit FontSettings",
+        "tests/axis-canvas.test.ts::non-HTML and HTML XY charts share compact axis margins and title offsets",
         "tests/axis-canvas.test.ts::one layout pass shares repeated text measurements without caching later formatter output",
         "tests/axis-canvas.test.ts::text measurement uses the same alphabetic baseline as drawing and restores caller state",
         "tests/axis-canvas.test.ts::title start/end/center/center-chart anchors use physical axis positions even with inversion",
@@ -34388,6 +34406,7 @@
         "tests/annotation-interaction.test.ts::logarithmic progress drag preserves the original grab offset multiplicatively",
         "tests/annotation-interaction.test.ts::playback progress drag updates the original constant line and emits the native value-change contract without zooming axes",
         "tests/annotation-native-contract.test.ts::native pointer routing cancels an active captured drag immediately when its configuration is disabled",
+        "tests/axis-canvas.test.ts::non-HTML and HTML XY charts share compact axis margins and title offsets",
         "tests/axis-contextmenu.test.ts::DOM hover transfers to the uniquely hit axis and clears over the plot",
         "tests/axis-contextmenu.test.ts::axis listeners can stop the original event before it reaches the card host",
         "tests/axis-default-geometry-margins.test.ts::automatic raw XY fit retains actual point geometry in both public projection and render packet domain",
@@ -35114,6 +35133,7 @@
         "tests/axis-canvas.test.ts::hidden/disposed axes and explicit empty title fill paint no text and consume no lanes",
         "tests/axis-canvas.test.ts::large fonts, margins, and parallel axes reserve separate lanes while stacked axes share a lane",
         "tests/axis-canvas.test.ts::new tick strategies and changed theme fonts recompute layout without overwriting explicit FontSettings",
+        "tests/axis-canvas.test.ts::non-HTML and HTML XY charts share compact axis margins and title offsets",
         "tests/axis-canvas.test.ts::one layout pass shares repeated text measurements without caching later formatter output",
         "tests/axis-canvas.test.ts::title start/end/center/center-chart anchors use physical axis positions even with inversion",
         "tests/axis-canvas.test.ts::visible tick length determines real tick geometry and keeps labels beyond its tip",
@@ -36096,6 +36116,7 @@
       "signature": "e983bf77fe7ee380bf0f77e8bc2dc8fefd79a2eefe49fd735be5d36a2fa6354f",
       "status": "mapped",
       "scenarios": [
+        "tests/axis-canvas.test.ts::non-HTML and HTML XY charts share compact axis margins and title offsets",
         "tests/data-style-public-api.test.ts::font variants and HTML text creation preserve source styles and insert plain text",
         "tests/style-public-values.test.ts::UI builder constants create their declared element and layout kinds and origins anchor real element bounds"
       ]
@@ -40540,7 +40561,7 @@
       "paths": [
         "crychart:version"
       ],
-      "signature": "3d657c1e8fbc9bf3f5db477406388f69eae1d872385b9cf251c25c3b8fd48732",
+      "signature": "8aef7d8a5dab15f12c63538a11d1928aee6e7a325459f06f924c28ec6c568041",
       "status": "mapped",
       "scenarios": [
         "tests/gallery-catalog.test.ts::gallery identity follows the native package and points to its local entry"
@@ -41505,7 +41526,7 @@
         },
         {
           "file": "tests/axis-canvas.test.ts",
-          "expression": "assert.ok(m.laneSize>=m.labelOffset+m.labelWidth+8)"
+          "expression": "assert.ok(m.laneSize>=m.labelOffset+m.labelWidth+7)"
         }
       ]
     },
@@ -41581,11 +41602,7 @@
       "assertions": [
         {
           "file": "tests/axis-canvas.test.ts",
-          "expression": "assert.equal(tickCalls,0)"
-        },
-        {
-          "file": "tests/axis-canvas.test.ts",
-          "expression": "assert.equal(ctx.measureCalls.length,0)"
+          "expression": "assert.ok(ctx.measureCalls.length<=4, `expected cached unique measurements, got ${ctx.measureCalls.length}`)"
         },
         {
           "file": "tests/axis-canvas.test.ts",
@@ -41593,15 +41610,15 @@
         },
         {
           "file": "tests/axis-canvas.test.ts",
-          "expression": "assert.ok([...layout.axes.values()].every(m=>!m.measured))"
+          "expression": "assert.ok([...layout.axes.values()].every(m=>m.measured))"
         },
         {
           "file": "tests/axis-canvas.test.ts",
-          "expression": "assert.equal(axisCanvasLaneOffset(lanes,outerX),44)"
+          "expression": "assert.equal(axisCanvasLaneOffset(lanes,outerX),lanes.axes.get(x)!.laneSize)"
         },
         {
           "file": "tests/axis-canvas.test.ts",
-          "expression": "assert.equal(axisCanvasLaneOffset(lanes,outerY),54)"
+          "expression": "assert.equal(axisCanvasLaneOffset(lanes,outerY),lanes.axes.get(ys[0]!)!.laneSize)"
         }
       ]
     },
@@ -41613,15 +41630,7 @@
       "assertions": [
         {
           "file": "tests/axis-canvas.test.ts",
-          "expression": "assert.deepEqual(ctx.texts.find(t=>t.text==='Time'),{text:'Time',x:300,y:413,rotation:0,align:'center',font:'normal normal normal 12px sans-serif',fill:ColorRGBA(190,200,215).toCSS()})"
-        },
-        {
-          "file": "tests/axis-canvas.test.ts",
-          "expression": "assert.equal(yTitle.x,52)"
-        },
-        {
-          "file": "tests/axis-canvas.test.ts",
-          "expression": "assert.equal(yTitle.y,220)"
+          "expression": "assert.equal(xTitle.x,300)"
         },
         {
           "file": "tests/axis-canvas.test.ts",
@@ -41629,11 +41638,31 @@
         },
         {
           "file": "tests/axis-canvas.test.ts",
-          "expression": "assert.ok(ctx.texts.some(t=>t.text==='5'&&t.x===300&&t.y===390))"
+          "expression": "assert.equal(xTitle.rotation,0)"
         },
         {
           "file": "tests/axis-canvas.test.ts",
-          "expression": "assert.ok(ctx.texts.some(t=>t.text==='5'&&t.x===91&&t.y===224))"
+          "expression": "assert.equal(xTitle.align,'center')"
+        },
+        {
+          "file": "tests/axis-canvas.test.ts",
+          "expression": "assert.equal(xTitle.font,'normal normal normal 12px sans-serif')"
+        },
+        {
+          "file": "tests/axis-canvas.test.ts",
+          "expression": "assert.equal(xTitle.fill,ColorRGBA(190,200,215).toCSS())"
+        },
+        {
+          "file": "tests/axis-canvas.test.ts",
+          "expression": "assert.equal(yTitle.y,220)"
+        },
+        {
+          "file": "tests/axis-canvas.test.ts",
+          "expression": "assert.ok(ctx.texts.some(t=>t.text==='5'&&t.x===300&&Math.abs(t.y-(plot.top+plot.height+xm.labelOffset+12*.4+3.6))<1e-9))"
+        },
+        {
+          "file": "tests/axis-canvas.test.ts",
+          "expression": "assert.ok(ctx.texts.some(t=>t.text==='5'&&t.x===plot.left-ym.labelOffset&&Math.abs(t.y-(220+3.6))<1e-9))"
         },
         {
           "file": "tests/axis-canvas.test.ts",
@@ -41665,11 +41694,11 @@
       "assertions": [
         {
           "file": "tests/axis-canvas.test.ts",
-          "expression": "assert.equal(layout.axes.get(x)!.measured,false)"
+          "expression": "assert.equal(layout.axes.get(x)!.measured,true)"
         },
         {
           "file": "tests/axis-canvas.test.ts",
-          "expression": "assert.deepEqual(ctx.measureCalls,['0','5','10'].map(text=>'normal normal normal 12px sans-serif\\0'+text),'drawing measures each X glyph for its physical boundary; the layout fast path remains unmeasured')"
+          "expression": "assert.ok(ctx.measureCalls.includes('normal normal normal 12px sans-serif\\0'+'5'))"
         },
         {
           "file": "tests/axis-canvas.test.ts",
@@ -41829,7 +41858,7 @@
         },
         {
           "file": "tests/axis-canvas.test.ts",
-          "expression": "assert.equal(layout.extraMargins.left,inner.laneSize-54)"
+          "expression": "assert.ok(Math.abs(actual-expected)<1e-9,`${actual} != ${expected}`)"
         },
         {
           "file": "tests/axis-canvas.test.ts",
@@ -41902,6 +41931,34 @@
         {
           "file": "tests/axis-canvas.test.ts",
           "expression": "assert.equal(measureAxisCanvasLayout(ctx.context,[],[y],variant).axes.get(y)!.measured,true,'Font variants must not enter the unmeasured default-font fast path')"
+        }
+      ]
+    },
+    "tests/axis-canvas.test.ts::non-HTML and HTML XY charts share compact axis margins and title offsets": {
+      "file": "tests/axis-canvas.test.ts",
+      "name": "non-HTML and HTML XY charts share compact axis margins and title offsets",
+      "dynamic": false,
+      "explicit": false,
+      "assertions": [
+        {
+          "file": "tests/axis-canvas.test.ts",
+          "expression": "assert.ok(layout.contentMargins!.left<50,`compact Y left margin should stay below 50px, got ${layout.contentMargins!.left}`)"
+        },
+        {
+          "file": "tests/axis-canvas.test.ts",
+          "expression": "assert.equal(ym.titleOffset-ym.labelOffset-ym.labelWidth,7+14*.4,'Y title sits exactly marginAfterTicks beyond tick labels')"
+        },
+        {
+          "file": "tests/axis-canvas.test.ts",
+          "expression": "assert.equal(xm.titleOffset-xm.labelOffset-12*.8,7+14*.4,'X title sits exactly marginAfterTicks beyond tick labels')"
+        },
+        {
+          "file": "tests/axis-canvas.test.ts",
+          "expression": "assert.deepEqual(plainChart.plot,htmlChart.plot)"
+        },
+        {
+          "file": "tests/axis-canvas.test.ts",
+          "expression": "assert.ok(plainChart.plot.left<70,`non-HTML XY chart left margin must stay compact, got ${plainChart.plot.left}`)"
         }
       ]
     },
@@ -42649,19 +42706,27 @@
       "assertions": [
         {
           "file": "tests/axis-empty-title-metrics.test.ts",
-          "expression": "assert.equal(noTitle.measured,false)"
+          "expression": "assert.equal(noTitle.measured,true)"
         },
         {
           "file": "tests/axis-empty-title-metrics.test.ts",
-          "expression": "assert.ok(noTitle.labelOffset>0)"
+          "expression": "assert.equal(noTitle.labelOffset,0)"
         },
         {
           "file": "tests/axis-empty-title-metrics.test.ts",
-          "expression": "assert.equal(metrics(chart,axis).measured,false)"
+          "expression": "assert.equal(noTitle.laneSize,0)"
+        },
+        {
+          "file": "tests/axis-empty-title-metrics.test.ts",
+          "expression": "assert.equal(metrics(chart,axis).measured,true)"
         },
         {
           "file": "tests/axis-empty-title-metrics.test.ts",
           "expression": "assert.equal(metrics(chart,axis).labelOffset,noTitle.labelOffset)"
+        },
+        {
+          "file": "tests/axis-empty-title-metrics.test.ts",
+          "expression": "assert.equal(metrics(chart,axis).laneSize,0)"
         }
       ]
     },
@@ -42813,11 +42878,15 @@
       "assertions": [
         {
           "file": "tests/axis-endpoint-labels.test.ts",
-          "expression": "assert.equal(ctx.measurements.length,0)"
+          "expression": "assert.ok(ctx.measurements.length<=16,`expected cached unique label measurements across 128 panes, got ${ctx.measurements.length}`)"
         },
         {
           "file": "tests/axis-endpoint-labels.test.ts",
           "expression": "assert.equal(ctx.texts.length,0)"
+        },
+        {
+          "file": "tests/axis-endpoint-labels.test.ts",
+          "expression": "assert.equal(ctx.measurements.length,0)"
         }
       ]
     },
@@ -42869,7 +42938,7 @@
       "assertions": [
         {
           "file": "tests/axis-endpoint-labels.test.ts",
-          "expression": "assert.deepEqual(yTexts.map(value=>({text:value.text,x:value.x,y:value.y})),[{text:'Y0',x:71,y:324},{text:'Y10',x:71,y:64}])"
+          "expression": "assert.deepEqual(yTexts.map(value=>({text:value.text,x:value.x,y:value.y})),[{text:'Y0',x:66,y:317},{text:'Y10',x:66,y:69}])"
         },
         {
           "file": "tests/axis-endpoint-labels.test.ts",
@@ -42909,7 +42978,7 @@
         },
         {
           "file": "tests/axis-endpoint-labels.test.ts",
-          "expression": "assert.ok(ctx.texts.every(value=>value.y===plot.top+plot.height+m.labelOffset))"
+          "expression": "assert.ok(ctx.texts.every(value=>Math.abs(value.y-expectedY)<1e-9))"
         },
         {
           "file": "tests/axis-endpoint-labels.test.ts",
@@ -43815,6 +43884,10 @@
       "dynamic": false,
       "explicit": false,
       "assertions": [
+        {
+          "file": "tests/axis-hover-highlight.test.ts",
+          "expression": "assert.ok(lm.laneSize>0&&pm.laneSize>0&&rm.laneSize>0&&bm.laneSize>0&&tm.laneSize>0)"
+        },
         {
           "file": "tests/axis-hover-highlight.test.ts",
           "expression": "assert.ok(rects.some(actual=>JSON.stringify(actual)===JSON.stringify(r)),JSON.stringify(r))"
@@ -55077,7 +55150,7 @@
       "assertions": [
         {
           "file": "tests/empty-chart-title-layout.test.ts",
-          "expression": "assert.ok(top(c)>=48,'Explicit CustomTicks remain a painted axis decoration even with Empty automatic ticks')"
+          "expression": "assert.ok(top(c)>=30,'Explicit CustomTicks remain a painted axis decoration even with Empty automatic ticks')"
         },
         {
           "file": "tests/empty-chart-title-layout.test.ts",
@@ -55085,7 +55158,7 @@
         },
         {
           "file": "tests/empty-chart-title-layout.test.ts",
-          "expression": "assert.ok(top(c)>=48)"
+          "expression": "assert.ok(top(c)>=30)"
         }
       ]
     },
@@ -55101,7 +55174,7 @@
         },
         {
           "file": "tests/empty-chart-title-layout.test.ts",
-          "expression": "assert.equal(top(c),81,'52px title slot+25px margin+4px source padding')"
+          "expression": "assert.equal(top(c),63,'34px compact title slot (18+16)+25px margin+4px source padding')"
         },
         {
           "file": "tests/empty-chart-title-layout.test.ts",
@@ -55109,11 +55182,11 @@
         },
         {
           "file": "tests/empty-chart-title-layout.test.ts",
-          "expression": "assert.ok(top(c)>=48,'Empty ticks do not hide an actual axis title')"
+          "expression": "assert.ok(top(c)>=24,'Empty ticks do not hide an actual axis title')"
         },
         {
           "file": "tests/empty-chart-title-layout.test.ts",
-          "expression": "assert.ok(top(c)>=48)"
+          "expression": "assert.ok(top(c)>=30)"
         }
       ]
     },
@@ -55125,7 +55198,7 @@
       "assertions": [
         {
           "file": "tests/empty-coordinate-axis-layout.test.ts",
-          "expression": "assert.equal(numeric, 53)"
+          "expression": "assert.ok(numeric > 0 && numeric < 44, `Compact Numeric bottom-axis lane expected < 44, got ${numeric}`)"
         },
         {
           "file": "tests/empty-coordinate-axis-layout.test.ts",
@@ -55133,7 +55206,7 @@
         },
         {
           "file": "tests/empty-coordinate-axis-layout.test.ts",
-          "expression": "assert.equal(leftMargin(chart, series), 66)"
+          "expression": "assert.equal(leftMargin(chart, series), leftNumeric)"
         },
         {
           "file": "tests/empty-coordinate-axis-layout.test.ts",
@@ -55153,7 +55226,15 @@
         },
         {
           "file": "tests/empty-coordinate-axis-layout.test.ts",
-          "expression": "assert.ok(bottomMargin(chart, series) >= numeric)"
+          "expression": "assert.ok(bottomMargin(chart, series) >= 20)"
+        },
+        {
+          "file": "tests/empty-coordinate-axis-layout.test.ts",
+          "expression": "assert.ok(bottomMargin(chart, series) >= 25)"
+        },
+        {
+          "file": "tests/empty-coordinate-axis-layout.test.ts",
+          "expression": "assert.ok(bottomMargin(chart, series) >= 1)"
         },
         {
           "file": "tests/empty-coordinate-axis-layout.test.ts",
@@ -55169,7 +55250,7 @@
       "assertions": [
         {
           "file": "tests/empty-coordinate-axis-layout.test.ts",
-          "expression": "assert.equal(numeric, 66)"
+          "expression": "assert.ok(numeric > 0 && numeric < 60, `Compact Numeric left-axis lane expected < 60, got ${numeric}`)"
         },
         {
           "file": "tests/empty-coordinate-axis-layout.test.ts",
@@ -55177,7 +55258,7 @@
         },
         {
           "file": "tests/empty-coordinate-axis-layout.test.ts",
-          "expression": "assert.equal(bottomMargin(chart, series), 53)"
+          "expression": "assert.equal(bottomMargin(chart, series), bottomNumeric)"
         },
         {
           "file": "tests/empty-coordinate-axis-layout.test.ts",
@@ -55197,11 +55278,15 @@
         },
         {
           "file": "tests/empty-coordinate-axis-layout.test.ts",
-          "expression": "assert.ok(leftMargin(chart, series) >= numeric, 'TimeWave channel-title Empty axes must remain')"
+          "expression": "assert.ok(leftMargin(chart, series) >= 20, 'TimeWave channel-title Empty axes must remain')"
         },
         {
           "file": "tests/empty-coordinate-axis-layout.test.ts",
-          "expression": "assert.ok(leftMargin(chart, series) >= numeric)"
+          "expression": "assert.ok(leftMargin(chart, series) >= 50)"
+        },
+        {
+          "file": "tests/empty-coordinate-axis-layout.test.ts",
+          "expression": "assert.ok(leftMargin(chart, series) >= 1)"
         },
         {
           "file": "tests/empty-coordinate-axis-layout.test.ts",
@@ -55217,7 +55302,7 @@
       "assertions": [
         {
           "file": "tests/empty-coordinate-axis-layout.test.ts",
-          "expression": "assert.equal(numeric, 82, 'Existing Numeric right-axis policy stays 22+60')"
+          "expression": "assert.ok(numeric > 0 && numeric < 60, `Compact Numeric right-axis lane expected < 60, got ${numeric}`)"
         },
         {
           "file": "tests/empty-coordinate-axis-layout.test.ts",
@@ -55225,11 +55310,11 @@
         },
         {
           "file": "tests/empty-coordinate-axis-layout.test.ts",
-          "expression": "assert.equal(leftMargin(chart, series), 66, 'Visible Numeric left-axis lane is unchanged')"
+          "expression": "assert.equal(leftMargin(chart, series), leftNumeric, 'Visible Numeric left-axis lane is unchanged')"
         },
         {
           "file": "tests/empty-coordinate-axis-layout.test.ts",
-          "expression": "assert.equal(bottomMargin(chart, series), 53, 'Visible Numeric bottom-axis lane is unchanged')"
+          "expression": "assert.equal(bottomMargin(chart, series), bottomNumeric, 'Visible Numeric bottom-axis lane is unchanged')"
         },
         {
           "file": "tests/empty-coordinate-axis-layout.test.ts",
@@ -55249,11 +55334,15 @@
         },
         {
           "file": "tests/empty-coordinate-axis-layout.test.ts",
-          "expression": "assert.ok(rightMargin(chart, series) >= numeric)"
+          "expression": "assert.ok(rightMargin(chart, series) >= 20)"
         },
         {
           "file": "tests/empty-coordinate-axis-layout.test.ts",
-          "expression": "assert.ok(rightMargin(chart, series) >= numeric, 'Visible axis stroke is real lane content')"
+          "expression": "assert.ok(rightMargin(chart, series) >= 50)"
+        },
+        {
+          "file": "tests/empty-coordinate-axis-layout.test.ts",
+          "expression": "assert.ok(rightMargin(chart, series) >= 1, 'Visible axis stroke is real lane content')"
         },
         {
           "file": "tests/empty-coordinate-axis-layout.test.ts",
@@ -62937,7 +63026,11 @@
         },
         {
           "file": "tests/native-cursor-chart.test.ts",
-          "expression": "assert.deepEqual(chart.translateCoordinate(events[0].mouseLocation,chart.coordsAxis),{x:1.5,y:2})"
+          "expression": "assert.ok(Math.abs(mouseAxis.x-1.5)<1e-12)"
+        },
+        {
+          "file": "tests/native-cursor-chart.test.ts",
+          "expression": "assert.ok(Math.abs(mouseAxis.y-2)<1e-12)"
         },
         {
           "file": "tests/native-cursor-chart.test.ts",

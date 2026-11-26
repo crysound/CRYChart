@@ -113,10 +113,12 @@ test('empty or invisible titles do not enter the new title-only branch',()=>{
   try {
     const axis=chart.getDefaultAxisY().setTickStrategy(AxisTickStrategies.Empty).setTitle('');
     const noTitle=metrics(chart,axis);
-    assert.equal(noTitle.measured,false);
-    assert.ok(noTitle.labelOffset>0);
+    assert.equal(noTitle.measured,true);
+    assert.equal(noTitle.labelOffset,0);
+    assert.equal(noTitle.laneSize,0);
     axis.setTitle('Invisible channel').setTitleFillStyle(emptyFill);
-    assert.equal(metrics(chart,axis).measured,false);
+    assert.equal(metrics(chart,axis).measured,true);
     assert.equal(metrics(chart,axis).labelOffset,noTitle.labelOffset);
+    assert.equal(metrics(chart,axis).laneSize,0);
   } finally {chart.dispose();}
 });

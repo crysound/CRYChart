@@ -6,12 +6,12 @@ CRYChart 是 **CRYSOUND 为 OpenTest 定制的前端渲染库**，基于 TypeScr
 
 CRYChart 面向 OpenTest 的数据可视化场景，提供流式数据绘制、交互坐标轴、游标、二维和三维图表。绘图使用 WebGL2，并提供 Canvas 回退。
 
-`1.0.4` 修复了 Canvas2D 绘制长波形时曲线消失的问题。
+`1.0.5` 统一了二维图表在非 HTML 与 HTML 文本模式下的紧凑内容坐标轴布局，修复多通道场景下 Y 轴边距过宽的问题。
 
 ## 在应用中安装
 
 ```powershell
-pnpm add --save-exact @crysound/crychart@1.0.4 --registry=https://registry.npmjs.org/
+pnpm add --save-exact @crysound/crychart@1.0.5 --registry=https://registry.npmjs.org/
 ```
 
 提交应用的锁文件，后续执行 `pnpm install --frozen-lockfile`。包入口和旧 `crychart` 包名的迁移方式见 [npm 使用说明](docs/npm-usage.md)。
